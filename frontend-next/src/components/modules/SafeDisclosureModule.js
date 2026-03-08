@@ -164,7 +164,7 @@ const SafeDisclosureModule = () => {
   const [submittedCase, setSubmittedCase] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const isAdmin = user?.role && user.role !== 'student';
+  const isAdmin = ['admin', 'super_admin', 'college_admin'].includes(user?.role);
 
   const resetAll = () => {
     setView('home');
