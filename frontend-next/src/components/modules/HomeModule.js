@@ -360,18 +360,6 @@ const HomeModule = () => {
             <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Services</span>
           </Link>
 
-          {/* 12. Financials */}
-          <Link
-            href="/dashboard/finance"
-            className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
-            data-testid="quick-finance"
-          >
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-success to-secondary flex items-center justify-center">
-              <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Finance</span>
-          </Link>
-
           {/* 13. Wellbeing */}
           {(user?.role === 'ra' || user?.role === 'admin' || user?.role === 'super_admin') ? (
             <Link

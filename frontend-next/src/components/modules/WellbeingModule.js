@@ -39,13 +39,6 @@ const WellbeingModule = () => {
       color: 'from-primary to-destructive',
       path: '/dashboard/wellbeing/resources'
     },
-    {
-      title: 'Support & Safety',
-      description: 'Confidential support for gender-based violence and safety concerns',
-      icon: Shield,
-      color: 'from-primary to-secondary',
-      path: '/dashboard/safe-disclosure'
-    }
   ];
 
   return (
