@@ -68,10 +68,10 @@ async def get_parcels(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get parcel notifications - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    if current_user.role == "admin":
-        parcels = await tenant_db.parcel_notifications.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    if current_user.role in ["admin", "super_admin", "college_admin", "ra"]:
+        parcels = await tenant_db.parcel_notifications.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     else:
-        parcels = await tenant_db.parcel_notifications.find({"student_id": current_user.id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        parcels = await tenant_db.parcel_notifications.find({"student_id": current_user.id}, {"_id": 0}).sort("created_at", -1).to_list(200)
     
     return parcels
 

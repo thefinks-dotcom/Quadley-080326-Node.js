@@ -413,6 +413,17 @@ const HomeModule = () => {
 
           {/* 15. AI Assistance */}
           <Link
+            href="/dashboard/parcels"
+            className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
+            data-testid="quick-parcels"
+          >
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <Briefcase className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+            </div>
+            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Packages</span>
+          </Link>
+
+          <Link
             href="/dashboard/safe-disclosure"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-make-report"

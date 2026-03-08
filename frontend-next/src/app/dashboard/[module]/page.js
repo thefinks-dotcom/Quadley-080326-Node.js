@@ -27,6 +27,7 @@ import BirthdayModule from '@/components/modules/BirthdayModule';
 import AdminModule from '@/components/modules/AdminModule';
 import RAFloorManagementModule from '@/components/modules/RAFloorManagementModule';
 import RAFloorEventsModule from '@/components/modules/RAFloorEventsModule';
+import ParcelsModule from '@/components/modules/ParcelsModule';
 
 const MODULE_MAP = {
   messages:       MessagesModule,
@@ -55,6 +56,7 @@ const MODULE_MAP = {
   'ra-floor':     RAFloorManagementModule,
   'ra-events':    RAFloorEventsModule,
   admin:          AdminModule,
+  parcels:        ParcelsModule,
 };
 
 export default function DashboardModulePage() {
