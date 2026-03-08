@@ -11,7 +11,7 @@ from utils.auth import get_tenant_db_for_user
 router = APIRouter(prefix="/announcements", tags=["announcements"])
 
 
-async def send_announcement_notification(title: str, content: str, is_emergency: bool, exclude_user_id: str):
+async def send_announcement_notification(tenant_db, title: str, content: str, is_emergency: bool, exclude_user_id: str):
     """Background task to send push notifications for new announcements"""
     try:
         from routes.notifications import notify_new_announcement
@@ -21,6 +21,7 @@ async def send_announcement_notification(title: str, content: str, is_emergency:
         
         # Send to all users except the creator
         await notify_new_announcement(
+            tenant_db,
             title=notification_title,
             preview=content[:150],
             exclude_user=exclude_user_id
@@ -74,6 +75,7 @@ async def create_announcement(
     if ann_doc['status'] == 'published':
         background_tasks.add_task(
             send_announcement_notification,
+            tenant_db,
             ann_doc['title'],
             ann_doc['content'],
             is_emergency,
