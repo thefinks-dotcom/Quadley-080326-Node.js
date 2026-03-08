@@ -146,26 +146,35 @@ async def create_safe_disclosure(
     investigation_deadline = (now + timedelta(days=63)).isoformat() if is_formal else None
     initial_status = "investigation" if is_formal else "pending_risk_assessment"
 
+    # Derive police_notified from reported_elsewhere list for backward compat
+    police_notified = disclosure_data.police_notified or "NSW Police" in (disclosure_data.reported_elsewhere or [])
+
     disclosure_dict = {
         "id": str(uuid.uuid4()),
         "reporter_id": None if disclosure_data.is_anonymous else current_user.id,
         "reporter_name": None if disclosure_data.is_anonymous else f"{current_user.first_name} {current_user.last_name}",
         "reporter_email": None if disclosure_data.is_anonymous else current_user.email,
         "is_anonymous": disclosure_data.is_anonymous,
+        "report_category": disclosure_data.report_category or "sexual_harm_gbv",
         "report_type": disclosure_data.report_type,
         "incident_type": disclosure_data.incident_type,
         "incident_date": disclosure_data.incident_date,
         "incident_location": disclosure_data.incident_location,
         "description": disclosure_data.description,
+        "reporter_relationship": disclosure_data.reporter_relationship or "self",
+        "third_party_details": disclosure_data.third_party_details,
         "individuals_involved": disclosure_data.individuals_involved,
         "witness_present": disclosure_data.witness_present,
         "witness_details": disclosure_data.witness_details,
+        "reported_elsewhere": disclosure_data.reported_elsewhere or [],
         "immediate_danger": disclosure_data.immediate_danger,
         "medical_attention_needed": disclosure_data.medical_attention_needed,
-        "police_notified": disclosure_data.police_notified,
+        "police_notified": police_notified,
+        "desired_outcome": disclosure_data.desired_outcome,
         "support_requested": disclosure_data.support_requested,
         "preferred_contact": encrypt_field(disclosure_data.preferred_contact) if disclosure_data.preferred_contact else None,
         "additional_notes": disclosure_data.additional_notes,
+        "demographics": disclosure_data.demographics or {},
         "status": initial_status,
         "urgency": "urgent" if disclosure_data.immediate_danger else "high" if disclosure_data.medical_attention_needed else "normal",
         "assigned_to": None,

@@ -742,20 +742,26 @@ class SafeDisclosure(BaseModel):
 
 class SafeDisclosureCreate(BaseModel):
     is_anonymous: bool = False
+    report_category: Optional[str] = "sexual_harm_gbv"
     report_type: str = "disclosure"  # "disclosure" | "formal_complaint"
     incident_type: str
     incident_date: Optional[str] = None
     incident_location: Optional[str] = None
     description: str
+    reporter_relationship: Optional[str] = "self"  # "self" | "third_party" | "unsure"
+    third_party_details: Optional[str] = None
     individuals_involved: Optional[str] = None
     witness_present: bool = False
     witness_details: Optional[str] = None
+    reported_elsewhere: List[str] = []
     immediate_danger: bool = False
     medical_attention_needed: bool = False
     police_notified: bool = False
+    desired_outcome: Optional[str] = None
     support_requested: List[str] = []
     preferred_contact: Optional[str] = None
     additional_notes: Optional[str] = None
+    demographics: dict = {}
 
 # ====== CSV USER IMPORT MODELS ======
 
