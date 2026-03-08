@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useContext } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import axios from 'axios';
 import { AuthContext, API } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -23,6 +23,8 @@ import ModuleHeader from '@/components/ModuleHeader';
 
 const AdminModule = () => {
   const { user } = useContext(AuthContext);
+  const pathname = usePathname();
+  const isJobsRoute = pathname === '/dashboard/jobs';
   const [activeTab, setActiveTab] = useState('jobs');
   
   // Jobs state
@@ -188,12 +190,12 @@ const AdminModule = () => {
   return (
     <div className="min-h-screen bg-background">
       <ModuleHeader
-        title="Admin"
-        showBack={false}
+        title={isJobsRoute ? 'Jobs' : 'Admin'}
+        showBack={isJobsRoute}
         showSearch={false}
       />
       <div className="px-4 pt-4 pb-4 space-y-4" data-testid="admin-module">
-      <h2 className="heading-font text-3xl font-bold">Admin Panel</h2>
+      {!isJobsRoute && <h2 className="heading-font text-3xl font-bold">Admin Panel</h2>}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
