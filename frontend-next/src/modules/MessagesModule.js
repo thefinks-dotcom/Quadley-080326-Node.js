@@ -55,7 +55,6 @@ const MessagesModule = () => {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [groupMembers, setGroupMembers] = useState([]);
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
   const pollingRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -122,7 +121,7 @@ const MessagesModule = () => {
     setSelectedConv(conv);
     setMessages([]);
     setView('chat');
-    setTimeout(() => inputRef.current?.focus(), 150);
+    setTimeout(() => textareaRef.current?.focus(), 300);
   };
 
   const goBack = () => {
