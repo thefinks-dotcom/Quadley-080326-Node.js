@@ -76,17 +76,18 @@ export function AuthProvider({ children }) {
     setEnabledModules(modules || null);
   };
 
-  const logout = async () => {
-    try {
-      await axios.post(`${API}/auth/logout`);
-    } catch (err) {
-      console.error('Logout error', err);
-    }
+  const logout = () => {
+    const token = localStorage.getItem('token');
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     try { sessionStorage.removeItem('quadley_dashboard_cache'); } catch {}
     setUser(null);
     setEnabledModules(null);
+    if (token) {
+      axios.post(`${API}/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {});
+    }
   };
 
   return (
