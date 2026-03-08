@@ -55,6 +55,11 @@ const UserManagement = () => {
   const [declarationNotes, setDeclarationNotes] = useState('');
   const [declarationLoading, setDeclarationLoading] = useState(false);
 
+  const [showAddUser, setShowAddUser] = useState(false);
+  const emptyAddForm = { first_name: '', last_name: '', email: '', role: 'student', floor: '', room: '' };
+  const [addForm, setAddForm] = useState(emptyAddForm);
+  const [addLoading, setAddLoading] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -168,6 +173,45 @@ const UserManagement = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!addForm.first_name.trim() || !addForm.last_name.trim() || !addForm.email.trim()) {
+      toast.error('First name, last name and email are required');
+      return;
+    }
+    setAddLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `${API}/api/users/invite`,
+        {
+          first_name: addForm.first_name.trim(),
+          last_name: addForm.last_name.trim(),
+          email: addForm.email.trim().toLowerCase(),
+          role: addForm.role,
+          floor: addForm.floor.trim() || null,
+          room: addForm.room.trim() || null,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const inviteCode = res.data?.user?.invite_code;
+      const emailSent = res.data?.email_sent;
+      toast.success(
+        emailSent
+          ? `Invitation sent to ${addForm.email}`
+          : `User created — invite code: ${inviteCode}`,
+        { duration: 6000 }
+      );
+      setShowAddUser(false);
+      setAddForm(emptyAddForm);
+      fetchUsers();
+    } catch (error) {
+      const detail = error.response?.data?.detail;
+      toast.error(typeof detail === 'string' ? detail : 'Failed to add user');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const exportUsers = () => {
     const csv = [
       ['First Name', 'Last Name', 'Email', 'Role', 'Floor', 'Status'].join(','),
@@ -241,6 +285,13 @@ const UserManagement = () => {
             </div>
           </div>
           <div className="flex gap-3">
+            <Button
+              onClick={() => setShowAddUser(true)}
+              className="flex items-center gap-2 h-10"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add User
+            </Button>
             <Button
               onClick={() => router.push('/admin/users/csv-upload')}
               variant="outline"
@@ -585,6 +636,124 @@ const UserManagement = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Add User panel */}
+        {showAddUser && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setShowAddUser(false)}>
+            <div
+              className="bg-white w-full max-w-lg rounded-t-3xl p-6 max-h-[92vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <UserPlus className="h-5 w-5 text-primary" /> Add User
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    An invitation will be emailed with their sign-up code.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddUser(false)}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium block mb-1">First Name <span className="text-destructive">*</span></label>
+                    <Input
+                      placeholder="e.g. Jane"
+                      value={addForm.first_name}
+                      onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium block mb-1">Last Name <span className="text-destructive">*</span></label>
+                    <Input
+                      placeholder="e.g. Smith"
+                      value={addForm.last_name}
+                      onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Email Address <span className="text-destructive">*</span></label>
+                  <Input
+                    type="email"
+                    placeholder="e.g. jane.smith@gracecollege.edu"
+                    value={addForm.email}
+                    onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Role</label>
+                  <select
+                    value={addForm.role}
+                    onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="student">Student</option>
+                    <option value="ra">Residential Assistant (RA)</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium block mb-1">Floor <span className="text-muted-foreground font-normal">(optional)</span></label>
+                    <Input
+                      placeholder="e.g. Floor 2"
+                      value={addForm.floor}
+                      onChange={e => setAddForm(f => ({ ...f, floor: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium block mb-1">Room <span className="text-muted-foreground font-normal">(optional)</span></label>
+                    <Input
+                      placeholder="e.g. 204"
+                      value={addForm.room}
+                      onChange={e => setAddForm(f => ({ ...f, room: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+                  <Mail className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    An invitation email will be sent to the user with their sign-up code and instructions to download the app. 
+                    If email delivery is unavailable, their invite code will be shown here.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => { setShowAddUser(false); setAddForm(emptyAddForm); }}
+                  disabled={addLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gap-2"
+                  onClick={handleAddUser}
+                  disabled={addLoading || !addForm.first_name.trim() || !addForm.last_name.trim() || !addForm.email.trim()}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {addLoading ? 'Adding...' : 'Add & Send Invite'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
