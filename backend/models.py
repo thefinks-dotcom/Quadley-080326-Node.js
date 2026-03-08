@@ -742,6 +742,7 @@ class SafeDisclosure(BaseModel):
 
 class SafeDisclosureCreate(BaseModel):
     is_anonymous: bool = False
+    report_type: str = "disclosure"  # "disclosure" | "formal_complaint"
     incident_type: str
     incident_date: Optional[str] = None
     incident_location: Optional[str] = None

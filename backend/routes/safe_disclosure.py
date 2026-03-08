@@ -96,6 +96,24 @@ class StatusUpdateData(BaseModel):
     notes: Optional[str] = None
 
 
+class CaseNoteData(BaseModel):
+    note: str
+    is_internal: bool = True
+
+
+class AssignData(BaseModel):
+    assignee_id: str
+    assignee_name: str
+
+
+class AppealData(BaseModel):
+    grounds: str
+
+
+class EscalateData(BaseModel):
+    reason: Optional[str] = None
+
+
 @router.post("", response_model=SafeDisclosure)
 async def create_safe_disclosure(
     disclosure_data: SafeDisclosureCreate,
@@ -107,12 +125,18 @@ async def create_safe_disclosure(
     # Risk assessment and support plan due within 48 hours per AU legislation
     deadline = now + timedelta(hours=48)
     
+    # For formal complaints submitted upfront, set the 45 business-day (≈63 calendar day) investigation deadline immediately
+    is_formal = disclosure_data.report_type == "formal_complaint"
+    investigation_deadline = (now + timedelta(days=63)).isoformat() if is_formal else None
+    initial_status = "investigation" if is_formal else "pending_risk_assessment"
+
     disclosure_dict = {
         "id": str(uuid.uuid4()),
         "reporter_id": None if disclosure_data.is_anonymous else current_user.id,
         "reporter_name": None if disclosure_data.is_anonymous else f"{current_user.first_name} {current_user.last_name}",
         "reporter_email": None if disclosure_data.is_anonymous else current_user.email,
         "is_anonymous": disclosure_data.is_anonymous,
+        "report_type": disclosure_data.report_type,
         "incident_type": disclosure_data.incident_type,
         "incident_date": disclosure_data.incident_date,
         "incident_location": disclosure_data.incident_location,
@@ -126,16 +150,19 @@ async def create_safe_disclosure(
         "support_requested": disclosure_data.support_requested,
         "preferred_contact": encrypt_field(disclosure_data.preferred_contact) if disclosure_data.preferred_contact else None,
         "additional_notes": disclosure_data.additional_notes,
-        "status": "pending_risk_assessment",
+        "status": initial_status,
         "urgency": "urgent" if disclosure_data.immediate_danger else "high" if disclosure_data.medical_attention_needed else "normal",
         "assigned_to": None,
+        "assigned_to_name": None,
         "risk_assessment_due": deadline.isoformat(),
         "support_plan_due": deadline.isoformat(),
         "risk_assessment": None,
         "support_plan": None,
         "safety_measures": [],
-        "formal_report": False,
-        "investigation_deadline": None,
+        "formal_report": is_formal,
+        "investigation_deadline": investigation_deadline,
+        "case_notes": [],
+        "appeal": None,
         "created_at": now.isoformat(),
         "updated_at": None
     }
@@ -790,6 +817,127 @@ async def export_annual_report_pdf(
     )
 
 
+@router.get("/overdue")
+async def get_overdue_cases(tenant_data: tuple = Depends(get_tenant_db_for_user)):
+    """List cases that are past or approaching their 45-day investigation deadline - admin only - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "ra", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    now = datetime.now(timezone.utc)
+    warning_threshold = now + timedelta(days=7)
+
+    cursor = tenant_db.safe_disclosures.find(
+        {"investigation_deadline": {"$ne": None}, "status": {"$nin": ["resolved", "appeal_resolved"]}},
+        {"_id": 0}
+    )
+    cases = await cursor.to_list(length=500)
+
+    overdue, approaching = [], []
+    for case in cases:
+        deadline_str = case.get("investigation_deadline")
+        if not deadline_str:
+            continue
+        try:
+            deadline = datetime.fromisoformat(deadline_str.replace("Z", "+00:00"))
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=timezone.utc)
+            if deadline < now:
+                case["overdue"] = True
+                case["days_overdue"] = (now - deadline).days
+                overdue.append(case)
+            elif deadline < warning_threshold:
+                case["overdue"] = False
+                case["days_remaining"] = (deadline - now).days
+                approaching.append(case)
+        except Exception:
+            continue
+
+    return {"overdue": overdue, "approaching_deadline": approaching, "total_overdue": len(overdue)}
+
+
+@router.get("/super-admin/stats")
+async def get_super_admin_stats(
+    year: Optional[int] = Query(None),
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Cross-college GBV statistics for super admin - aggregated per college, no case detail"""
+    _, current_user = tenant_data
+    if current_user.role not in ["super_admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+
+    from utils.multi_tenant import master_db, get_tenant_db
+
+    current_year = year or datetime.now(timezone.utc).year
+    academic_start = datetime(current_year, 7, 1, tzinfo=timezone.utc)
+    academic_end = datetime(current_year + 1, 6, 30, 23, 59, 59, tzinfo=timezone.utc)
+
+    tenants = await master_db.tenants.find({}, {"_id": 0, "code": 1, "name": 1}).to_list(length=500)
+    results = []
+
+    for tenant in tenants:
+        code = tenant.get("code")
+        name = tenant.get("name", code)
+        if not code:
+            continue
+        try:
+            tdb = get_tenant_db(code)
+            all_cases = await tdb.safe_disclosures.find(
+                {"created_at": {"$gte": academic_start.isoformat(), "$lte": academic_end.isoformat()}},
+                {"_id": 0, "status": 1, "formal_report": 1, "investigation_deadline": 1, "resolved_at": 1, "report_type": 1}
+            ).to_list(length=5000)
+
+            total = len(all_cases)
+            formal = sum(1 for c in all_cases if c.get("formal_report") or c.get("report_type") == "formal_complaint")
+            resolved = sum(1 for c in all_cases if c.get("status") == "resolved")
+            overdue_count = 0
+            resolved_in_time = 0
+            now = datetime.now(timezone.utc)
+
+            for c in all_cases:
+                dl = c.get("investigation_deadline")
+                if dl and c.get("status") not in ["resolved", "appeal_resolved"]:
+                    try:
+                        deadline = datetime.fromisoformat(dl.replace("Z", "+00:00"))
+                        if deadline.tzinfo is None:
+                            deadline = deadline.replace(tzinfo=timezone.utc)
+                        if deadline < now:
+                            overdue_count += 1
+                    except Exception:
+                        pass
+                if c.get("status") == "resolved" and dl:
+                    try:
+                        resolved_at = c.get("resolved_at")
+                        deadline = datetime.fromisoformat(dl.replace("Z", "+00:00"))
+                        if resolved_at:
+                            rat = datetime.fromisoformat(resolved_at.replace("Z", "+00:00"))
+                            if rat.tzinfo is None:
+                                rat = rat.replace(tzinfo=timezone.utc)
+                            if deadline.tzinfo is None:
+                                deadline = deadline.replace(tzinfo=timezone.utc)
+                            if rat <= deadline:
+                                resolved_in_time += 1
+                    except Exception:
+                        pass
+
+            compliance_rate = round((resolved_in_time / formal * 100), 1) if formal > 0 else None
+            results.append({
+                "college_code": code,
+                "college_name": name,
+                "total_cases": total,
+                "formal_complaints": formal,
+                "resolved": resolved,
+                "active": total - resolved,
+                "overdue": overdue_count,
+                "compliance_rate": compliance_rate,
+                "academic_year": f"{current_year}-{current_year + 1}"
+            })
+        except Exception as e:
+            results.append({"college_code": code, "college_name": name, "error": str(e)})
+
+    return {"year": current_year, "colleges": results, "generated_at": datetime.now(timezone.utc).isoformat()}
+
+
 @router.get("/{disclosure_id}")
 async def get_disclosure_by_id(
     disclosure_id: str,
@@ -1260,3 +1408,161 @@ async def forward_disclosure(
             status_code=500,
             detail=f"Failed to send email: {str(e)}"
         )
+
+
+@router.post("/{disclosure_id}/escalate")
+async def escalate_to_formal_complaint(
+    disclosure_id: str,
+    data: EscalateData = Body(default=EscalateData()),
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Convert a disclosure to a formal complaint, starting the 45 business-day clock - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "ra", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+    if existing.get("formal_report"):
+        raise HTTPException(status_code=400, detail="Already a formal complaint")
+
+    now = datetime.now(timezone.utc)
+    investigation_deadline = now + timedelta(days=63)
+
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {"$set": {
+            "report_type": "formal_complaint",
+            "formal_report": True,
+            "status": "investigation",
+            "investigation_deadline": investigation_deadline.isoformat(),
+            "escalated_by": current_user.id,
+            "escalated_by_name": f"{current_user.first_name} {current_user.last_name}",
+            "escalated_at": now.isoformat(),
+            "escalation_reason": data.reason,
+            "updated_at": now.isoformat()
+        }}
+    )
+
+    await log_admin_action(
+        db=tenant_db,
+        admin_id=current_user.id,
+        admin_email=current_user.email,
+        action_type=AdminActionType.DATA_MODIFICATION,
+        target_type="safe_disclosure",
+        target_id=disclosure_id,
+        details={"action": "escalate_to_formal", "reason": data.reason}
+    )
+
+    return {"message": "Escalated to formal complaint", "investigation_deadline": investigation_deadline.isoformat()}
+
+
+@router.post("/{disclosure_id}/assign")
+async def assign_case_worker(
+    disclosure_id: str,
+    data: AssignData,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Assign a disclosure to a named case worker - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    now = datetime.now(timezone.utc)
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {"$set": {
+            "assigned_to": data.assignee_id,
+            "assigned_to_name": data.assignee_name,
+            "updated_at": now.isoformat()
+        }}
+    )
+
+    await log_admin_action(
+        db=tenant_db,
+        admin_id=current_user.id,
+        admin_email=current_user.email,
+        action_type=AdminActionType.DATA_MODIFICATION,
+        target_type="safe_disclosure",
+        target_id=disclosure_id,
+        details={"action": "assign", "assignee_id": data.assignee_id, "assignee_name": data.assignee_name}
+    )
+
+    return {"message": "Case assigned", "assignee": data.assignee_name}
+
+
+@router.post("/{disclosure_id}/notes")
+async def add_case_note(
+    disclosure_id: str,
+    data: CaseNoteData,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Add an internal case note (admin-only audit trail) - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "ra", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    now = datetime.now(timezone.utc)
+    note_record = {
+        "id": str(uuid.uuid4()),
+        "note": data.note,
+        "is_internal": data.is_internal,
+        "created_by": current_user.id,
+        "created_by_name": f"{current_user.first_name} {current_user.last_name}",
+        "created_at": now.isoformat()
+    }
+
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {
+            "$push": {"case_notes": note_record},
+            "$set": {"updated_at": now.isoformat()}
+        }
+    )
+
+    return {"message": "Note added", "note": note_record}
+
+
+@router.post("/{disclosure_id}/appeal")
+async def initiate_appeal(
+    disclosure_id: str,
+    data: AppealData,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Student initiates an appeal within 20 business days of resolution - Standard 5 - tenant isolated"""
+    tenant_db, current_user = tenant_data
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+
+    if existing.get("status") != "resolved":
+        raise HTTPException(status_code=400, detail="Can only appeal a resolved case")
+
+    if existing.get("reporter_id") and existing["reporter_id"] != current_user.id:
+        if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+            raise HTTPException(status_code=403, detail="Not your case")
+
+    now = datetime.now(timezone.utc)
+    appeal_deadline = now + timedelta(days=28)
+
+    appeal_record = {
+        "grounds": data.grounds,
+        "initiated_by": current_user.id,
+        "initiated_by_name": f"{current_user.first_name} {current_user.last_name}",
+        "initiated_at": now.isoformat(),
+        "appeal_deadline": appeal_deadline.isoformat(),
+        "appeal_status": "appeal_under_review"
+    }
+
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {"$set": {
+            "status": "appeal_under_review",
+            "appeal": appeal_record,
+            "updated_at": now.isoformat()
+        }}
+    )
+
+    return {"message": "Appeal initiated", "appeal_deadline": appeal_deadline.isoformat()}

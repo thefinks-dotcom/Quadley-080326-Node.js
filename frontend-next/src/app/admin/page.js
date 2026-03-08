@@ -19,7 +19,9 @@ import {
   TrendingUp,
   Activity,
   ChevronRight,
-  LogOut
+  LogOut,
+  Heart,
+  FileText
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AuthContext, API } from '@/contexts/AuthContext';
@@ -313,6 +315,22 @@ const AdminDashboard = () => {
                   <p className="text-sm text-muted-foreground">Bulk import via CSV</p>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
+              </button>
+
+              <button
+                onClick={() => router.push('/admin/gbv')}
+                className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-orange-300 hover:bg-orange-50 transition-all group text-left"
+              >
+                <div className="p-3 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg group-hover:scale-105 transition-transform">
+                  {isSuperAdmin ? <FileText className="h-5 w-5 text-white" /> : <Heart className="h-5 w-5 text-white" />}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">GBV {isSuperAdmin ? 'Statistics' : 'Case Management'}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isSuperAdmin ? 'National GBV compliance overview' : 'Cases, 45-day tracking & board reports'}
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
               </button>
             </div>
           </CardContent>
