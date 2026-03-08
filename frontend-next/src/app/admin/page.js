@@ -349,6 +349,22 @@ const AdminDashboard = () => {
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
                 </button>
               )}
+
+              {!isSuperAdmin && (
+                <button
+                  onClick={() => router.push('/admin/relationships')}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-rose-300 hover:bg-rose-50 transition-all group text-left"
+                >
+                  <div className="p-3 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg group-hover:scale-105 transition-transform">
+                    <Heart className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Relationship Disclosures</h3>
+                    <p className="text-sm text-muted-foreground">Staff/student governance tracking</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-rose-500 transition-colors" />
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
