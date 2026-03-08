@@ -442,20 +442,20 @@ const ClubsModule = () => {
         title="Clubs"
         showBack={true}
         showSearch={false}
+        rightContent={
+          <button
+            onClick={() => setShowForm(v => !v)}
+            data-testid="create-club-btn"
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+          >
+            <Plus className="h-5 w-5 text-white" />
+          </button>
+        }
       />
       <div className="px-4 pt-4 pb-4 space-y-4">
 
-      <div className="flex items-center justify-between">
-        <h2 className="heading-font text-3xl font-bold">Clubs</h2>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-gradient-to-r from-primary to-secondary"
-          data-testid="create-club-btn"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Club
-        </Button>
-      </div>
+      <h2 className="heading-font text-3xl font-bold">Clubs</h2>
 
       {showForm && (
         <Card className="p-6 glass">

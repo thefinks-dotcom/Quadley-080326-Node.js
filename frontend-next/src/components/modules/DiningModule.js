@@ -101,20 +101,20 @@ const DiningModule = () => {
         title="Dining"
         showBack={true}
         showSearch={false}
+        rightContent={
+          <button
+            onClick={() => setShowRequestForm(v => !v)}
+            data-testid="request-late-meal-btn"
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+          >
+            <Plus className="h-5 w-5 text-white" />
+          </button>
+        }
       />
       <div className="px-4 pt-4 pb-4 space-y-4">
 
-      <div className="flex items-center justify-between">
-        <h2 className="heading-font text-3xl font-bold">Dining</h2>
-        <Button 
-          onClick={() => setShowRequestForm(!showRequestForm)}
-          data-testid="request-late-meal-btn"
-          className="bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-secondary"
-        >
-          <UtensilsCrossed className="mr-2 h-4 w-4" />
-          Request Late Meal
-        </Button>
-      </div>
+      <h2 className="heading-font text-3xl font-bold">Dining</h2>
 
       {/* Late Meal Request Form */}
       {showRequestForm && (

@@ -5,10 +5,14 @@ import axios from 'axios';
 import { AuthContext, API } from '@/contexts/AuthContext';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { Card } from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import { toast } from 'sonner';
 import {
   Megaphone, AlertCircle, AlertTriangle, CheckCircle, CheckCircle2,
-  Search, Archive, ShieldCheck, Home
+  Search, Archive, ShieldCheck, Home, Plus
 } from 'lucide-react';
 import ModuleHeader from '../ModuleHeader';
 
@@ -20,6 +24,9 @@ const AnnouncementsModule = () => {
   const [activeTab, setActiveTab] = useState('unread');
   const [markingRead, setMarkingRead] = useState(new Set());
   const [respondingTo, setRespondingTo] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '', priority: 'normal' });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -92,6 +99,27 @@ const AnnouncementsModule = () => {
       ann.content?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const createAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) {
+      toast.error('Title and content are required');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/announcements`, newAnnouncement);
+      toast.success('Announcement posted');
+      setShowCreateForm(false);
+      setNewAnnouncement({ title: '', content: '', priority: 'normal' });
+      fetchAll();
+    } catch {
+      toast.error('Failed to post announcement');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const ADMIN_RA_ROLES = ['admin', 'super_admin', 'college_admin', 'ra'];
   const pendingRollcalls = activeRollcalls.filter(r => !r.my_response);
 
   return (
@@ -101,9 +129,57 @@ const AnnouncementsModule = () => {
         subtitle={`${unreadAnnouncements.length} unread${pendingRollcalls.length > 0 ? ` · ${pendingRollcalls.length} roll call pending` : ''}`}
         showBack
         showSearch={false}
+        rightContent={
+          ADMIN_RA_ROLES.includes(user?.role) ? (
+            <button
+              onClick={() => setShowCreateForm(v => !v)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.2)' }}
+            >
+              <Plus className="h-5 w-5 text-white" />
+            </button>
+          ) : null
+        }
       />
 
       <div className="px-4 pt-4 pb-6 space-y-4">
+
+        {showCreateForm && ADMIN_RA_ROLES.includes(user?.role) && (
+          <Card className="p-4">
+            <form onSubmit={createAnnouncement} className="space-y-3">
+              <h3 className="font-semibold">New Announcement</h3>
+              <div>
+                <Label>Title *</Label>
+                <Input className="mt-1" placeholder="Announcement title"
+                  value={newAnnouncement.title}
+                  onChange={e => setNewAnnouncement(a => ({ ...a, title: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Content *</Label>
+                <Textarea className="mt-1" rows={3} placeholder="Write your announcement..."
+                  value={newAnnouncement.content}
+                  onChange={e => setNewAnnouncement(a => ({ ...a, content: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Priority</Label>
+                <select className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background"
+                  value={newAnnouncement.priority}
+                  onChange={e => setNewAnnouncement(a => ({ ...a, priority: e.target.value }))}>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button type="submit" disabled={submitting} className="flex-1">
+                  {submitting ? 'Posting...' : 'Post Announcement'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>Cancel</Button>
+              </div>
+            </form>
+          </Card>
+        )}
+
         {pendingRollcalls.length > 0 && (
           <div className="rounded-2xl bg-red-600 text-white p-4 shadow-lg animate-pulse-once">
             <div className="flex items-center gap-2 mb-1">

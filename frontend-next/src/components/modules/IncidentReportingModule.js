@@ -101,23 +101,23 @@ const IncidentReportingModule = () => {
         title="Safe Disclosure"
         showBack={true}
         showSearch={false}
+        rightContent={
+          user?.role === 'ra' ? (
+            <button
+              onClick={() => setShowCreateForm(v => !v)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.2)' }}
+            >
+              <Plus className="h-5 w-5 text-white" />
+            </button>
+          ) : null
+        }
       />
       <div className="px-4 pt-4 pb-4 space-y-4">
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="heading-font text-3xl font-bold">Incident Reporting</h2>
-          <p className="text-muted-foreground">Report and track floor incidents</p>
-        </div>
-        {user?.role === 'ra' && (
-          <Button 
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="bg-gradient-to-r from-destructive to-secondary"
-          >
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Report Incident
-          </Button>
-        )}
+      <div>
+        <h2 className="heading-font text-3xl font-bold">Incident Reporting</h2>
+        <p className="text-muted-foreground">Report and track floor incidents</p>
       </div>
 
       {showCreateForm && user?.role === 'ra' && (

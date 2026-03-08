@@ -343,6 +343,16 @@ const MessagesModule = () => {
         searchValue={conversationSearch}
         onSearchChange={setConversationSearch}
         searchPlaceholder="Search conversations..."
+        rightContent={
+          <button
+            onClick={() => { setSelectedUsers([]); setGroupName(''); setUserSearch(''); setShowNewChatModal(true); }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+            aria-label="New conversation"
+          >
+            <Plus className="h-5 w-5 text-white" />
+          </button>
+        }
       />
 
       <div className="px-4 pt-4 pb-2">
@@ -427,34 +437,6 @@ const MessagesModule = () => {
         )}
       </div>
 
-      <div className="fixed bottom-20 right-4 flex flex-col gap-3 z-40">
-        <button
-          onClick={() => {
-            setSelectedUsers([]);
-            setGroupName('');
-            setUserSearch('');
-            setShowNewChatModal('group');
-          }}
-          className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
-          style={{ background: 'hsl(var(--primary))' }}
-          aria-label="New group chat"
-        >
-          <UserPlus className="h-6 w-6 text-white" />
-        </button>
-        <button
-          onClick={() => {
-            setSelectedUsers([]);
-            setGroupName('');
-            setUserSearch('');
-            setShowNewChatModal('direct');
-          }}
-          className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
-          style={{ background: 'hsl(var(--primary))' }}
-          aria-label="New message"
-        >
-          <Edit3 className="h-6 w-6 text-white" />
-        </button>
-      </div>
 
       {showNewChatModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setShowNewChatModal(false)}>

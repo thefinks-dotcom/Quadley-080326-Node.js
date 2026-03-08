@@ -53,16 +53,19 @@ const MaintenanceModule = () => {
         title="Services"
         showBack={true}
         showSearch={false}
+        rightContent={
+          <button
+            onClick={() => setShowForm(v => !v)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+          >
+            <Plus className="h-5 w-5 text-white" />
+          </button>
+        }
       />
       <div className="px-4 pt-4 pb-4 space-y-4">
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold gradient-text">🔧 Maintenance</h1>
-        <Button onClick={() => setShowForm(!showForm)} className="bg-gradient-to-r from-primary to-destructive">
-          <Plus className="mr-2 h-4 w-4" />
-          New Request
-        </Button>
-      </div>
+      <h1 className="text-3xl font-bold">Maintenance</h1>
 
       {showForm && (
         <Card className="p-6">

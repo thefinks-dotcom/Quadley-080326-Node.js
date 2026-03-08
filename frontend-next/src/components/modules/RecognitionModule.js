@@ -153,6 +153,16 @@ const RecognitionModule = () => {
         title="Recognition"
         showBack={true}
         showSearch={false}
+        rightContent={
+          <button
+            onClick={() => setShowShoutoutForm(v => !v)}
+            data-testid="create-shoutout-btn"
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+          >
+            <Plus className="h-5 w-5 text-white" />
+          </button>
+        }
       />
       <div className="px-4 pt-4 pb-4 space-y-4">
 
@@ -163,12 +173,8 @@ const RecognitionModule = () => {
       <p className="text-muted-foreground">Celebrate your peers with shoutouts for kindness, achievements, and help!</p>
 
       <Card className="p-6 glass">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <h3 className="font-semibold text-lg">Send a Shoutout</h3>
-          <Button onClick={() => setShowShoutoutForm(!showShoutoutForm)} data-testid="create-shoutout-btn">
-            <Plus className="mr-2 h-4 w-4" />
-            New Shoutout
-          </Button>
         </div>
 
         {showShoutoutForm && (
