@@ -152,8 +152,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Stats Overview — super admin only */}
+        {isSuperAdmin && <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {isSuperAdmin && (
             <Card 
               className="bg-gradient-to-br from-warning/10 to-warning/10 border-border cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
@@ -194,62 +194,7 @@ const AdminDashboard = () => {
             </Card>
           )}
 
-          <Card 
-            className="bg-gradient-to-br from-muted to-muted border-border cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
-            onClick={() => router.push('/admin/users')}
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary">Total Users</p>
-                  <p className="text-3xl font-bold text-foreground mt-1">{stats.totalUsers}</p>
-                </div>
-                <div className="p-2 bg-muted/50 rounded-lg">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-              <p className="text-xs text-primary mt-3">Click to view all →</p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="bg-gradient-to-br from-success/10 to-success/10 border-success cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
-            onClick={() => router.push('/admin/users')}
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-success">Active Users</p>
-                  <p className="text-3xl font-bold text-success mt-1">{stats.activeUsers}</p>
-                </div>
-                <div className="p-2 bg-success/40/50 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-success" />
-                </div>
-              </div>
-              <p className="text-xs text-success mt-3">Click to view all →</p>
-            </CardContent>
-          </Card>
-
-          {stats.inactiveUsers > 0 && (
-            <Card 
-              className="bg-gradient-to-br from-destructive/10 to-muted border-destructive/20 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
-              onClick={() => router.push('/admin/users')}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-destructive">Inactive Users</p>
-                    <p className="text-3xl font-bold text-destructive mt-1">{stats.inactiveUsers}</p>
-                  </div>
-                  <div className="p-2 bg-destructive/40/50 rounded-lg">
-                    <AlertCircle className="h-5 w-5 text-destructive" />
-                  </div>
-                </div>
-                <p className="text-xs text-destructive mt-3">Click to review →</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        </div>}
 
         {/* Quick Actions — top 4 tiles */}
         {!isSuperAdmin && (
