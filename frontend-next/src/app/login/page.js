@@ -16,7 +16,7 @@ import TenantLogo from '@/components/TenantLogo';
 import { Shield, Key, CheckCircle, ArrowRight, Lock, Users, Calendar, Award, Eye, EyeOff } from 'lucide-react';
 
 const getRedirectPath = (user) => {
-  if (user?.role === 'super_admin') return '/admin';
+  if (['super_admin', 'admin', 'college_admin'].includes(user?.role)) return '/admin';
   return '/dashboard';
 };
 

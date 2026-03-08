@@ -66,7 +66,10 @@ const MessagesModule = () => {
 
   useEffect(() => {
     const filtered = userSearch.trim()
-      ? users.filter(u => u.id !== user?.id && (u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase())))
+      ? users.filter(u => {
+          const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+          return u.id !== user?.id && (fullName.includes(userSearch.toLowerCase()) || (u.email || '').toLowerCase().includes(userSearch.toLowerCase()));
+        })
       : users.filter(u => u.id !== user?.id);
     setFilteredUsers(filtered);
   }, [userSearch, users, user]);
@@ -76,7 +79,7 @@ const MessagesModule = () => {
   const fetchConversations = async () => {
     try {
       const res = await axios.get(`${API}/conversations`);
-      setConversations(res.data);
+      setConversations(Array.isArray(res.data) ? res.data : []);
     } catch {}
   };
 
@@ -106,8 +109,9 @@ const MessagesModule = () => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(`${API}/users`);
-      setUsers(res.data);
-      setFilteredUsers(res.data.filter(u => u.id !== user?.id));
+      const data = Array.isArray(res.data) ? res.data : [];
+      setUsers(data);
+      setFilteredUsers(data.filter(u => u.id !== user?.id));
     } catch {}
   };
 
@@ -309,10 +313,10 @@ const MessagesModule = () => {
                   <div key={member.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
                       style={{ background: 'hsl(252 57% 90%)', color: 'hsl(var(--primary))' }}>
-                      {member.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {`${member.first_name || ''} ${member.last_name || ''}`.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm">{member.name}</p>
+                      <p className="font-semibold text-sm">{member.first_name} {member.last_name}</p>
                       <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
                     </div>
                     {member.id === user?.id && (
@@ -470,7 +474,7 @@ const MessagesModule = () => {
                   {selectedUsers.map(u => (
                     <span key={u.id} className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full text-white"
                       style={{ background: 'hsl(var(--primary))' }}>
-                      {u.name}
+                      {u.first_name} {u.last_name}
                       <button onClick={() => toggleUserSelection(u)}><X className="h-3 w-3" /></button>
                     </span>
                   ))}
@@ -507,10 +511,10 @@ const MessagesModule = () => {
                     className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-colors ${isSelected ? 'bg-primary/10' : 'hover:bg-muted'}`}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
                       style={{ background: 'hsl(252 57% 90%)', color: 'hsl(var(--primary))' }}>
-                      {u.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {`${u.first_name || ''} ${u.last_name || ''}`.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm">{u.name}</p>
+                      <p className="font-semibold text-sm">{u.first_name} {u.last_name}</p>
                       <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
                     </div>
                     {isSelected && (

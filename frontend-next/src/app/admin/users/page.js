@@ -49,6 +49,11 @@ const UserManagement = () => {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [userToToggle, setUserToToggle] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [showDeclarationDialog, setShowDeclarationDialog] = useState(false);
+  const [userForDeclaration, setUserForDeclaration] = useState(null);
+  const [declarationChecked, setDeclarationChecked] = useState(false);
+  const [declarationNotes, setDeclarationNotes] = useState('');
+  const [declarationLoading, setDeclarationLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -139,6 +144,27 @@ const UserManagement = () => {
       toast.error(typeof detail === 'string' ? detail : 'Failed to update user status');
     } finally {
       setStatusLoading(false);
+    }
+  };
+
+  const handleUpdateDeclaration = async () => {
+    if (!userForDeclaration) return;
+    setDeclarationLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/gbv-training/gbv-declaration`,
+        { user_id: userForDeclaration.id, has_declaration: declarationChecked, declaration_notes: declarationNotes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('GBV declaration status updated');
+      setShowDeclarationDialog(false);
+      setUserForDeclaration(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update declaration');
+    } finally {
+      setDeclarationLoading(false);
     }
   };
 
@@ -377,13 +403,24 @@ const UserManagement = () => {
                         {user.floor || <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        <Badge className={`${
-                          user.active !== false
-                            ? 'bg-success/10 text-success hover:bg-success/10'
-                            : 'bg-destructive/10 text-destructive hover:bg-destructive/10'
-                        }`}>
-                          {user.active !== false ? 'Active' : 'Inactive'}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge className={`${
+                            user.active !== false
+                              ? 'bg-success/10 text-success hover:bg-success/10'
+                              : 'bg-destructive/10 text-destructive hover:bg-destructive/10'
+                          }`}>
+                            {user.active !== false ? 'Active' : 'Inactive'}
+                          </Badge>
+                          {['admin', 'ra', 'college_admin'].includes(user.role) && (
+                            <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border w-fit ${
+                              user.gbv_declaration
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}>
+                              {user.gbv_declaration ? '✓ GBV Declared' : '⚠ No Declaration'}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -402,9 +439,25 @@ const UserManagement = () => {
                               <CheckCircle className="h-4 w-4 text-success" />
                             )}
                           </Button>
-                          <Button size="sm" variant="ghost">
-                            <Edit className="h-4 w-4 text-muted-foreground" />
-                          </Button>
+                          {['admin', 'ra', 'college_admin'].includes(user.role) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Update GBV declaration"
+                              onClick={() => {
+                                setUserForDeclaration(user);
+                                setDeclarationChecked(!!user.gbv_declaration);
+                                setDeclarationNotes(user.gbv_declaration_notes || '');
+                                setShowDeclarationDialog(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="ghost" disabled>
+                              <Edit className="h-4 w-4 text-muted-foreground/40" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"
@@ -480,6 +533,54 @@ const UserManagement = () => {
                 className={userToToggle?.active !== false ? 'bg-warning hover:bg-warning' : 'bg-success hover:bg-success'}
               >
                 {statusLoading ? 'Processing...' : (userToToggle?.active !== false ? 'Deactivate' : 'Activate')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* GBV Declaration Dialog */}
+        <Dialog open={showDeclarationDialog} onOpenChange={setShowDeclarationDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Pre-employment GBV Declaration</DialogTitle>
+              <DialogDescription>
+                Standard 1 — National Higher Education Code. Record whether <strong>{userForDeclaration?.first_name} {userForDeclaration?.last_name}</strong> has provided a pre-employment GBV declaration.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="flex items-start gap-3 p-3 rounded-lg border border-border">
+                <Checkbox
+                  id="gbv-declaration-check"
+                  checked={declarationChecked}
+                  onCheckedChange={setDeclarationChecked}
+                  className="mt-0.5"
+                />
+                <label htmlFor="gbv-declaration-check" className="text-sm cursor-pointer leading-relaxed">
+                  This person has provided a pre-employment GBV declaration confirming they have not been subject to an unresolved GBV finding or investigation.
+                </label>
+              </div>
+              {!declarationChecked && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                  <span>⚠</span>
+                  <span>Standard 1 requires this declaration before appointment to staff or RA roles.</span>
+                </div>
+              )}
+              <div>
+                <label className="text-sm font-medium">Notes (optional)</label>
+                <Input
+                  className="mt-1"
+                  placeholder="e.g. Declaration form ref, date received..."
+                  value={declarationNotes}
+                  onChange={e => setDeclarationNotes(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeclarationDialog(false)} disabled={declarationLoading}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateDeclaration} disabled={declarationLoading}>
+                {declarationLoading ? 'Saving...' : 'Save Declaration'}
               </Button>
             </DialogFooter>
           </DialogContent>

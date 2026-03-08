@@ -21,7 +21,8 @@ import {
   ChevronRight,
   LogOut,
   Heart,
-  FileText
+  FileText,
+  GraduationCap
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AuthContext, API } from '@/contexts/AuthContext';
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
         }
       } else {
         try {
-          const tenantRes = await axios.get(`${API}/tenants/${currentUser.tenant_id}`);
+          const tenantRes = await axios.get(`${API}/tenants/${currentUser.tenant_code}`);
           setTenant(tenantRes.data);
         } catch (e) {
           console.error('Failed to fetch tenant', e);
@@ -332,6 +333,22 @@ const AdminDashboard = () => {
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-orange-500 transition-colors" />
               </button>
+
+              {!isSuperAdmin && (
+                <button
+                  onClick={() => router.push('/admin/training')}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-purple-300 hover:bg-purple-50 transition-all group text-left"
+                >
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg group-hover:scale-105 transition-transform">
+                    <GraduationCap className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">GBV Training</h3>
+                    <p className="text-sm text-muted-foreground">Staff training compliance — Standard 3</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>

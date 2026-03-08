@@ -142,6 +142,42 @@ frontend/            # CRA backup (kept for reference)
 - Admin dashboards (college admin, super admin)
 - GDPR compliance features
 - OWASP security hardening
+- GBV compliance (F2025L01251) — see below
+
+## GBV Compliance (F2025L01251)
+Full implementation of the National Higher Education Code to Prevent and Respond to GBV.
+
+### Student Flow (`/dashboard/safe-disclosure` → `SafeDisclosureModule.js`)
+- **Step 1**: Choice between Disclosure (support only) and Formal Complaint (investigation)
+- Disclosure: support coordinator within 48h, no investigation without consent
+- Formal Complaint: 45 business-day (63 calendar day) investigation clock starts immediately at submission
+- Confirmation page with case reference number and plain-language "what happens next"
+- **Student case tracker**: view own submissions with plain-language status and appeal option
+- Appeals: students can appeal within 20 business days of resolution via `POST /api/safe-disclosures/{id}/appeal`
+
+### Admin Case Management (`/admin/gbv` → `frontend-next/src/app/admin/gbv/page.js`)
+- Full case list with filter tabs: All | Formal | Disclosure | Active | Overdue | Resolved
+- **Overdue alert banner** when cases exceed 45-day deadline
+- 45-day countdown badges (red if overdue, amber if <7 days)
+- Case detail modal with 5 tabs: Case Details | Risk Assessment | Support Plan | Notes | Actions
+- Action buttons driven by status: Complete Risk Assessment → Create Support Plan → Escalate to Formal → Resolve
+- Internal case notes (admin audit trail)
+- **Annual report / board submission**: generate CSV or PDF for governing board (Standard 6)
+- Super admin sees per-college statistics overview (no individual case detail per user requirement)
+
+### Backend Routes (`backend/routes/safe_disclosure.py`)
+- `POST /` — create disclosure/formal complaint (report_type field, investigation_deadline set at submission for formal)
+- `PUT /{id}/risk-assessment` — complete risk assessment (Standard 4.4)
+- `PUT /{id}/support-plan` — create support plan (Standard 4.6)
+- `PUT /{id}/formal-report` — admin escalation from disclosure to formal complaint
+- `POST /{id}/escalate` — same, with reason field
+- `POST /{id}/assign` — assign to named case worker
+- `POST /{id}/notes` — add internal case note
+- `POST /{id}/appeal` — student initiates appeal (20 business-day deadline)
+- `PUT /{id}/resolve` — mark resolved
+- `GET /overdue` — cases past or approaching 45-day deadline
+- `GET /super-admin/stats` — cross-tenant statistics for super admin only
+- `GET /annual-report/{year}/export/csv` and `/pdf` — board submission export
 
 ## User Role System
 - **Super Admin** (`super_admin`) — MFA required, platform-wide access

@@ -23,6 +23,7 @@ import ModuleHeader from '@/components/ModuleHeader';
 
 const ProfileModule = () => {
   const { user, setUser, logout } = useContext(AuthContext);
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [changingEmail, setChangingEmail] = useState(false);
@@ -350,6 +351,24 @@ const ProfileModule = () => {
           </Button>
         )}
       </Card>
+
+      {['admin', 'super_admin', 'college_admin'].includes(user?.role) && (
+        <Card className="p-4 glass">
+          <button
+            onClick={() => router.push('/admin')}
+            className="w-full flex items-center gap-4 p-3 rounded-xl border border-border hover:bg-muted transition-all group text-left"
+          >
+            <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:scale-105 transition-transform">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">Admin Portal</p>
+              <p className="text-xs text-muted-foreground">Manage your college, cases & reports</p>
+            </div>
+            <Settings className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </button>
+        </Card>
+      )}
 
       {/* Change Email Section */}
       <Card className="p-6 glass" data-testid="change-email-card">

@@ -114,6 +114,22 @@ class EscalateData(BaseModel):
     reason: Optional[str] = None
 
 
+class NSOEscalationData(BaseModel):
+    reference: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class RespondentData(BaseModel):
+    respondent_name: str
+    respondent_id: Optional[str] = None
+
+
+class InterimMeasureData(BaseModel):
+    measure_type: str
+    description: str
+    date_imposed: Optional[str] = None
+
+
 @router.post("", response_model=SafeDisclosure)
 async def create_safe_disclosure(
     disclosure_data: SafeDisclosureCreate,
@@ -1566,3 +1582,141 @@ async def initiate_appeal(
     )
 
     return {"message": "Appeal initiated", "appeal_deadline": appeal_deadline.isoformat()}
+
+
+@router.post("/{disclosure_id}/escalate-nso")
+async def escalate_to_nso(
+    disclosure_id: str,
+    data: NSOEscalationData = Body(default=NSOEscalationData()),
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Record external escalation to the National Student Ombudsman - Standard 5 - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+
+    now = datetime.now(timezone.utc)
+    nso_record = {
+        "nso_escalated": True,
+        "nso_escalation_date": now.isoformat(),
+        "nso_reference": data.reference or "",
+        "nso_notes": data.notes or "",
+        "nso_escalated_by": current_user.id,
+        "nso_escalated_by_name": f"{current_user.first_name} {current_user.last_name}",
+        "updated_at": now.isoformat()
+    }
+
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {"$set": nso_record}
+    )
+
+    await log_admin_action(
+        db=tenant_db,
+        admin_id=current_user.id,
+        admin_email=current_user.email,
+        action_type=AdminActionType.DATA_MODIFICATION,
+        target_type="safe_disclosure",
+        target_id=disclosure_id,
+        details={"action": "escalate_nso", "reference": data.reference}
+    )
+
+    return {"message": "Case escalated to National Student Ombudsman", "escalation_date": now.isoformat()}
+
+
+@router.put("/{disclosure_id}/respondent")
+async def update_respondent(
+    disclosure_id: str,
+    data: RespondentData,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Record respondent information against a case - Standard 1 - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+
+    now = datetime.now(timezone.utc)
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {"$set": {
+            "respondent_name": data.respondent_name,
+            "respondent_id": data.respondent_id,
+            "respondent_recorded_by": f"{current_user.first_name} {current_user.last_name}",
+            "respondent_recorded_at": now.isoformat(),
+            "updated_at": now.isoformat()
+        }}
+    )
+
+    return {"message": "Respondent information recorded"}
+
+
+@router.post("/{disclosure_id}/interim-measures")
+async def add_interim_measure(
+    disclosure_id: str,
+    data: InterimMeasureData,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Add an interim protective measure to a case - Standard 1 - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+
+    now = datetime.now(timezone.utc)
+    measure = {
+        "id": str(uuid.uuid4()),
+        "measure_type": data.measure_type,
+        "description": data.description,
+        "date_imposed": data.date_imposed or now.isoformat(),
+        "imposed_by": current_user.id,
+        "imposed_by_name": f"{current_user.first_name} {current_user.last_name}",
+        "recorded_at": now.isoformat()
+    }
+
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {
+            "$push": {"interim_measures": measure},
+            "$set": {"updated_at": now.isoformat()}
+        }
+    )
+
+    return {"message": "Interim measure added", "measure": measure}
+
+
+@router.delete("/{disclosure_id}/interim-measures/{measure_id}")
+async def remove_interim_measure(
+    disclosure_id: str,
+    measure_id: str,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Remove an interim measure from a case - tenant isolated"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Disclosure not found")
+
+    now = datetime.now(timezone.utc)
+    await tenant_db.safe_disclosures.update_one(
+        {"id": disclosure_id},
+        {
+            "$pull": {"interim_measures": {"id": measure_id}},
+            "$set": {"updated_at": now.isoformat()}
+        }
+    )
+
+    return {"message": "Interim measure removed"}

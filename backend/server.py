@@ -1333,6 +1333,7 @@ from routes import bookings as bookings_routes
 from routes import delight as delight_routes
 from routes import wellbeing as wellbeing_routes
 from routes import safe_disclosure as safe_disclosure_routes
+from routes import gbv_training as gbv_training_routes
 from routes import tutoring as tutoring_routes
 from routes import parcels as parcels_routes
 from routes import move_in as move_in_routes
@@ -1377,6 +1378,7 @@ api_router.include_router(bookings_routes.router)
 api_router.include_router(delight_routes.router)
 api_router.include_router(wellbeing_routes.router)
 api_router.include_router(safe_disclosure_routes.router)
+api_router.include_router(gbv_training_routes.router)
 api_router.include_router(tutoring_routes.router)
 api_router.include_router(parcels_routes.router)
 api_router.include_router(move_in_routes.router)

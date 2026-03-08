@@ -4,13 +4,22 @@ import { useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import OnboardingModal from '@/components/OnboardingModal';
-import { LayoutGrid, MessageCircle, User } from 'lucide-react';
+import { LayoutGrid, MessageCircle, User, Shield } from 'lucide-react';
 
-const BOTTOM_NAV_TABS = [
+const STUDENT_TABS = [
   { id: 'home', label: 'Dashboard', icon: LayoutGrid, path: '/dashboard' },
   { id: 'messages', label: 'Messages', icon: MessageCircle, path: '/dashboard/messages' },
   { id: 'profile', label: 'Profile', icon: User, path: '/dashboard/profile' },
 ];
+
+const ADMIN_TABS = [
+  { id: 'home', label: 'Dashboard', icon: LayoutGrid, path: '/dashboard' },
+  { id: 'messages', label: 'Messages', icon: MessageCircle, path: '/dashboard/messages' },
+  { id: 'admin', label: 'Admin', icon: Shield, path: '/admin', external: true },
+  { id: 'profile', label: 'Profile', icon: User, path: '/dashboard/profile' },
+];
+
+const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin', 'ra'];
 
 export default function DashboardLayout({ children }) {
   const { user, loading } = useContext(AuthContext);
@@ -32,9 +41,12 @@ export default function DashboardLayout({ children }) {
 
   if (loading || !user) return null;
 
-  const isTabActive = (path) => {
-    if (path === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(path);
+  const tabs = ADMIN_ROLES.includes(user.role) ? ADMIN_TABS : STUDENT_TABS;
+
+  const isTabActive = (tab) => {
+    if (tab.external) return false;
+    if (tab.path === '/dashboard') return pathname === '/dashboard';
+    return pathname.startsWith(tab.path);
   };
 
   return (
@@ -51,9 +63,9 @@ export default function DashboardLayout({ children }) {
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 flex items-center justify-around"
         style={{ height: 'var(--bottom-nav-height)' }}
       >
-        {BOTTOM_NAV_TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
-          const active = isTabActive(tab.path);
+          const active = isTabActive(tab);
           return (
             <button
               key={tab.id}
