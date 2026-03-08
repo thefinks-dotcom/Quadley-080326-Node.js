@@ -56,6 +56,7 @@ const MODULE_MAP = {
   'ra-floor':     RAFloorManagementModule,
   'ra-events':    RAFloorEventsModule,
   admin:          AdminModule,
+  jobs:           AdminModule,
   parcels:        ParcelsModule,
 };
 
