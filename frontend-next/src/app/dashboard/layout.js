@@ -15,7 +15,7 @@ const STUDENT_TABS = [
 const ADMIN_TABS = [
   { id: 'home', label: 'Dashboard', icon: LayoutGrid, path: '/dashboard' },
   { id: 'messages', label: 'Messages', icon: MessageCircle, path: '/dashboard/messages' },
-  { id: 'admin', label: 'Admin', icon: Shield, path: '/admin', external: true },
+  { id: 'admin', label: 'Admin', icon: Shield, path: '/dashboard/admin' },
   { id: 'profile', label: 'Profile', icon: User, path: '/dashboard/profile' },
 ];
 

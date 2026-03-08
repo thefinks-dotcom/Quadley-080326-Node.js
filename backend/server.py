@@ -1424,6 +1424,23 @@ api_router.include_router(compliance_routes.router)
 
 from utils.auth import get_current_user as tenant_get_current_user
 
+# Users directory endpoint - TENANT ISOLATED, accessible to all authenticated users
+# Used by Messages (new conversation search) and Parcels (student search)
+@api_router.get("/users")
+async def get_users_directory(
+    current_user = Depends(tenant_get_current_user),
+):
+    """Return all users in the tenant for directory/messaging purposes - tenant isolated"""
+    from utils.multi_tenant import get_tenant_db
+    tenant_code = getattr(current_user, 'tenant_code', None)
+    if not tenant_code:
+        raise HTTPException(status_code=403, detail="Tenant context required")
+    user_db = get_tenant_db(tenant_code)
+
+    users = await user_db.users.find({}, {"_id": 0, "password": 0, "mfa_secret": 0, "mfa_backup_codes": 0, "setup_token": 0}).to_list(1000)
+    return users
+
+
 # Users list endpoint - TENANT ISOLATED (OWASP A01 fix)
 @api_router.get("/users/list")
 async def get_users_list(
