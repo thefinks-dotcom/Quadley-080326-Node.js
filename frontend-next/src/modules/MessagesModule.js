@@ -250,7 +250,7 @@ const MessagesModule = () => {
     const [colorFrom, colorTo] = getAvatarColors(chatName);
 
     return (
-      <div className="flex flex-col bg-background" style={{ height: '100dvh' }} data-testid="chat-view">
+      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 40 }} data-testid="chat-view">
         {/* Chat header */}
         <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
           style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})`, paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
@@ -274,7 +274,7 @@ const MessagesModule = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F5F4FB' }}>
+        <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F5F4FB', minHeight: 0 }}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center pb-8">
               <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-3"
@@ -354,7 +354,7 @@ const MessagesModule = () => {
 
         {/* Input bar */}
         <div className="flex-shrink-0 bg-white border-t border-border px-4 pt-3"
-          style={{ paddingBottom: 'calc(var(--bottom-nav-height, 72px) + 8px)' }}>
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           <form onSubmit={sendMessage} className="flex items-end gap-2">
             <textarea
               ref={textareaRef}
@@ -418,7 +418,7 @@ const MessagesModule = () => {
   // ── NEW CONVERSATION VIEW ──────────────────────────────────────────────────
   if (view === 'new') {
     return (
-      <div className="flex flex-col bg-background" style={{ height: '100dvh' }}>
+      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 40 }}>
         {/* Header */}
         <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
           style={{ background: 'hsl(var(--primary))', paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
