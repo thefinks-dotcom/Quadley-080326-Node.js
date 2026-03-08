@@ -251,11 +251,51 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — top 4 tiles */}
+        {!isSuperAdmin && (
+          <div className="mb-6">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Tile 1 — Announcements */}
+              <button
+                onClick={() => router.push('/admin/announcements')}
+                className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl bg-white border-2 border-blue-200 hover:border-blue-400 hover:shadow-md transition-all group text-center shadow-sm"
+              >
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl group-hover:scale-105 transition-transform shadow">
+                  <Megaphone className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-foreground">Announcements</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Post · receipts · push</p>
+                </div>
+              </button>
+
+              {/* Tile 2 — placeholder */}
+              <div className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 border-dashed border-border bg-muted/30 text-center opacity-40">
+                <div className="w-12 h-12 rounded-xl bg-muted" />
+                <div className="w-16 h-2 rounded bg-muted" />
+              </div>
+
+              {/* Tile 3 — placeholder */}
+              <div className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 border-dashed border-border bg-muted/30 text-center opacity-40">
+                <div className="w-12 h-12 rounded-xl bg-muted" />
+                <div className="w-16 h-2 rounded bg-muted" />
+              </div>
+
+              {/* Tile 4 — placeholder */}
+              <div className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border-2 border-dashed border-border bg-muted/30 text-center opacity-40">
+                <div className="w-12 h-12 rounded-xl bg-muted" />
+                <div className="w-16 h-2 rounded bg-muted" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Management */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+            <CardTitle className="text-lg">Management</CardTitle>
+            <CardDescription>Administrative tools and compliance</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -291,6 +331,7 @@ const AdminDashboard = () => {
                 </button>
               )}
 
+              {/* User Management — includes bulk import */}
               <button
                 onClick={() => router.push('/admin/users')}
                 className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-border hover:bg-muted transition-all group text-left"
@@ -300,21 +341,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">User Management</h3>
-                  <p className="text-sm text-muted-foreground">View & manage users</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
-              </button>
-
-              <button
-                onClick={() => router.push('/admin/users/csv-upload')}
-                className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-border hover:bg-muted transition-all group text-left"
-              >
-                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:scale-105 transition-transform">
-                  <Upload className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Import Users</h3>
-                  <p className="text-sm text-muted-foreground">Bulk import via CSV</p>
+                  <p className="text-sm text-muted-foreground">View, manage & bulk import via CSV</p>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
               </button>
@@ -348,22 +375,6 @@ const AdminDashboard = () => {
                     <p className="text-sm text-muted-foreground">Staff training compliance — Standard 3</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
-                </button>
-              )}
-
-              {!isSuperAdmin && (
-                <button
-                  onClick={() => router.push('/admin/announcements')}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-blue-300 hover:bg-blue-50 transition-all group text-left"
-                >
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg group-hover:scale-105 transition-transform">
-                    <Megaphone className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">Announcements</h3>
-                    <p className="text-sm text-muted-foreground">Post updates · read receipts · push</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
                 </button>
               )}
 
