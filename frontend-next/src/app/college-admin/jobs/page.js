@@ -12,7 +12,7 @@ import {
   ArrowLeft, Mail, Send
 } from 'lucide-react';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL + '/api';
+const API = '/api';
 
 const CollegeJobsAdmin = () => {
   const { user } = useContext(AuthContext);
@@ -256,8 +256,8 @@ const CollegeJobsAdmin = () => {
 
   const handleDownloadResume = async (resumeUrl, applicantName) => {
     try {
-      // Construct full URL - resumeUrl already includes /api/uploads/...
-      const fullUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}${resumeUrl}`;
+      // resumeUrl already includes /api/uploads/... so use it directly
+      const fullUrl = resumeUrl;
       console.log('Downloading from:', fullUrl);
       
       const response = await axios.get(fullUrl, {

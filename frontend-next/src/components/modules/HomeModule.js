@@ -198,25 +198,25 @@ const HomeModule = () => {
       )}
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link to="/dashboard/announcements" className="block no-underline" data-testid="stat-news">
+        <Link href="/dashboard/announcements" className="block no-underline" data-testid="stat-news">
           <Card className="p-6 glass card-hover cursor-pointer">
             <div className="text-sm text-muted-foreground">News</div>
             <div className="text-3xl font-bold gradient-text">{dashboard.recent_announcements?.length || 0}</div>
           </Card>
         </Link>
-        <Link to="/dashboard/messages" className="block no-underline" data-testid="stat-unread-messages">
+        <Link href="/dashboard/messages" className="block no-underline" data-testid="stat-unread-messages">
           <Card className="p-6 glass card-hover cursor-pointer">
             <div className="text-sm text-muted-foreground">Messages</div>
             <div className="text-3xl font-bold gradient-text">{dashboard.unread_messages_count || 0}</div>
           </Card>
         </Link>
-        <Link to="/dashboard/events" className="block no-underline" data-testid="stat-upcoming-events">
+        <Link href="/dashboard/events" className="block no-underline" data-testid="stat-upcoming-events">
           <Card className="p-6 glass card-hover cursor-pointer">
             <div className="text-sm text-muted-foreground">Upcoming Events</div>
             <div className="text-3xl font-bold gradient-text">{dashboard.upcoming_events?.length || 0}</div>
           </Card>
         </Link>
-        <Link to="/dashboard/recognition" className="block no-underline" data-testid="stat-recognitions">
+        <Link href="/dashboard/recognition" className="block no-underline" data-testid="stat-recognitions">
           <Card className="p-6 glass card-hover cursor-pointer">
             <div className="text-sm text-muted-foreground">Recent Recognitions</div>
             <div className="text-3xl font-bold gradient-text">{dashboard.shoutouts?.length || 0}</div>
@@ -230,7 +230,7 @@ const HomeModule = () => {
         <div className="quick-access-grid">
           {/* 1. Messages */}
           <Link
-            to="/dashboard/messages"
+            href="/dashboard/messages"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-messages"
           >
@@ -242,7 +242,7 @@ const HomeModule = () => {
 
           {/* 2. Events */}
           <Link
-            to="/dashboard/events"
+            href="/dashboard/events"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-events"
           >
@@ -254,7 +254,7 @@ const HomeModule = () => {
 
           {/* 3. Announcements */}
           <Link
-            to="/dashboard/announcements"
+            href="/dashboard/announcements"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-announcements"
           >
@@ -266,7 +266,7 @@ const HomeModule = () => {
 
           {/* 4. Dining */}
           <Link
-            to="/dashboard/dining"
+            href="/dashboard/dining"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-dining"
           >
@@ -278,7 +278,7 @@ const HomeModule = () => {
 
           {/* 5. Floor */}
           <Link
-            to="/dashboard/houses"
+            href="/dashboard/houses"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-floor"
           >
@@ -290,7 +290,7 @@ const HomeModule = () => {
 
           {/* 6. Co-Curricular */}
           <Link
-            to="/dashboard/cocurricular"
+            href="/dashboard/cocurricular"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-cocurricular"
           >
@@ -302,7 +302,7 @@ const HomeModule = () => {
 
           {/* 7. Birthdays */}
           <Link
-            to="/dashboard/birthdays"
+            href="/dashboard/birthdays"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-birthdays"
           >
@@ -314,7 +314,7 @@ const HomeModule = () => {
 
           {/* 8. Academics */}
           <Link
-            to="/dashboard/academics"
+            href="/dashboard/academics"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-academics"
           >
@@ -326,7 +326,7 @@ const HomeModule = () => {
 
           {/* 9. Recognition */}
           <Link
-            to="/dashboard/recognition"
+            href="/dashboard/recognition"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-recognition"
           >
@@ -338,7 +338,7 @@ const HomeModule = () => {
 
           {/* 10. Jobs */}
           <Link
-            to="/jobs"
+            href="/dashboard/jobs"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-jobs"
           >
@@ -350,7 +350,7 @@ const HomeModule = () => {
 
           {/* 11. Services */}
           <Link
-            to="/dashboard/maintenance"
+            href="/dashboard/maintenance"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-services"
           >
@@ -362,7 +362,7 @@ const HomeModule = () => {
 
           {/* 12. Financials */}
           <Link
-            to="/dashboard/finance"
+            href="/dashboard/finance"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-finance"
           >
@@ -375,7 +375,7 @@ const HomeModule = () => {
           {/* 13. Wellbeing */}
           {(user?.role === 'ra' || user?.role === 'admin' || user?.role === 'super_admin') ? (
             <Link
-              to="/dashboard/wellbeing"
+              href="/dashboard/wellbeing"
               className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
               data-testid="quick-wellbeing"
             >
@@ -386,7 +386,7 @@ const HomeModule = () => {
             </Link>
           ) : (
             <Link
-              to="/dashboard/wellbeing"
+              href="/dashboard/wellbeing"
               className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
               data-testid="quick-wellbeing"
             >
@@ -400,7 +400,7 @@ const HomeModule = () => {
           {/* 14. My Disclosure */}
           {hasNonAnonymousDisclosure && (
             <Link
-              to="/dashboard/safe-disclosure"
+              href="/dashboard/safe-disclosure"
               className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline border border-border"
               data-testid="quick-my-disclosure"
             >
@@ -413,7 +413,7 @@ const HomeModule = () => {
 
           {/* 15. AI Assistance */}
           <Link
-            to="/dashboard/ai"
+            href="/dashboard/ai"
             className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline"
             data-testid="quick-ai"
           >

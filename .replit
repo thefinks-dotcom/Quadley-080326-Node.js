@@ -1,0 +1,79 @@
+modules = ["nodejs-20", "python-3.12", "bash", "web", "postgresql-16"]
+[agent]
+expertMode = true
+integrations = ["github:1.0.0"]
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+DB_NAME = "quadley_dev"
+REACT_APP_BACKEND_URL = ""
+PORT = "5000"
+UPLOAD_DIR = "/home/runner/workspace/backend/uploads"
+CORS_ORIGINS = "https://064555d4-31a0-460a-86bc-263cb6f956ab-00-e2aiqsdejjpc.picard.replit.dev,http://localhost:5000"
+FRONTEND_URL = "https://064555d4-31a0-460a-86bc-263cb6f956ab-00-e2aiqsdejjpc.picard.replit.dev"
+SENDGRID_FROM_EMAIL = "support@quadley.com"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && uvicorn server:app --host 0.0.0.0 --port 8000"
+waitForPort = 8000
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend-next && yarn dev"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[[ports]]
+localPort = 5904
+externalPort = 3001
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["bash", "-c", "cd backend && uvicorn server:app --host 0.0.0.0 --port 8000"]
+build = ["bash", "-c", "pip install -r backend/requirements.txt && cd frontend && yarn install --ignore-engines && REACT_APP_BACKEND_URL='' yarn build"]

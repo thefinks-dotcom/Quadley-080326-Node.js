@@ -31,6 +31,9 @@ const nextConfig = {
   // Static export for Capacitor iOS builds
   ...(isExport ? { output: 'export', distDir: 'out' } : {}),
 
+  // Allow Replit preview URLs and localhost variants as dev origins for HMR
+  allowedDevOrigins: ['*.replit.dev', '*.picard.replit.dev', '127.0.0.1'],
+
   // Proxy /api/* to FastAPI backend in all environments
   async rewrites() {
     if (isExport) return [];

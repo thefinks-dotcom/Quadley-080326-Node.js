@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 const STEP_STATUS_STYLES = {
   pass: 'bg-success/10 border-success text-success',

@@ -51,7 +51,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 const CollegeAdminDashboard = () => {
   const router = useRouter();

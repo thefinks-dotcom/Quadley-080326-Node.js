@@ -27,9 +27,7 @@ import React, {
   useContext,
   useEffect,
   useState,
-  Suspense,
 } from 'react';
-import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { API } from '@/contexts/AuthContext';
 import { hexToHsl, toMutedVariant } from '@/utils/colorUtils';
@@ -99,8 +97,7 @@ function brandingToTheme(branding = {}) {
   };
 }
 
-function TenantThemeLoader({ children }) {
-  const searchParams = useSearchParams();
+export function TenantThemeProvider({ children }) {
   const [branding, setBranding]           = useState(null);
   const [tenantCode, setTenantCode]       = useState(null);
   const [tenantName, setTenantName]       = useState(null);
@@ -131,26 +128,19 @@ function TenantThemeLoader({ children }) {
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     const code =
-      searchParams.get('tenant') ||
+      params.get('tenant') ||
       process.env.NEXT_PUBLIC_TENANT_CODE ||
       null;
 
     setTenantCode(code);
     fetchAndApplyTheme(code);
-  }, [searchParams, fetchAndApplyTheme]);
+  }, [fetchAndApplyTheme]);
 
   return (
     <TenantThemeContext.Provider value={{ branding, tenantCode, tenantName, isThemeLoaded }}>
       {children}
     </TenantThemeContext.Provider>
-  );
-}
-
-export function TenantThemeProvider({ children }) {
-  return (
-    <Suspense fallback={null}>
-      <TenantThemeLoader>{children}</TenantThemeLoader>
-    </Suspense>
   );
 }

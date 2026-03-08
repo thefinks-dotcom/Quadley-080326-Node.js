@@ -36,7 +36,8 @@ import {
   Plus,
   Shield,
   UserCog,
-  Palette
+  Palette,
+  Layers
 } from 'lucide-react';
 
 const ALL_MODULES = [
@@ -58,7 +59,7 @@ const ALL_MODULES = [
   { id: 'bookings',        label: 'Bookings' },
 ];
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 const TenantManagement = () => {
   const router = useRouter();
@@ -77,6 +78,9 @@ const TenantManagement = () => {
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '' });
+  const [showModulesDialog, setShowModulesDialog] = useState(false);
+  const [modulesLoading, setModulesLoading] = useState(false);
+  const [editModules, setEditModules] = useState([]);
   const [newTenant, setNewTenant] = useState({
     tenant_id: '',
     tenant_name: '',
@@ -248,6 +252,28 @@ const TenantManagement = () => {
       toast.error(typeof detail === 'string' ? detail : 'Failed to update contact person');
     } finally {
       setContactLoading(false);
+    }
+  };
+
+  const handleSaveModules = async () => {
+    if (!selectedTenant) return;
+    setModulesLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/tenants/${selectedTenant.code}/modules`,
+        { enabled_modules: editModules },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Modules updated!');
+      setShowModulesDialog(false);
+      setSelectedTenant(null);
+      fetchTenants();
+    } catch (error) {
+      const detail = error.response?.data?.detail;
+      toast.error(typeof detail === 'string' ? detail : 'Failed to update modules');
+    } finally {
+      setModulesLoading(false);
     }
   };
 
@@ -441,6 +467,21 @@ const TenantManagement = () => {
                       >
                         <UserCog className="h-4 w-4 mr-1" />
                         Contact
+                      </Button>
+                      {/* Modules Button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setEditModules(tenant.enabled_modules || ALL_MODULES.map(m => m.id));
+                          setShowModulesDialog(true);
+                        }}
+                        className="text-primary border-border hover:bg-muted"
+                        data-testid={`modules-${tenant.code}`}
+                      >
+                        <Layers className="h-4 w-4 mr-1" />
+                        Modules
                       </Button>
                       {/* SSO Configuration Button */}
                       <Button
@@ -914,6 +955,78 @@ const TenantManagement = () => {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modules Dialog */}
+        <Dialog open={showModulesDialog} onOpenChange={setShowModulesDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-primary" />
+                Modules — {selectedTenant?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Toggle which modules are available to users of this tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="my-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">
+                  {editModules.length} of {ALL_MODULES.length} enabled
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditModules(ALL_MODULES.map(m => m.id))}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditModules([])}
+                  >
+                    None
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+                {ALL_MODULES.map((mod) => {
+                  const active = editModules.includes(mod.id);
+                  return (
+                    <button
+                      key={mod.id}
+                      type="button"
+                      onClick={() =>
+                        setEditModules(prev =>
+                          prev.includes(mod.id)
+                            ? prev.filter(m => m !== mod.id)
+                            : [...prev, mod.id]
+                        )
+                      }
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${
+                        active
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-muted border-border text-muted-foreground hover:border-primary/40'
+                      }`}
+                    >
+                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${active ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                      {mod.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowModulesDialog(false)} disabled={modulesLoading}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveModules} disabled={modulesLoading}>
+                {modulesLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

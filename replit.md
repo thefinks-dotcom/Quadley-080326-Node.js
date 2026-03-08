@@ -33,7 +33,7 @@ Quadley is a multi-tenant campus community platform for residential colleges. It
 - `SENDGRID_API_KEY` - SendGrid API key for transactional emails (password reset, invites)
 
 ### Env Vars
-- `NEXT_PUBLIC_BACKEND_URL` - Backend URL for frontend (`http://localhost:8000`)
+- `NEXT_PUBLIC_BACKEND_URL` - Backend URL used ONLY by Next.js server-side rewrites (proxy destination). **All browser API calls use relative `/api` paths** — the rewrite in `next.config.js` proxies them to the backend. Do NOT use `NEXT_PUBLIC_BACKEND_URL` directly in client-side code.
 - `NEXT_PUBLIC_TENANT_CODE` - Tenant code for dedicated deployments (e.g. `GRAC7421`)
 - `DB_NAME` - MongoDB database name (`quadley_dev`)
 - `UPLOAD_DIR` - File upload directory (`/home/runner/workspace/backend/uploads`)

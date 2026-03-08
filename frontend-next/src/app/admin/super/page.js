@@ -50,7 +50,7 @@ import {
 import { toast } from 'sonner';
 import BrandingPreviewPanel from '@/components/BrandingPreviewPanel';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 // All available modules
 const ALL_MODULES = [

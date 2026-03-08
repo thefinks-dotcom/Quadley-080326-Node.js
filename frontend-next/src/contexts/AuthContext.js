@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-export const API = `${BACKEND_URL}/api`;
+export const BACKEND_URL = '';
+export const API = '/api';
 
 export const AuthContext = createContext(null);
 

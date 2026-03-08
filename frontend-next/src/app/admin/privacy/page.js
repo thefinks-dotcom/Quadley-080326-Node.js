@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 const HOURS = Array.from({length: 24}, (_, i) => i);
 

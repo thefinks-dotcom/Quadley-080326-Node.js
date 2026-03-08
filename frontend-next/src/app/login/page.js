@@ -15,6 +15,11 @@ import { toast } from 'sonner';
 import TenantLogo from '@/components/TenantLogo';
 import { Shield, Key, CheckCircle, ArrowRight, Lock, Users, Calendar, Award, Eye, EyeOff } from 'lucide-react';
 
+const getRedirectPath = (user) => {
+  if (user?.role === 'super_admin') return '/admin';
+  return '/dashboard';
+};
+
 const Login = () => {
   const router = useRouter();
   const { login } = useContext(AuthContext);
@@ -138,7 +143,7 @@ const Login = () => {
 
       login(access_token, user, modules);
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      router.push(getRedirectPath(user));
     } catch (error) {
       const detail = error.response?.data?.detail;
       const message = typeof detail === 'string'
@@ -190,7 +195,7 @@ const Login = () => {
   const handleMfaSetupComplete = () => {
     login(mfaToken, mfaUser);
     toast.success('MFA enabled! Welcome.');
-    router.push('/dashboard');
+    router.push(getRedirectPath(mfaUser));
   };
 
   const handleMfaVerify = async () => {
@@ -206,7 +211,7 @@ const Login = () => {
       });
       login(mfaToken, mfaUser);
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      router.push(getRedirectPath(mfaUser));
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Invalid MFA code');
     } finally {
@@ -217,7 +222,7 @@ const Login = () => {
   const handleMfaSkip = () => {
     login(mfaToken, mfaUser, mfaModules);
     toast.info('You can set up 2FA later in Settings.');
-    router.push('/dashboard');
+    router.push(getRedirectPath(mfaUser));
   };
 
   const resetMfaFlow = () => {

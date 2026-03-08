@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,15 +18,15 @@ import {
   Shield,
   TrendingUp,
   Activity,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { AuthContext, API } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { user, logout, loading: authLoading } = useContext(AuthContext);
   const [tenant, setTenant] = useState(null);
   const [tenants, setTenants] = useState([]);
   const [stats, setStats] = useState({
@@ -39,25 +39,21 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    fetchDashboardData(user);
+  }, [user, authLoading]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (currentUser) => {
     try {
-      // Get user from localStorage (set during login)
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (!userData) {
-        router.push('/login');
-        return;
-      }
-      setUser(userData);
+      const isSuperAdmin = currentUser.role === 'super_admin';
 
-      const isSuperAdmin = userData.role === 'super_admin';
-
-      // For super admin, fetch all tenants
       if (isSuperAdmin) {
         try {
-          const tenantsRes = await axios.get(`${API}/api/tenants`);
+          const tenantsRes = await axios.get(`${API}/tenants`);
           setTenants(tenantsRes.data);
           const pending = tenantsRes.data.filter(t => t.status === 'pending').length;
           const active = tenantsRes.data.filter(t => t.status === 'active').length;
@@ -66,26 +62,26 @@ const AdminDashboard = () => {
           console.error('Failed to fetch tenants', e);
         }
       } else {
-        // Get tenant info for admin
         try {
-          const tenantRes = await axios.get(`${API}/api/tenants/${userData.tenant_id}`);
+          const tenantRes = await axios.get(`${API}/tenants/${currentUser.tenant_id}`);
           setTenant(tenantRes.data);
         } catch (e) {
           console.error('Failed to fetch tenant', e);
         }
       }
 
-      // Get user stats
-      try {
-        const usersRes = await axios.get(`${API}/api/users/list`);
-        setStats(prev => ({
-          ...prev,
-          totalUsers: usersRes.data.length,
-          activeUsers: usersRes.data.filter(u => u.active !== false).length,
-          inactiveUsers: usersRes.data.filter(u => u.active === false).length
-        }));
-      } catch (e) {
-        console.error('Failed to fetch users', e);
+      if (!isSuperAdmin) {
+        try {
+          const usersRes = await axios.get(`${API}/users/list`);
+          setStats(prev => ({
+            ...prev,
+            totalUsers: usersRes.data.length,
+            activeUsers: usersRes.data.filter(u => u.active !== false).length,
+            inactiveUsers: usersRes.data.filter(u => u.active === false).length
+          }));
+        } catch (e) {
+          console.error('Failed to fetch users', e);
+        }
       }
 
     } catch (error) {
@@ -96,7 +92,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-muted">
         <div className="text-center">
@@ -130,14 +126,26 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            variant="outline"
-            className="flex items-center gap-2 self-start"
-          >
-            <ArrowRight className="h-4 w-4 rotate-180" />
-            Back to App
-          </Button>
+          <div className="flex items-center gap-2 self-start">
+            {!isSuperAdmin && (
+              <Button
+                onClick={() => router.push('/dashboard')}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ArrowRight className="h-4 w-4 rotate-180" />
+                Back to App
+              </Button>
+            )}
+            <Button
+              onClick={async () => { await logout(); router.replace('/login'); }}
+              variant="outline"
+              className="flex items-center gap-2 text-destructive border-destructive/20 hover:bg-destructive/5"
+            >
+              <LogOut className="h-4 w-4" />
+              Log Out
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}

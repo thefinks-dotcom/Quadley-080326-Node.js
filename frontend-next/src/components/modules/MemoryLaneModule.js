@@ -24,7 +24,11 @@ import ModuleHeader from '@/components/ModuleHeader';
 const MemoryLaneModule = () => {
   const { user } = useContext(AuthContext);
   const [memories, setMemories] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(null);
+
+  useEffect(() => {
+    setSelectedYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     fetchMemories();

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 const SEVERITY_STYLES = {
   critical: { bg: 'bg-destructive/5 border-destructive/20', text: 'text-destructive', badge: 'bg-destructive/10 text-destructive border-destructive/20' },

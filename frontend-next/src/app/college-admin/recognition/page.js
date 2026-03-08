@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API = '';
 
 const RecognitionAdmin = () => {
   const router = useRouter();
