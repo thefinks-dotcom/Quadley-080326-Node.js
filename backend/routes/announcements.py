@@ -79,7 +79,20 @@ async def create_announcement(
             is_emergency,
             current_user.id
         )
-    
+
+    # Auto-create emergency roll call in background
+    if ann_doc['status'] == 'published' and is_emergency:
+        async def _create_rollcall():
+            try:
+                from routes.emergency_rollcall import create_rollcall_for_announcement
+                await create_rollcall_for_announcement(
+                    ann_doc['id'], current_user.tenant_code, current_user.id, tenant_db
+                )
+            except Exception as e:
+                import logging
+                logging.error(f"Failed to create emergency roll call: {e}")
+        background_tasks.add_task(_create_rollcall)
+
     # Return the document (without _id)
     ann_doc.pop('_id', None)
     return ann_doc

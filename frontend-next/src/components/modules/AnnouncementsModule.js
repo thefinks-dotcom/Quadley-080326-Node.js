@@ -3,27 +3,36 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { AuthContext, API } from '@/contexts/AuthContext';
-import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { toast } from 'sonner';
-import { Megaphone, AlertCircle, CheckCircle2, Search, Archive, ChevronRight } from 'lucide-react';
+import {
+  Megaphone, AlertCircle, AlertTriangle, CheckCircle, CheckCircle2,
+  Search, Archive, ShieldCheck, Home
+} from 'lucide-react';
 import ModuleHeader from '../ModuleHeader';
 
 const AnnouncementsModule = () => {
   const { user } = useContext(AuthContext);
   const [announcements, setAnnouncements] = useState([]);
+  const [activeRollcalls, setActiveRollcalls] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('unread');
   const [markingRead, setMarkingRead] = useState(new Set());
+  const [respondingTo, setRespondingTo] = useState(null);
 
   useEffect(() => {
-    fetchAnnouncements();
+    fetchAll();
   }, []);
 
-  const fetchAnnouncements = async () => {
+  const fetchAll = async () => {
     try {
-      const res = await axios.get(`${API}/announcements`);
-      setAnnouncements(Array.isArray(res.data) ? res.data : []);
+      const [annRes, rollcallRes] = await Promise.all([
+        axios.get(`${API}/announcements`),
+        axios.get(`${API}/emergency-rollcall/active`).catch(() => ({ data: [] })),
+      ]);
+      setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
+      setActiveRollcalls(Array.isArray(rollcallRes.data) ? rollcallRes.data : []);
     } catch (error) {
       console.error('Failed to fetch announcements', error);
     }
@@ -38,7 +47,6 @@ const AnnouncementsModule = () => {
         prev.map(a => a.id === announcementId ? { ...a, is_read: true } : a)
       );
     } catch (error) {
-      console.error('Failed to mark as read', error);
       toast.error('Failed to mark as read');
     } finally {
       setMarkingRead(prev => {
@@ -48,6 +56,29 @@ const AnnouncementsModule = () => {
       });
     }
   }, [markingRead]);
+
+  const respondToRollcall = async (rollcallId, status, announcementId) => {
+    setRespondingTo(rollcallId + status);
+    try {
+      await axios.post(`${API}/emergency-rollcall/${rollcallId}/respond`, { status });
+      await axios.post(`${API}/announcements/${announcementId}/mark-read`).catch(() => {});
+      toast.success(status === 'evacuated' ? 'Confirmed — you are marked as evacuated' : 'Confirmed — you are marked as not at college');
+      setActiveRollcalls(prev =>
+        prev.map(r => r.id === rollcallId ? { ...r, my_response: status } : r)
+      );
+      setAnnouncements(prev =>
+        prev.map(a => a.id === announcementId ? { ...a, is_read: true } : a)
+      );
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to submit response');
+    } finally {
+      setRespondingTo(null);
+    }
+  };
+
+  const rollcallByAnnouncement = Object.fromEntries(
+    activeRollcalls.map(r => [r.announcement_id, r])
+  );
 
   const unreadAnnouncements = announcements.filter(ann =>
     !ann.is_read &&
@@ -61,16 +92,32 @@ const AnnouncementsModule = () => {
       ann.content?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const pendingRollcalls = activeRollcalls.filter(r => !r.my_response);
+
   return (
     <div className="min-h-screen bg-background">
       <ModuleHeader
         title="Announcements"
-        subtitle={`${unreadAnnouncements.length} unread`}
+        subtitle={`${unreadAnnouncements.length} unread${pendingRollcalls.length > 0 ? ` · ${pendingRollcalls.length} roll call pending` : ''}`}
         showBack
         showSearch={false}
       />
 
       <div className="px-4 pt-4 pb-6 space-y-4">
+        {pendingRollcalls.length > 0 && (
+          <div className="rounded-2xl bg-red-600 text-white p-4 shadow-lg animate-pulse-once">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <p className="font-bold text-base">Emergency Roll Call Active</p>
+            </div>
+            <p className="text-white/90 text-sm">
+              {pendingRollcalls.length === 1
+                ? 'You must respond to the emergency below before it can be dismissed.'
+                : `You must respond to ${pendingRollcalls.length} emergencies below.`}
+            </p>
+          </div>
+        )}
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -88,7 +135,11 @@ const AnnouncementsModule = () => {
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'unread' ? 'bg-white shadow text-foreground' : 'text-muted-foreground'}`}
           >
             <Megaphone className="h-3.5 w-3.5" />
-            Unread {unreadAnnouncements.length > 0 && <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{unreadAnnouncements.length}</span>}
+            Unread {(unreadAnnouncements.length > 0 || pendingRollcalls.length > 0) && (
+              <span className={`text-xs rounded-full px-1.5 py-0.5 leading-none ${pendingRollcalls.length > 0 ? 'bg-red-500 text-white' : 'bg-primary text-white'}`}>
+                {unreadAnnouncements.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('archive')}
@@ -111,15 +162,31 @@ const AnnouncementsModule = () => {
               </div>
             ) : (
               <>
-                <p className="text-xs text-muted-foreground text-center">Swipe right or tap to mark as read</p>
-                {unreadAnnouncements.map(ann => (
-                  <SwipeableAnnouncementCard
-                    key={ann.id}
-                    announcement={ann}
-                    onMarkRead={markAsRead}
-                    isMarking={markingRead.has(ann.id)}
-                  />
-                ))}
+                {!unreadAnnouncements.some(a => a.is_emergency) && (
+                  <p className="text-xs text-muted-foreground text-center">Swipe right or tap to mark as read</p>
+                )}
+                {unreadAnnouncements.map(ann => {
+                  const rollcall = rollcallByAnnouncement[ann.id];
+                  if (ann.is_emergency && rollcall) {
+                    return (
+                      <EmergencyRollcallCard
+                        key={ann.id}
+                        announcement={ann}
+                        rollcall={rollcall}
+                        onRespond={respondToRollcall}
+                        respondingTo={respondingTo}
+                      />
+                    );
+                  }
+                  return (
+                    <SwipeableAnnouncementCard
+                      key={ann.id}
+                      announcement={ann}
+                      onMarkRead={markAsRead}
+                      isMarking={markingRead.has(ann.id)}
+                    />
+                  );
+                })}
               </>
             )}
           </div>
@@ -136,9 +203,13 @@ const AnnouncementsModule = () => {
                 </p>
               </div>
             ) : (
-              readAnnouncements.map(ann => (
-                <ReadAnnouncementCard key={ann.id} announcement={ann} />
-              ))
+              readAnnouncements.map(ann => {
+                const rollcall = rollcallByAnnouncement[ann.id];
+                if (rollcall?.my_response) {
+                  return <RespondedEmergencyCard key={ann.id} announcement={ann} rollcall={rollcall} />;
+                }
+                return <ReadAnnouncementCard key={ann.id} announcement={ann} />;
+              })
             )}
           </div>
         )}
@@ -147,26 +218,115 @@ const AnnouncementsModule = () => {
   );
 };
 
+function EmergencyRollcallCard({ announcement, rollcall, onRespond, respondingTo }) {
+  const responded = !!rollcall.my_response;
+
+  if (responded) {
+    return (
+      <div className="rounded-2xl bg-green-50 border-2 border-green-300 p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <span className="font-bold text-green-800">Response Recorded</span>
+        </div>
+        <p className="text-sm font-semibold text-foreground mb-0.5">{announcement.title}</p>
+        <p className="text-sm text-muted-foreground mb-2">{announcement.content}</p>
+        <div className="flex items-center gap-2">
+          {rollcall.my_response === 'evacuated' ? (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+              <Home className="h-4 w-4" /> You confirmed: Evacuated
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+              <ShieldCheck className="h-4 w-4" /> You confirmed: Not at College
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const isRespondingEvac = respondingTo === rollcall.id + 'evacuated';
+  const isRespondingNac = respondingTo === rollcall.id + 'not_at_college';
+
+  return (
+    <div className="rounded-2xl bg-red-600 text-white p-4 shadow-xl border-4 border-red-400">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-5 w-5 text-red-100 shrink-0" />
+        <span className="font-bold text-base text-white">EMERGENCY — Response Required</span>
+      </div>
+
+      <h3 className="font-bold text-white text-base mb-1">{announcement.title}</h3>
+      <p className="text-red-100 text-sm mb-4 leading-relaxed">{announcement.content}</p>
+
+      <p className="text-white/90 text-xs font-medium mb-3 uppercase tracking-wide">
+        Please confirm your status immediately:
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => onRespond(rollcall.id, 'evacuated', announcement.id)}
+          disabled={!!respondingTo}
+          className="flex flex-col items-center gap-2 bg-white text-red-700 rounded-2xl py-4 px-3 font-bold text-sm hover:bg-red-50 transition-colors disabled:opacity-60 shadow-md active:scale-95"
+        >
+          <Home className="h-7 w-7 text-green-600" />
+          <span className="leading-tight text-center">I have evacuated<br/><span className="font-normal text-xs text-muted-foreground">I am outside</span></span>
+          {isRespondingEvac && <span className="text-xs text-muted-foreground">Confirming...</span>}
+        </button>
+
+        <button
+          onClick={() => onRespond(rollcall.id, 'not_at_college', announcement.id)}
+          disabled={!!respondingTo}
+          className="flex flex-col items-center gap-2 bg-white text-red-700 rounded-2xl py-4 px-3 font-bold text-sm hover:bg-red-50 transition-colors disabled:opacity-60 shadow-md active:scale-95"
+        >
+          <ShieldCheck className="h-7 w-7 text-blue-600" />
+          <span className="leading-tight text-center">Not at College<br/><span className="font-normal text-xs text-muted-foreground">I am off-campus</span></span>
+          {isRespondingNac && <span className="text-xs text-muted-foreground">Confirming...</span>}
+        </button>
+      </div>
+
+      <p className="text-red-200 text-xs text-center mt-3">
+        Posted {new Date(announcement.created_at).toLocaleString()}
+        {announcement.created_by_name && ` · ${announcement.created_by_name}`}
+      </p>
+    </div>
+  );
+}
+
+function RespondedEmergencyCard({ announcement, rollcall }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-4 border border-green-100 opacity-80">
+      <div className="flex items-start gap-3">
+        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-xs font-medium text-red-600 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" /> Emergency
+            </span>
+          </div>
+          <h3 className="text-sm font-medium">{announcement.title}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Your response: <strong>{rollcall.my_response === 'evacuated' ? 'Evacuated' : 'Not at College'}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SwipeableAnnouncementCard({ announcement, onMarkRead, isMarking }) {
-  const cardRef = useRef(null);
   const startXRef = useRef(null);
-  const currentXRef = useRef(null);
   const [swipeX, setSwipeX] = useState(0);
   const [swiped, setSwiped] = useState(false);
   const SWIPE_THRESHOLD = 80;
 
   const handleTouchStart = useCallback((e) => {
     startXRef.current = e.touches[0].clientX;
-    currentXRef.current = e.touches[0].clientX;
   }, []);
 
   const handleTouchMove = useCallback((e) => {
     if (startXRef.current === null) return;
     const dx = e.touches[0].clientX - startXRef.current;
-    currentXRef.current = e.touches[0].clientX;
-    if (dx > 0) {
-      setSwipeX(Math.min(dx, 120));
-    }
+    if (dx > 0) setSwipeX(Math.min(dx, 120));
   }, []);
 
   const handleTouchEnd = useCallback(() => {
@@ -182,13 +342,7 @@ function SwipeableAnnouncementCard({ announcement, onMarkRead, isMarking }) {
   const swipePct = Math.min(swipeX / SWIPE_THRESHOLD, 1);
   const isActivated = swipeX >= SWIPE_THRESHOLD;
 
-  if (swiped) {
-    return (
-      <div className="rounded-xl overflow-hidden bg-green-500 flex items-center justify-center h-16 opacity-0 transition-opacity duration-300">
-        <CheckCircle2 className="h-6 w-6 text-white" />
-      </div>
-    );
-  }
+  if (swiped) return <div className="h-4 rounded-xl" />;
 
   return (
     <div className="relative rounded-xl overflow-hidden">
@@ -202,8 +356,7 @@ function SwipeableAnnouncementCard({ announcement, onMarkRead, isMarking }) {
       </div>
 
       <div
-        ref={cardRef}
-        className={`relative bg-white rounded-xl shadow-sm transition-transform ${isMarking ? 'opacity-60' : ''} ${announcement.is_emergency ? 'border-2 border-red-200 bg-red-50' : ''}`}
+        className={`relative bg-white rounded-xl shadow-sm ${isMarking ? 'opacity-60' : ''} ${announcement.is_emergency ? 'border-2 border-red-200 bg-red-50' : ''}`}
         style={{ transform: `translateX(${swipeX}px)`, touchAction: 'pan-y' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

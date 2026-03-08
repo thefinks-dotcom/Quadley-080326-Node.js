@@ -79,6 +79,7 @@ export default function AnnouncementsAdmin() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [rollcallData, setRollcallData] = useState({});
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -97,9 +98,24 @@ export default function AnnouncementsAdmin() {
         axios.get(`${API}/announcements?include_scheduled=true&include_archived=true`),
         axios.get(`${API}/users`),
       ]);
-      setAnnouncements(Array.isArray(annRes.data) ? annRes.data : []);
+      const anns = Array.isArray(annRes.data) ? annRes.data : [];
+      setAnnouncements(anns);
       const students = Array.isArray(usersRes.data) ? usersRes.data.filter(u => u.role === 'student') : [];
       setTotalStudents(students.length);
+
+      const emergencyAnns = anns.filter(a => a.is_emergency && (a.status === 'published' || !a.status));
+      if (emergencyAnns.length > 0) {
+        const rollcallResults = await Promise.all(
+          emergencyAnns.map(a =>
+            axios.get(`${API}/emergency-rollcall/by-announcement/${a.id}`)
+              .then(r => ({ id: a.id, data: r.data }))
+              .catch(() => ({ id: a.id, data: null }))
+          )
+        );
+        const rcMap = {};
+        rollcallResults.forEach(({ id, data }) => { if (data) rcMap[id] = data; });
+        setRollcallData(rcMap);
+      }
     } catch (e) {
       toast.error('Failed to load announcements');
     } finally {
@@ -308,6 +324,20 @@ export default function AnnouncementsAdmin() {
               </div>
 
               <div className="px-4 pb-3 flex items-center gap-2 justify-end flex-wrap">
+                {ann.is_emergency && rollcallData[ann.id] && (
+                  <Button
+                    size="sm"
+                    className={`h-7 text-xs gap-1 ${rollcallData[ann.id].status === 'active' ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-muted text-foreground'}`}
+                    onClick={() => router.push(`/admin/announcements/rollcall/${rollcallData[ann.id].id}`)}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {rollcallData[ann.id].status === 'active' ? (
+                      <>Roll Call — {rollcallData[ann.id].total_responded}/{rollcallData[ann.id].total_residents}</>
+                    ) : (
+                      <>View Roll Call</>
+                    )}
+                  </Button>
+                )}
                 {(ann.status === 'published' || !ann.status) && (
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleArchive(ann.id)}>
                     <Archive className="h-3 w-3" /> Archive
