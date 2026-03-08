@@ -338,6 +338,7 @@ const MessagesModule = () => {
       <ModuleHeader
         title="Messages"
         subtitle={`${conversations.length} conversation${conversations.length !== 1 ? 's' : ''}`}
+        showBack={true}
         showSearch
         searchValue={conversationSearch}
         onSearchChange={setConversationSearch}
