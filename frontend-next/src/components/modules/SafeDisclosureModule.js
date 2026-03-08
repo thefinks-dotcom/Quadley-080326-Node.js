@@ -338,7 +338,7 @@ const SafeDisclosureModule = () => {
     );
   }
 
-  const backHandler = view === 'category' ? () => setView('warning')
+  const backHandler = view === 'category' ? () => router.back()
     : view === 'pathway' ? () => setView('category')
     : view === 'form' ? () => setView(isGBV ? 'pathway' : 'category')
     : view === 'confirmation' ? resetAll
@@ -348,7 +348,7 @@ const SafeDisclosureModule = () => {
     <div className="min-h-screen bg-background">
       <ModuleHeader
         title="Safe Disclosure"
-        showBack={view !== 'warning' && view !== 'category'}
+        showBack={view !== 'warning'}
         onBack={backHandler}
         showSearch={false}
       />
