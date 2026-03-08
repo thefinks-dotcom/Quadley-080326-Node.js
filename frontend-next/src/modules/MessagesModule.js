@@ -249,7 +249,7 @@ const MessagesModule = () => {
     const [colorFrom, colorTo] = getAvatarColors(chatName);
 
     return (
-      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 40 }} data-testid="chat-view">
+      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 60 }} data-testid="chat-view">
         {/* Chat header */}
         <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
           style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})`, paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
@@ -417,7 +417,7 @@ const MessagesModule = () => {
   // ── NEW CONVERSATION VIEW ──────────────────────────────────────────────────
   if (view === 'new') {
     return (
-      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 40 }}>
+      <div className="flex flex-col bg-background" style={{ position: 'fixed', inset: 0, zIndex: 60 }}>
         {/* Header */}
         <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
           style={{ background: 'hsl(var(--primary))', paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
