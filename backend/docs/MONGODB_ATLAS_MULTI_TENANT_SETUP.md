@@ -49,12 +49,12 @@ curl -X POST \
     "groupId": "'${ATLAS_PROJECT_ID}'",
     "roles": [
       {
-        "databaseName": "quadley_tenant_ormd0001",
+        "databaseName": "quadley_tenant_<TENANT_CODE>",
         "roleName": "readWrite"
       }
     ],
-    "username": "tenant_ormd0001",
-    "password": "SecurePassword123!"
+    "username": "tenant_<TENANT_CODE>",
+    "password": "<STRONG_RANDOM_PASSWORD>"
   }'
 ```
 
@@ -71,7 +71,7 @@ curl -X GET \
 
 ```bash
 curl -X DELETE \
-  "https://cloud.mongodb.com/api/atlas/v1.0/groups/${ATLAS_PROJECT_ID}/databaseUsers/admin/tenant_ormd0001" \
+  "https://cloud.mongodb.com/api/atlas/v1.0/groups/${ATLAS_PROJECT_ID}/databaseUsers/admin/tenant_${TENANT_CODE}" \
   -u "${ATLAS_PUBLIC_KEY}:${ATLAS_PRIVATE_KEY}" \
   --digest
 ```
@@ -81,7 +81,7 @@ curl -X DELETE \
 Each tenant would connect using their specific credentials:
 
 ```
-mongodb+srv://tenant_ormd0001:SecurePassword123!@cluster0.xxxxx.mongodb.net/quadley_tenant_ormd0001
+mongodb+srv://tenant_<TENANT_CODE>:<STRONG_RANDOM_PASSWORD>@<YOUR_CLUSTER>.mongodb.net/quadley_tenant_<TENANT_CODE>
 ```
 
 ## Step 5: Subscription Tiers & User Limits
@@ -230,12 +230,12 @@ async def delete_tenant_db_user(tenant_code: str) -> bool:
 
 ```bash
 # Connect as the tenant user and verify access
-mongosh "mongodb+srv://cluster0.xxxxx.mongodb.net/quadley_tenant_ormd0001" \
-  --username tenant_ormd0001 \
-  --password "your_password"
+mongosh "mongodb+srv://<YOUR_CLUSTER>.mongodb.net/quadley_tenant_<TENANT_CODE>" \
+  --username "tenant_<TENANT_CODE>" \
+  --password "<STRONG_RANDOM_PASSWORD>"
 
 # Try accessing own database (should work)
-use quadley_tenant_ormd0001
+use quadley_tenant_<TENANT_CODE>
 db.users.find().limit(1)
 
 # Try accessing another tenant (should fail)
