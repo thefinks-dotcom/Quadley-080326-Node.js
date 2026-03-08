@@ -1,0 +1,156 @@
+'use client';
+
+/**
+ * TenantThemeContext
+ * ==================
+ * Manages the active tenant's color palette and branding data.
+ *
+ * Lifecycle:
+ *  1. On mount (or when user/URL changes), determine the active tenant code:
+ *       • Post-login  → user.tenant_code from AuthContext
+ *       • Pre-login   → ?tenant=CODE URL param or NEXT_PUBLIC_TENANT_CODE env var
+ *  2. Apply the static fallback theme immediately (zero-flash).
+ *  3. Fetch live branding from /api/branding/public/{code} in the background.
+ *  4. Re-apply CSS variables with the live values once fetched.
+ *
+ * How colors reach components:
+ *  CSS custom properties are injected onto <html> (document.documentElement).
+ *  Tailwind reads them via hsl(var(--primary)) etc, so all utility classes
+ *  (bg-primary, text-primary, border-primary …) automatically reflect the
+ *  active tenant's palette. Components do NOT need to call useTenantTheme
+ *  for colors — only for branding metadata (logo, app name, etc.).
+ */
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  Suspense,
+} from 'react';
+import { useSearchParams } from 'next/navigation';
+import axios from 'axios';
+import { API } from '@/contexts/AuthContext';
+import { hexToHsl, toMutedVariant } from '@/utils/colorUtils';
+import {
+  PLATFORM_THEME,
+  getStaticThemeForTenant,
+} from '@/config/tenantThemes';
+
+const TenantThemeContext = createContext({
+  branding: null,
+  tenantCode: null,
+  tenantName: null,
+  isThemeLoaded: false,
+});
+
+export const useTenantTheme = () => useContext(TenantThemeContext);
+
+function setCssVar(name, value) {
+  if (typeof document !== 'undefined' && value != null) {
+    document.documentElement.style.setProperty(name, value);
+  }
+}
+
+function applyThemeToDom(theme) {
+  setCssVar('--primary',             theme.primary);
+  setCssVar('--primary-foreground',  theme.primaryForeground);
+  setCssVar('--secondary',           theme.secondary);
+  setCssVar('--secondary-foreground',theme.secondaryForeground);
+  setCssVar('--background',          theme.background);
+  setCssVar('--foreground',          theme.foreground);
+  setCssVar('--muted',               theme.muted);
+  setCssVar('--muted-foreground',    theme.mutedForeground);
+  setCssVar('--accent',              theme.accent);
+  setCssVar('--accent-foreground',   theme.accentForeground);
+  setCssVar('--ring',                theme.ring);
+  setCssVar('--border',              theme.border);
+  setCssVar('--input',               theme.input);
+  setCssVar('--avatar-bg',           theme.avatarBg);
+  setCssVar('--avatar-fg',           theme.avatarFg);
+  setCssVar('--chart-1',             theme.primary);
+}
+
+function brandingToTheme(branding = {}) {
+  const primary   = hexToHsl(branding.primary_color)   || PLATFORM_THEME.primary;
+  const secondary = hexToHsl(branding.secondary_color) || PLATFORM_THEME.secondary;
+  const background= hexToHsl(branding.background_color)|| PLATFORM_THEME.background;
+  const foreground= hexToHsl(branding.text_color)      || PLATFORM_THEME.foreground;
+
+  const hue = (primary.match(/^(\d+)/) || ['', '207'])[1];
+
+  return {
+    primary,
+    primaryForeground:   '0 0% 100%',
+    secondary,
+    secondaryForeground: '0 0% 100%',
+    background,
+    foreground,
+    muted:               `${hue} 8% 94%`,
+    mutedForeground:     `${hue} 6% 48%`,
+    accent:              primary,
+    accentForeground:    '0 0% 100%',
+    ring:                primary,
+    border:              `${hue} 8% 88%`,
+    input:               `${hue} 8% 88%`,
+    avatarBg:            toMutedVariant(secondary) || `${hue} 25% 92%`,
+    avatarFg:            primary,
+  };
+}
+
+function TenantThemeLoader({ children }) {
+  const searchParams = useSearchParams();
+  const [branding, setBranding]           = useState(null);
+  const [tenantCode, setTenantCode]       = useState(null);
+  const [tenantName, setTenantName]       = useState(null);
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+
+  const fetchAndApplyTheme = useCallback(async (code) => {
+    if (!code) {
+      applyThemeToDom(PLATFORM_THEME);
+      setIsThemeLoaded(true);
+      return;
+    }
+
+    const staticTheme = getStaticThemeForTenant(code);
+    applyThemeToDom(staticTheme);
+
+    try {
+      const res = await axios.get(`${API}/branding/public/${code}`);
+      const data = res.data;
+      const liveBranding = data.branding || {};
+      setBranding(liveBranding);
+      setTenantName(data.tenant_name || liveBranding.app_name || null);
+      applyThemeToDom(brandingToTheme(liveBranding));
+    } catch {
+      setBranding(null);
+    } finally {
+      setIsThemeLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const code =
+      searchParams.get('tenant') ||
+      process.env.NEXT_PUBLIC_TENANT_CODE ||
+      null;
+
+    setTenantCode(code);
+    fetchAndApplyTheme(code);
+  }, [searchParams, fetchAndApplyTheme]);
+
+  return (
+    <TenantThemeContext.Provider value={{ branding, tenantCode, tenantName, isThemeLoaded }}>
+      {children}
+    </TenantThemeContext.Provider>
+  );
+}
+
+export function TenantThemeProvider({ children }) {
+  return (
+    <Suspense fallback={null}>
+      <TenantThemeLoader>{children}</TenantThemeLoader>
+    </Suspense>
+  );
+}

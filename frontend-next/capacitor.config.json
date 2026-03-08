@@ -1,0 +1,12 @@
+{
+  "appId": "com.gracecollege.app",
+  "appName": "Grace College",
+  "webDir": "out",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": false
+  }
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Shield body -->
+  <path d="M60 8 L100 22 L100 62 C100 85 80 102 60 112 C40 102 20 85 20 62 L20 22 Z"
+        fill="url(#shield-grad)" />
+  <!-- Inner shield highlight -->
+  <path d="M60 18 L92 30 L92 62 C92 81 75 96 60 104 C45 96 28 81 28 62 L28 30 Z"
+        fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.25" />
+  <!-- Horizontal divider bar -->
+  <rect x="20" y="58" width="80" height="8" fill="white" fill-opacity="0.15" />
+  <!-- G letterform -->
+  <text x="38" y="58"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="26" font-weight="700"
+        fill="white" fill-opacity="0.95"
+        letter-spacing="-1">G</text>
+  <!-- C letterform -->
+  <text x="62" y="58"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="26" font-weight="700"
+        fill="white" fill-opacity="0.85"
+        letter-spacing="-1">C</text>
+  <!-- Bottom wordmark -->
+  <text x="60" y="82"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="8.5" font-weight="400"
+        fill="white" fill-opacity="0.80"
+        text-anchor="middle" letter-spacing="2">GRACE</text>
+  <!-- Top crown / star accent -->
+  <polygon points="60,5 62,11 68,11 63,15 65,21 60,17 55,21 57,15 52,11 58,11"
+           fill="white" fill-opacity="0.9" />
+  <defs>
+    <linearGradient id="shield-grad" x1="20" y1="8" x2="100" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E63535" />
+      <stop offset="100%" stop-color="#7B35D9" />
+    </linearGradient>
+  </defs>
+</svg>
