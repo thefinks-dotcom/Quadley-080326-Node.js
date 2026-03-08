@@ -48,6 +48,10 @@ const AdminDashboard = () => {
       router.push('/login');
       return;
     }
+    if (!['admin', 'super_admin', 'college_admin'].includes(user.role)) {
+      router.replace('/dashboard');
+      return;
+    }
     fetchDashboardData(user);
   }, [user, authLoading]);
 

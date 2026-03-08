@@ -16,7 +16,7 @@ import {
   Eye, TrendingUp
 } from 'lucide-react';
 
-const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin', 'ra'];
+const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin'];
 
 const TAB_OPTIONS = [
   { key: 'current', label: 'Current', icon: CheckCircle },

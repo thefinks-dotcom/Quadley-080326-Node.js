@@ -19,7 +19,7 @@ const ADMIN_TABS = [
   { id: 'profile', label: 'Profile', icon: User, path: '/dashboard/profile' },
 ];
 
-const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin', 'ra'];
+const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin'];
 
 export default function DashboardLayout({ children }) {
   const { user, loading } = useContext(AuthContext);
