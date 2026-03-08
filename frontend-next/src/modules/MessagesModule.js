@@ -112,8 +112,8 @@ const MessagesModule = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${API}/users`);
-      setUsers(Array.isArray(res.data) ? res.data.filter(u => u.id !== user?.id) : []);
+      const res = await axios.get(`${API}/users/directory`);
+      setUsers(Array.isArray(res.data) ? res.data : []);
     } catch {}
   };
 
@@ -205,7 +205,7 @@ const MessagesModule = () => {
   const loadGroupMembers = async () => {
     if (!selectedConv || selectedConv.type !== 'group') return;
     try {
-      const res = await axios.get(`${API}/users`);
+      const res = await axios.get(`${API}/users/directory`);
       setGroupMembers(selectedConv.members.map(id => res.data.find(u => u.id === id)).filter(Boolean));
       setShowGroupMembers(true);
     } catch { toast.error('Failed to load members'); }

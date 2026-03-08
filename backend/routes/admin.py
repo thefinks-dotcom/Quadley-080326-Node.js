@@ -51,6 +51,20 @@ async def list_users(
     return users
 
 
+@router.get("/users/directory")
+async def get_user_directory(
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Minimal user directory (id, name, role) for all active tenant users.
+    Accessible to all authenticated roles — used for messaging and contact lookups."""
+    tenant_db, current_user = tenant_data
+    users = await tenant_db.users.find(
+        {"active": True},
+        {"_id": 0, "id": 1, "first_name": 1, "last_name": 1, "role": 1}
+    ).to_list(1000)
+    return [u for u in users if u.get("id") != current_user.id]
+
+
 class InviteStudentRequest(BaseModel):
     """Request model for inviting a new user"""
     email: EmailStr

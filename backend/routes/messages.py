@@ -249,7 +249,39 @@ async def get_conversation_messages(
 ):
     """Get messages in a specific conversation with pagination"""
     tenant_db, current_user = tenant_data
-    
+
+    # SECURITY: Verify the requesting user is a participant in this conversation
+    # before returning any messages — prevents IDOR attacks.
+    is_authorized = False
+
+    # Direct message conversation_id is "{user_a_id}_{user_b_id}" (UUIDs use only hyphens,
+    # so the single underscore is always the separator between the two participant IDs).
+    parts = conversation_id.rsplit('_', 1)
+    if len(parts) == 2 and current_user.id in (parts[0], parts[1]):
+        is_authorized = True
+
+    if not is_authorized:
+        # Group conversation: user must be an active member
+        group = await tenant_db.message_groups.find_one(
+            {"id": conversation_id, "members": current_user.id, "is_active": True},
+            {"_id": 0, "id": 1}
+        )
+        if group:
+            is_authorized = True
+
+    if not is_authorized:
+        # Fallback: verify via an existing message (handles any edge-case ID formats)
+        existing_msg = await tenant_db.messages.find_one(
+            {"conversation_id": conversation_id,
+             "$or": [{"sender_id": current_user.id}, {"receiver_id": current_user.id}]},
+            {"_id": 0, "id": 1}
+        )
+        if existing_msg:
+            is_authorized = True
+
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized to view this conversation")
+
     # Build query with optional timestamp filter for pagination
     query = {"conversation_id": conversation_id}
     if before:
