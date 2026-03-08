@@ -22,7 +22,8 @@ import {
   LogOut,
   Heart,
   FileText,
-  GraduationCap
+  GraduationCap,
+  Megaphone
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AuthContext, API } from '@/contexts/AuthContext';
@@ -347,6 +348,22 @@ const AdminDashboard = () => {
                     <p className="text-sm text-muted-foreground">Staff training compliance — Standard 3</p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
+                </button>
+              )}
+
+              {!isSuperAdmin && (
+                <button
+                  onClick={() => router.push('/admin/announcements')}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-blue-300 hover:bg-blue-50 transition-all group text-left"
+                >
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg group-hover:scale-105 transition-transform">
+                    <Megaphone className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Announcements</h3>
+                    <p className="text-sm text-muted-foreground">Post updates · read receipts · push</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
                 </button>
               )}
 

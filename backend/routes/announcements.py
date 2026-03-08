@@ -158,6 +158,27 @@ async def get_announcements(
     return announcements
 
 
+@router.delete("/{announcement_id}")
+async def delete_announcement(
+    announcement_id: str,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Permanently delete an announcement and its read records (admin only) - tenant isolated"""
+    tenant_db, current_user = tenant_data
+
+    if current_user.role not in ['ra', 'admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    existing = await tenant_db.announcements.find_one({"id": announcement_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    await tenant_db.announcements.delete_one({"id": announcement_id})
+    await tenant_db.announcement_reads.delete_many({"announcement_id": announcement_id})
+
+    return {"message": "Announcement deleted"}
+
+
 @router.get("/archived")
 async def get_archived_announcements(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get archived announcements (admin only) - tenant isolated"""
