@@ -21,6 +21,8 @@ export default function AcademicsScreen({ navigation }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('study-groups');
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [newGroup, setNewGroup] = useState({
     subject: '', topic: '', location: '', max_members: '6', description: '',
   });
@@ -107,11 +109,17 @@ export default function AcademicsScreen({ navigation }) {
 
   const renderStudyGroup = ({ item }) => {
     const isJoined = item.members?.some(m => m.user_id === user?.id || m === user?.id);
+    const isFull = (item.members?.length || 0) >= (item.max_members || 10);
     return (
-      <View data-testid={`study-group-${item.id}`} style={{
-        backgroundColor: colors.surface, marginHorizontal: spacing.lg, marginBottom: spacing.md,
-        borderRadius: borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
-      }}>
+      <TouchableOpacity
+        data-testid={`study-group-${item.id}`}
+        activeOpacity={0.85}
+        onPress={() => { setSelectedGroup(item); setDetailVisible(true); }}
+        style={{
+          backgroundColor: colors.surface, marginHorizontal: spacing.lg, marginBottom: spacing.md,
+          borderRadius: borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
+        }}
+      >
         <View style={{ height: 3, backgroundColor: primaryColor }} />
         <View style={{ padding: spacing.lg }}>
           {isJoined && (
@@ -130,16 +138,22 @@ export default function AcademicsScreen({ navigation }) {
                 {item.name || item.subject}
               </Text>
             </View>
-            {!isJoined && (
+            {!isJoined ? (
               <TouchableOpacity
-                onPress={() => joinGroup.mutate(item.id)}
+                onPress={(e) => { e.stopPropagation?.(); joinGroup.mutate(item.id); }}
                 data-testid={`join-group-${item.id}`}
+                disabled={isFull}
                 style={{
-                  backgroundColor: primaryColor, paddingHorizontal: 12, paddingVertical: 6,
+                  backgroundColor: isFull ? colors.borderLight : primaryColor,
+                  paddingHorizontal: 12, paddingVertical: 6,
                   borderRadius: borderRadius.sm, marginLeft: spacing.sm,
                 }}>
-                <Text style={{ color: colors.textInverse, fontWeight: '600', fontSize: 13 }}>Join</Text>
+                <Text style={{ color: isFull ? colors.textTertiary : colors.textInverse, fontWeight: '600', fontSize: 13 }}>
+                  {isFull ? 'Full' : 'Join'}
+                </Text>
               </TouchableOpacity>
+            ) : (
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} style={{ marginTop: 2 }} />
             )}
           </View>
           {item.meeting_schedule && (
@@ -166,7 +180,7 @@ export default function AcademicsScreen({ navigation }) {
             </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -318,6 +332,137 @@ export default function AcademicsScreen({ navigation }) {
       />
       </AnimatedScreen>
 
+
+      {/* Study Group Detail Modal */}
+      <Modal
+        visible={detailVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => { setDetailVisible(false); setSelectedGroup(null); }}
+      >
+        {selectedGroup && (() => {
+          const g = selectedGroup;
+          const liveGroup = sortedStudyGroups?.find(sg => sg.id === g.id) || g;
+          const isJoined = liveGroup.members?.some(m => m.user_id === user?.id || m === user?.id);
+          const memberCount = liveGroup.members?.length || 0;
+          const maxMembers = liveGroup.max_members || 10;
+          const isFull = memberCount >= maxMembers;
+          const spotsLeft = maxMembers - memberCount;
+          return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <TouchableOpacity onPress={() => { setDetailVisible(false); setSelectedGroup(null); }}>
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: colors.textPrimary }}>Study Group</Text>
+                <View style={{ width: 24 }} />
+              </View>
+
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}>
+                <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+                  <View style={{ width: 72, height: 72, backgroundColor: primaryColor + '15', borderRadius: 36, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md }}>
+                    <Ionicons name="people" size={36} color={primaryColor} />
+                  </View>
+                  <Text style={{ fontSize: 22, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', letterSpacing: -0.4 }}>
+                    {liveGroup.name || liveGroup.subject}
+                  </Text>
+                  {liveGroup.subject && liveGroup.name && liveGroup.name !== liveGroup.subject && (
+                    <View style={{ backgroundColor: primaryColor + '15', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginTop: spacing.sm }}>
+                      <Text style={{ fontSize: 13, color: primaryColor, fontWeight: '600' }}>{liveGroup.subject}</Text>
+                    </View>
+                  )}
+                  {isJoined && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, backgroundColor: primaryColor + '15', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 }}>
+                      <Ionicons name="checkmark-circle" size={14} color={primaryColor} />
+                      <Text style={{ fontSize: 13, color: primaryColor, fontWeight: '600', marginLeft: 4 }}>You are a member</Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg }}>
+                  <View style={{ flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, alignItems: 'center' }}>
+                    <Ionicons name="people-outline" size={20} color={primaryColor} />
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginTop: 4 }}>{memberCount}/{maxMembers}</Text>
+                    <Text style={{ fontSize: 11, color: colors.textTertiary, fontWeight: '500' }}>Members</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, alignItems: 'center' }}>
+                    <Ionicons name="add-circle-outline" size={20} color={isFull ? colors.textTertiary : '#2E7D32'} />
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: isFull ? colors.textTertiary : '#2E7D32', marginTop: 4 }}>
+                      {isFull ? '0' : spotsLeft}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.textTertiary, fontWeight: '500' }}>Spots Left</Text>
+                  </View>
+                </View>
+
+                {liveGroup.location ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md }}>
+                    <Ionicons name="location" size={20} color={primaryColor} style={{ marginRight: spacing.md }} />
+                    <View>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 }}>Location</Text>
+                      <Text style={{ fontSize: 15, color: colors.textPrimary, fontWeight: '500', marginTop: 2 }}>{liveGroup.location}</Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {liveGroup.meeting_schedule ? (
+                  <View style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <Ionicons name="calendar-outline" size={18} color={primaryColor} style={{ marginRight: spacing.sm }} />
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 }}>Schedule / Description</Text>
+                    </View>
+                    <Text style={{ fontSize: 15, color: colors.textPrimary, lineHeight: 22 }}>{liveGroup.meeting_schedule}</Text>
+                  </View>
+                ) : null}
+
+                {liveGroup.members?.length > 0 && (
+                  <View style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.sm }}>
+                      Members ({memberCount})
+                    </Text>
+                    {liveGroup.members.map((m, idx) => {
+                      const name = m.user_name || m.name || (typeof m === 'string' ? m : null);
+                      const isMe = m.user_id === user?.id || m === user?.id;
+                      return (
+                        <View key={m.user_id || m.id || idx} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: idx < liveGroup.members.length - 1 ? 1 : 0, borderBottomColor: colors.border }}>
+                          <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: primaryColor + '20', justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: primaryColor }}>
+                              {name ? name[0].toUpperCase() : '?'}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 14, color: colors.textPrimary, flex: 1 }}>
+                            {name || 'Member'}
+                          </Text>
+                          {isMe && (
+                            <Text style={{ fontSize: 11, color: primaryColor, fontWeight: '600' }}>You</Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </ScrollView>
+
+              {!isJoined && (
+                <View style={{ padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface }}>
+                  <TouchableOpacity
+                    onPress={() => joinGroup.mutate(liveGroup.id)}
+                    disabled={isFull || joinGroup.isPending}
+                    style={{
+                      backgroundColor: isFull ? colors.borderLight : primaryColor,
+                      borderRadius: borderRadius.md, padding: spacing.lg, alignItems: 'center',
+                      opacity: joinGroup.isPending ? 0.7 : 1,
+                    }}
+                  >
+                    <Text style={{ color: isFull ? colors.textTertiary : colors.textInverse, fontSize: 16, fontWeight: '700' }}>
+                      {joinGroup.isPending ? 'Joining...' : isFull ? 'Group is Full' : 'Join This Group'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </SafeAreaView>
+          );
+        })()}
+      </Modal>
 
       {/* Create Study Group Modal */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalVisible(false)}>
