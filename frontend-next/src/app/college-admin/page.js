@@ -180,7 +180,7 @@ const CollegeAdminDashboard = () => {
       window.removeEventListener('keydown', handleKeyDown);
       clearTimeout(keyTimer);
     };
-  }, [navigate]);
+  }, [router]);
 
   // Global Search
   const performSearch = useCallback(async (query) => {
