@@ -13,17 +13,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { warmupConnection } from '../../services/api';
 import { colors as defaultColors, borderRadius, spacing, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import TENANT_LOGOS from '../../utils/tenantLogos';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
 
-const buildTenantCode = Constants.expoConfig?.extra?.tenant || 'quadley';
-const buildTenantName = Constants.expoConfig?.extra?.tenantName || 'Quadley';
-const buildPrimaryColor = Constants.expoConfig?.extra?.primaryColor || defaultColors.primary;
+const buildTenantCode = BUILD_CONFIG.tenant;
+const buildTenantName = BUILD_CONFIG.tenantName;
+const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
 const buildLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
 
 export default function LoginScreen({ navigation }) {

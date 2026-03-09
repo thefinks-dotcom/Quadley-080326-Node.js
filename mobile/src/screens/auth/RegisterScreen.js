@@ -12,14 +12,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors, spacing, borderRadius, typography, inputStyle, buttonPrimary, shadows } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import TermsOfServiceModal from '../../components/TermsOfServiceModal';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
 
-const buildPrimaryColor = Constants.expoConfig?.extra?.primaryColor || colors.primary;
+const buildPrimaryColor = BUILD_CONFIG.primaryColor || colors.primary;
 
 export default function RegisterScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();

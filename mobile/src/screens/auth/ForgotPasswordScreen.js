@@ -12,13 +12,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { authService } from '../../services/authService';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors, borderRadius, spacing, inputStyle, buttonPrimary } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
 
-const buildPrimaryColor = Constants.expoConfig?.extra?.primaryColor || colors.primary;
+const buildPrimaryColor = BUILD_CONFIG.primaryColor || colors.primary;
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
