@@ -236,7 +236,8 @@ const attachInterceptors = () => {
       // Skip auth endpoints (login/logout) and prevent recursive loops
       const requestUrl = error.config?.url || '';
       const isAuthEndpoint = requestUrl.includes('/auth/');
-      if (error.response?.status === 401 && !isAuthEndpoint && !sessionExpiredFiring) {
+      const isSilentEndpoint = requestUrl.includes('/messages/typing') || requestUrl.includes('/typing/');
+      if (error.response?.status === 401 && !isAuthEndpoint && !isSilentEndpoint && !sessionExpiredFiring) {
         sessionExpiredFiring = true;
         console.log('[API] Session expired - forcing logout');
         try {

@@ -484,7 +484,7 @@ export default function ChatScreen({ route, navigation }) {
     );
   };
 
-  if (isLoading) {
+  if (!messages && isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={primaryColor} />

@@ -35,9 +35,12 @@ export default function MessagesScreen({ navigation }) {
     refetchInterval: 10000,
   });
 
+  const modalOpen = newMessageModalVisible || newGroupModalVisible;
   const { data: allUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => { const r = await api.get(ENDPOINTS.USER_SEARCH); return r.data || []; },
+    enabled: modalOpen,
+    staleTime: 60 * 1000,
   });
 
   const filteredUsers = userSearchQuery.length > 0
@@ -170,7 +173,7 @@ export default function MessagesScreen({ navigation }) {
     );
   };
 
-  if (isLoading) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={primaryColor} /></SafeAreaView>;
+  if (!conversations && isLoading) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={primaryColor} /></SafeAreaView>;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']} testID="messages-screen">
