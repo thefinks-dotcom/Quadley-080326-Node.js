@@ -27,6 +27,7 @@ import AdminCsvTemplatesScreen from '../screens/admin/AdminCsvTemplatesScreen';
 import AdminSetupStatsScreen from '../screens/admin/AdminSetupStatsScreen';
 import AdminActivitiesScreen from '../screens/admin/AdminActivitiesScreen';
 import AdminSafeDisclosuresScreen from '../screens/admin/AdminSafeDisclosuresScreen';
+import RelationshipDisclosuresScreen from '../screens/admin/RelationshipDisclosuresScreen';
 
 import { colors } from '../theme';
 import { useAppTheme } from '../contexts/ThemeContext';
@@ -103,6 +104,7 @@ function DashboardStack() {
       <Stack.Screen name="AdminSetupStats" component={AdminSetupStatsScreen} options={{ title: 'Account Setup Stats' }} />
       <Stack.Screen name="AdminActivities" component={AdminActivitiesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSafeDisclosures" component={AdminSafeDisclosuresScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="RelationshipDisclosures" component={RelationshipDisclosuresScreen} options={{ headerShown: false }} />
       
       {/* Student Modules (accessible by Admin) */}
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />

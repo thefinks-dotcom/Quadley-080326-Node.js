@@ -59,6 +59,7 @@ export default function AdminDashboardScreen({ navigation }) {
     { title: 'Dining Menu', icon: 'restaurant', screen: 'AdminDiningMenu', description: 'Manage daily menus' },
     { title: 'Service Requests', icon: 'construct', screen: 'AdminServiceRequests', count: stats?.pending_requests },
     { title: 'Safe Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Manage disclosures' },
+    { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
     { title: 'Events', icon: 'calendar', screen: 'AdminEvents', count: stats?.total_events },
     { title: 'Job Postings', icon: 'briefcase', screen: 'AdminJobs', count: stats?.active_jobs },
     { title: 'Recognition', icon: 'star', screen: 'AdminRecognition', count: stats?.total_shoutouts },
