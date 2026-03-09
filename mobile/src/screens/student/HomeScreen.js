@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { colors as defaultColors, shadows, borderRadius, spacing, typography } from '../../theme';
 import TENANT_LOGOS from '../../utils/tenantLogos';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Build-time fallback colors
 const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
@@ -131,12 +133,28 @@ export default function HomeScreen({ navigation }) {
     queryKey: ['announcements'],
     queryFn: async () => {
       const response = await api.get(ENDPOINTS.ANNOUNCEMENTS);
-      return response.data.slice(0, 3);
+      return response.data;
     },
     enabled: isModuleEnabled('announcements'),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
+
+  const [readIds, setReadIds] = useState({});
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!user?.id) return;
+      AsyncStorage.getItem(`read_announcements_${user.id}`)
+        .then(stored => { if (stored) setReadIds(JSON.parse(stored)); })
+        .catch(() => {});
+    }, [user?.id])
+  );
+
+  const unreadNewsCount = useMemo(
+    () => (announcements || []).filter(a => !readIds[a.id]).length,
+    [announcements, readIds]
+  );
 
   const { data: events, refetch: refetchEvents } = useQuery({
     queryKey: ['events'],
@@ -352,8 +370,8 @@ export default function HomeScreen({ navigation }) {
                 <Ionicons name="newspaper" size={18} color={colors.textInverse} />
               </View>
               <View>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textInverse }}>{announcements?.length || 0}</Text>
-                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '500' }}>News</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textInverse }}>{unreadNewsCount}</Text>
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '500' }}>{unreadNewsCount === 1 ? 'Unread' : 'Unread News'}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -446,7 +464,7 @@ export default function HomeScreen({ navigation }) {
               onViewAll={() => navigation.navigate('Announcements')} 
             />
             <View style={{ paddingHorizontal: spacing.lg }}>
-              {announcements?.length > 0 ? announcements.map((announcement, idx) => (
+              {announcements?.length > 0 ? announcements.slice(0, 3).map((announcement, idx) => (
                 <TouchableOpacity
                   key={announcement.id || `announcement-${idx}`}
                   onPress={() => navigation.navigate('Announcements')}
@@ -480,9 +498,17 @@ export default function HomeScreen({ navigation }) {
                       </Text>
                     </View>
                   )}
-                  <Text style={{ ...typography.label }} numberOfLines={1}>
-                    {announcement.title}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {!readIds[announcement.id] && (
+                      <View style={{
+                        width: 7, height: 7, borderRadius: 3.5,
+                        backgroundColor: primaryColor, marginRight: 6, flexShrink: 0,
+                      }} />
+                    )}
+                    <Text style={{ ...typography.label, flex: 1, fontWeight: readIds[announcement.id] ? '500' : '700' }} numberOfLines={1}>
+                      {announcement.title}
+                    </Text>
+                  </View>
                   <Text style={{ ...typography.bodySmall, marginTop: spacing.xs }} numberOfLines={2}>
                     {announcement.content}
                   </Text>
