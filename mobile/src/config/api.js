@@ -38,6 +38,7 @@ export const ENDPOINTS = {
   
   // Announcements
   ANNOUNCEMENTS: '/announcements',
+  EMERGENCY_ROLLCALL: '/emergency-rollcall',
   
   // Messages
   MESSAGES: '/messages',
