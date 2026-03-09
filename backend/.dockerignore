@@ -1,0 +1,14 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.env
+.env.*
+uploads/
+logs/
+*.log
+.git
+.gitignore
+node_modules

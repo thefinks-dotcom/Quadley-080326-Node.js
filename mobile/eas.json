@@ -1,0 +1,121 @@
+{
+  "cli": {
+    "version": ">= 5.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest",
+        "gradleCommand": ":app:assembleDebug"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest",
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "cache": {
+        "disabled": true
+      },
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest",
+        "buildType": "app-bundle"
+      }
+    },
+
+    "production-quadley": {
+      "extends": "production",
+      "env": {
+        "TENANT": "quadley"
+      }
+    },
+
+    "production-ormond": {
+      "extends": "production",
+      "env": {
+        "TENANT": "ormond"
+      }
+    },
+
+    "production-murphy-shark": {
+      "extends": "production",
+      "env": {
+        "TENANT": "murphy_shark"
+      }
+    },
+
+    "production-grace-college": {
+      "extends": "production",
+      "env": {
+        "TENANT": "grace_college"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6746585498"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+
+    "production-quadley": {
+      "ios": {
+        "ascAppId": "6746585498"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+
+    "production-ormond": {
+      "ios": {
+        "ascAppId": "YOUR_ORMOND_APP_STORE_ID"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+
+    "production-murphy-shark": {
+      "ios": {
+        "ascAppId": "YOUR_MURPHY_SHARK_APP_STORE_ID"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+
+    "production-grace-college": {
+      "ios": {
+        "ascAppId": "6759232709"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

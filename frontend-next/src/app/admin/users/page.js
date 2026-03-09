@@ -32,6 +32,7 @@ import {
   Mail
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 
 const API = '';
 
@@ -638,122 +639,103 @@ const UserManagement = () => {
         </Dialog>
 
         {/* Add User panel */}
-        {showAddUser && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setShowAddUser(false)}>
-            <div
-              className="bg-white w-full max-w-lg rounded-t-3xl p-6 max-h-[92vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 text-primary" /> Add User
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    An invitation will be emailed with their sign-up code.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAddUser(false)}
-                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
-                >
-                  ✕
-                </button>
+        <BottomSheet
+          open={showAddUser}
+          onClose={() => { setShowAddUser(false); setAddForm(emptyAddForm); }}
+          title="Add User"
+          footer={
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => { setShowAddUser(false); setAddForm(emptyAddForm); }}
+                disabled={addLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleAddUser}
+                disabled={addLoading || !addForm.first_name.trim() || !addForm.last_name.trim() || !addForm.email.trim()}
+              >
+                <UserPlus className="h-4 w-4" />
+                {addLoading ? 'Adding...' : 'Add & Send Invite'}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium block mb-1">First Name <span className="text-destructive">*</span></label>
+                <Input
+                  placeholder="e.g. Jane"
+                  value={addForm.first_name}
+                  onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
+                  autoFocus
+                />
               </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium block mb-1">First Name <span className="text-destructive">*</span></label>
-                    <Input
-                      placeholder="e.g. Jane"
-                      value={addForm.first_name}
-                      onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))}
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Last Name <span className="text-destructive">*</span></label>
-                    <Input
-                      placeholder="e.g. Smith"
-                      value={addForm.last_name}
-                      onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Email Address <span className="text-destructive">*</span></label>
-                  <Input
-                    type="email"
-                    placeholder="e.g. jane.smith@gracecollege.edu"
-                    value={addForm.email}
-                    onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-1">Role</label>
-                  <select
-                    value={addForm.role}
-                    onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))}
-                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="student">Student</option>
-                    <option value="ra">Residential Assistant (RA)</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Floor <span className="text-muted-foreground font-normal">(optional)</span></label>
-                    <Input
-                      placeholder="e.g. Floor 2"
-                      value={addForm.floor}
-                      onChange={e => setAddForm(f => ({ ...f, floor: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Room <span className="text-muted-foreground font-normal">(optional)</span></label>
-                    <Input
-                      placeholder="e.g. 204"
-                      value={addForm.room}
-                      onChange={e => setAddForm(f => ({ ...f, room: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
-                  <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>
-                    An invitation email will be sent to the user with their sign-up code and instructions to download the app. 
-                    If email delivery is unavailable, their invite code will be shown here.
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => { setShowAddUser(false); setAddForm(emptyAddForm); }}
-                  disabled={addLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1 gap-2"
-                  onClick={handleAddUser}
-                  disabled={addLoading || !addForm.first_name.trim() || !addForm.last_name.trim() || !addForm.email.trim()}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {addLoading ? 'Adding...' : 'Add & Send Invite'}
-                </Button>
+              <div>
+                <label className="text-sm font-medium block mb-1">Last Name <span className="text-destructive">*</span></label>
+                <Input
+                  placeholder="e.g. Smith"
+                  value={addForm.last_name}
+                  onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))}
+                />
               </div>
             </div>
+
+            <div>
+              <label className="text-sm font-medium block mb-1">Email Address <span className="text-destructive">*</span></label>
+              <Input
+                type="email"
+                placeholder="e.g. jane.smith@gracecollege.edu"
+                value={addForm.email}
+                onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium block mb-1">Role</label>
+              <select
+                value={addForm.role}
+                onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="student">Student</option>
+                <option value="ra">Residential Assistant (RA)</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium block mb-1">Floor <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <Input
+                  placeholder="e.g. Floor 2"
+                  value={addForm.floor}
+                  onChange={e => setAddForm(f => ({ ...f, floor: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">Room <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <Input
+                  placeholder="e.g. 204"
+                  value={addForm.room}
+                  onChange={e => setAddForm(f => ({ ...f, room: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+              <Mail className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                An invitation email will be sent to the user with their sign-up code and instructions to download the app.
+                If email delivery is unavailable, their invite code will be shown here.
+              </span>
+            </div>
           </div>
-        )}
+        </BottomSheet>
       </div>
     </div>
   );

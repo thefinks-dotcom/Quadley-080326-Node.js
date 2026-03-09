@@ -25,8 +25,9 @@ import ModuleHeader from '@/components/ModuleHeader';
 const DASHBOARD_CACHE_KEY = 'quadley_dashboard_cache';
 
 const HomeModule = () => {
-  const { user } = useContext(AuthContext);
+  const { user, enabledModules } = useContext(AuthContext);
   const router = useRouter();
+  const moduleEnabled = (key) => !enabledModules || enabledModules.includes(key);
   const [dashboard, setDashboard] = useState(() => {
     try {
       const cached = sessionStorage.getItem(DASHBOARD_CACHE_KEY);
@@ -197,134 +198,164 @@ const HomeModule = () => {
         </Card>
       )}
       
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/dashboard/announcements" className="block no-underline" data-testid="stat-news">
-          <Card className="p-4 glass card-hover cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-                <Bell className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">News</div>
-                <div className="text-2xl font-bold gradient-text leading-tight">{dashboard.recent_announcements?.length || 0}</div>
-              </div>
-            </div>
-          </Card>
-        </Link>
-        <Link href="/dashboard/messages" className="block no-underline" data-testid="stat-unread-messages">
-          <Card className="p-4 glass card-hover cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Messages</div>
-                <div className="text-2xl font-bold gradient-text leading-tight">{dashboard.unread_messages_count || 0}</div>
-              </div>
-            </div>
-          </Card>
-        </Link>
-      </div>
+      {(moduleEnabled('announcements') || moduleEnabled('messages')) && (
+        <div className="grid grid-cols-2 gap-3">
+          {moduleEnabled('announcements') && (
+            <Link href="/dashboard/announcements" className="block no-underline" data-testid="stat-news">
+              <Card className="p-4 glass card-hover cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+                    <Bell className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">News</div>
+                    <div className="text-2xl font-bold gradient-text leading-tight">{dashboard.recent_announcements?.length || 0}</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          )}
+          {moduleEnabled('messages') && (
+            <Link href="/dashboard/messages" className="block no-underline" data-testid="stat-unread-messages">
+              <Card className="p-4 glass card-hover cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Messages</div>
+                    <div className="text-2xl font-bold gradient-text leading-tight">{dashboard.unread_messages_count || 0}</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Quick Access Navigation */}
       <Card className="p-3 sm:p-6 glass overflow-hidden">
         <h3 className="font-bold text-lg sm:text-xl mb-3 sm:mb-4">Quick Access</h3>
         <div className="quick-access-grid">
           {/* 1. Events */}
-          <Link href="/dashboard/events" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-events">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Calendar className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Events</span>
-          </Link>
+          {moduleEnabled('events') && (
+            <Link href="/dashboard/events" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-events">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Calendar className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Events</span>
+            </Link>
+          )}
 
           {/* 2. Dining */}
-          <Link href="/dashboard/dining" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-dining">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <UtensilsCrossed className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Dining</span>
-          </Link>
+          {moduleEnabled('dining') && (
+            <Link href="/dashboard/dining" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-dining">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <UtensilsCrossed className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Dining</span>
+            </Link>
+          )}
 
           {/* 3. Service */}
-          <Link href="/dashboard/maintenance" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-services">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-muted-foreground to-secondary flex items-center justify-center">
-              <Wrench className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Service</span>
-          </Link>
+          {moduleEnabled('maintenance') && (
+            <Link href="/dashboard/maintenance" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-services">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-muted-foreground to-secondary flex items-center justify-center">
+                <Wrench className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Service</span>
+            </Link>
+          )}
 
           {/* 4. Parcels */}
-          <Link href="/dashboard/parcels" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-parcels">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Parcels</span>
-          </Link>
+          {moduleEnabled('parcels') && (
+            <Link href="/dashboard/parcels" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-parcels">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Package className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Parcels</span>
+            </Link>
+          )}
 
           {/* 5. Floor */}
-          <Link href="/dashboard/houses" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-floor">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-warning to-secondary flex items-center justify-center">
-              <Building className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Floor</span>
-          </Link>
+          {moduleEnabled('floor') && (
+            <Link href="/dashboard/houses" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-floor">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-warning to-secondary flex items-center justify-center">
+                <Building className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Floor</span>
+            </Link>
+          )}
 
           {/* 6. Academics */}
-          <Link href="/dashboard/academics" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-academics">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Academics</span>
-          </Link>
+          {moduleEnabled('academics') && (
+            <Link href="/dashboard/academics" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-academics">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Academics</span>
+            </Link>
+          )}
 
           {/* 7. Clubs */}
-          <Link href="/dashboard/cocurricular" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-cocurricular">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Trophy className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Clubs</span>
-          </Link>
+          {moduleEnabled('cocurricular') && (
+            <Link href="/dashboard/cocurricular" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-cocurricular">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Trophy className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Clubs</span>
+            </Link>
+          )}
 
           {/* 8. Make a Report */}
-          <Link href="/dashboard/safe-disclosure" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-make-report">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
-              <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Make a Report</span>
-          </Link>
+          {moduleEnabled('safe_disclosure') && (
+            <Link href="/dashboard/safe-disclosure" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-make-report">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-destructive to-orange-500 flex items-center justify-center">
+                <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Make a Report</span>
+            </Link>
+          )}
 
           {/* 9. Jobs */}
-          <Link href="/dashboard/jobs" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-jobs">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-success to-success flex items-center justify-center">
-              <Briefcase className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Jobs</span>
-          </Link>
+          {moduleEnabled('jobs') && (
+            <Link href="/dashboard/jobs" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-jobs">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-success to-success flex items-center justify-center">
+                <Briefcase className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Jobs</span>
+            </Link>
+          )}
 
           {/* 10. Birthdays */}
-          <Link href="/dashboard/birthdays" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-birthdays">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Cake className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Birthdays</span>
-          </Link>
+          {moduleEnabled('birthdays') && (
+            <Link href="/dashboard/birthdays" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-birthdays">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Cake className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Birthdays</span>
+            </Link>
+          )}
 
           {/* 11. Shoutouts */}
-          <Link href="/dashboard/recognition" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-recognition">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-warning/40 to-secondary flex items-center justify-center">
-              <Award className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Shoutouts</span>
-          </Link>
+          {moduleEnabled('recognition') && (
+            <Link href="/dashboard/recognition" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-recognition">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-warning/40 to-secondary flex items-center justify-center">
+                <Award className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Shoutouts</span>
+            </Link>
+          )}
 
           {/* 12. Wellbeing */}
-          <Link href="/dashboard/wellbeing" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-wellbeing">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-destructive flex items-center justify-center">
-              <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Wellbeing</span>
-          </Link>
+          {moduleEnabled('wellbeing') && (
+            <Link href="/dashboard/wellbeing" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-wellbeing">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-destructive flex items-center justify-center">
+                <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <span className="text-[10px] sm:text-sm font-medium text-center leading-tight">Wellbeing</span>
+            </Link>
+          )}
 
           {/* 13. AI Help */}
           <Link href="/dashboard/ai" className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-4 rounded-lg hover:bg-muted transition-all text-current no-underline" data-testid="quick-ai">
@@ -380,7 +411,7 @@ const HomeModule = () => {
       )}
 
       {/* Birthday Widget */}
-      {dashboard.upcoming_birthdays && dashboard.upcoming_birthdays.length > 0 && (
+      {moduleEnabled('birthdays') && dashboard.upcoming_birthdays && dashboard.upcoming_birthdays.length > 0 && (
         <Card className="p-6 glass border-l-4 border-primary">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-xl flex items-center gap-2">
@@ -424,7 +455,7 @@ const HomeModule = () => {
       )}
 
       {/* Recent Recognitions Widget */}
-      {dashboard.shoutouts && dashboard.shoutouts.length > 0 && (
+      {moduleEnabled('recognition') && dashboard.shoutouts && dashboard.shoutouts.length > 0 && (
         <Card className="p-6 glass border-l-4 border-warning">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-xl flex items-center gap-2">
@@ -478,7 +509,7 @@ const HomeModule = () => {
         </Card>
       )}
 
-      {dashboard.upcoming_events && dashboard.upcoming_events.length > 0 && (
+      {moduleEnabled('events') && dashboard.upcoming_events && dashboard.upcoming_events.length > 0 && (
         <Card className="p-6 glass">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-xl">Upcoming Events</h3>

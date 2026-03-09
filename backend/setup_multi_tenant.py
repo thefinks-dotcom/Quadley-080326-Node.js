@@ -76,7 +76,6 @@ async def setup_multi_tenant_test_data():
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await master_db.super_admins.insert_one(super_admin)
-    print(f"  - Super Admin: {super_admin['email']} / Quadley2025!")
     
     # 4. Create Test Tenants
     print("\n[4/5] Creating test tenants...")
@@ -110,7 +109,6 @@ async def setup_multi_tenant_test_data():
             "created_by": super_admin['id']
         }
         await master_db.tenants.insert_one(tenant)
-        print(f"  - Tenant: {tenant['name']} (Code: {tenant['code']})")
         
         # Create invitation for tenant admin
         invitation = {
@@ -127,7 +125,6 @@ async def setup_multi_tenant_test_data():
             "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
         }
         await master_db.invitations.insert_one(invitation)
-        print(f"    - Admin invitation: {invitation['email']} (Token: {invitation['token'][:8]}...)")
         
         # Initialize tenant database
         tenant_db = client[f"quadley_tenant_{tenant['code'].lower()}"]

@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native folders (using CNG/Prebuild)
+ios/
+android/
+
+# Native builds
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+.env
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Temporary files
+*.log

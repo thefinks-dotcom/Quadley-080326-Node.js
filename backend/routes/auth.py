@@ -374,9 +374,23 @@ async def login(request: Request, credentials: UserLogin):
             response_content["mfa_setup_required"] = True
             response_content["message"] = "MFA setup is required for admin accounts. Please set up MFA to continue."
         
-        # Create response — Bearer-only auth, no cookies (PEN test A.9.4)
         response = JSONResponse(content=response_content)
-        
+
+        # Set httpOnly cookie for fully-authenticated users only.
+        # MFA-pending users are NOT given a cookie yet — they must complete MFA first,
+        # at which point the MFA endpoint sets the cookie.
+        # SameSite=Lax protects against CSRF on mutating methods (RFC 6265bis §8.8.2).
+        if not mfa_required:
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=COOKIE_HTTPONLY,
+                secure=COOKIE_SECURE,
+                samesite=COOKIE_SAMESITE,
+                max_age=COOKIE_MAX_AGE,
+                path="/",
+            )
+
         return response
     
     except HTTPException:

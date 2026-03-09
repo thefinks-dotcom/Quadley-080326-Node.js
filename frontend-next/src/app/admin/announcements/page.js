@@ -15,6 +15,7 @@ import {
   Calendar, Users, Trash2, Archive, BarChart2, X, Bell, RotateCcw,
   Eye, TrendingUp
 } from 'lucide-react';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin'];
 
@@ -357,147 +358,139 @@ export default function AnnouncementsAdmin() {
         </div>
       </div>
 
-      {showForm && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setShowForm(false)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-primary" /> New Announcement
-              </h3>
-              <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+      <BottomSheet
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="New Announcement"
+        footer={
+          <Button
+            onClick={handlePost}
+            disabled={posting || !form.title.trim() || !form.content.trim()}
+            className="w-full gap-2"
+          >
+            {scheduleConfirmed && form.scheduled_date ? (
+              <><Clock className="h-4 w-4" /> {posting ? 'Scheduling...' : 'Schedule Announcement'}</>
+            ) : (
+              <><Send className="h-4 w-4" /> {posting ? 'Posting...' : form.send_push ? 'Post + Send Push' : 'Post Announcement'}</>
+            )}
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium mb-1">Title *</Label>
+            <Input
+              placeholder="Announcement title..."
+              value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              autoFocus
+            />
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium mb-1">Title *</Label>
-                <Input
-                  placeholder="Announcement title..."
-                  value={form.title}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  autoFocus
-                />
-              </div>
+          <div>
+            <Label className="text-sm font-medium mb-1">Content *</Label>
+            <textarea
+              className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 min-h-[100px] resize-none"
+              placeholder="Write your announcement..."
+              value={form.content}
+              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+            />
+          </div>
 
-              <div>
-                <Label className="text-sm font-medium mb-1">Content *</Label>
-                <textarea
-                  className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 min-h-[100px] resize-none"
-                  placeholder="Write your announcement..."
-                  value={form.content}
-                  onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm font-medium mb-1">Audience</Label>
-                  <select
-                    value={form.target_audience}
-                    onChange={e => setForm(f => ({ ...f, target_audience: e.target.value }))}
-                    className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 mt-1"
-                  >
-                    <option value="all">All Residents</option>
-                    <option value="students">Students Only</option>
-                    <option value="staff">Staff Only</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium mb-1">Priority</Label>
-                  <select
-                    value={form.priority}
-                    onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
-                    className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 mt-1"
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="is_emergency"
-                    checked={form.is_emergency}
-                    onChange={e => setForm(f => ({ ...f, is_emergency: e.target.checked }))}
-                    className="h-4 w-4 accent-red-500"
-                  />
-                  <label htmlFor="is_emergency" className="text-sm font-medium text-red-600 cursor-pointer flex items-center gap-1.5">
-                    <AlertTriangle className="h-4 w-4" /> Mark as Emergency
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="send_push"
-                    checked={form.send_push}
-                    onChange={e => setForm(f => ({ ...f, send_push: e.target.checked }))}
-                    className="h-4 w-4 accent-primary"
-                  />
-                  <label htmlFor="send_push" className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
-                    <Bell className="h-4 w-4 text-primary" /> Send push notification
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium mb-1">Schedule for later (optional)</Label>
-                {scheduleConfirmed && form.scheduled_date ? (
-                  <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg mt-1">
-                    <span className="text-sm font-medium text-amber-700 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {new Date(form.scheduled_date).toLocaleString()}
-                    </span>
-                    <button className="text-xs text-amber-700 underline" onClick={() => { setScheduleConfirmed(false); setTempScheduleDate(form.scheduled_date); }}>
-                      Change
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative mt-1">
-                    <Input
-                      type="datetime-local"
-                      value={tempScheduleDate}
-                      onChange={e => setTempScheduleDate(e.target.value)}
-                      className={tempScheduleDate ? 'pr-24' : ''}
-                    />
-                    {tempScheduleDate && (
-                      <Button
-                        size="sm"
-                        onClick={() => { setForm(f => ({ ...f, scheduled_date: tempScheduleDate })); setScheduleConfirmed(true); }}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-2 text-xs"
-                      >
-                        Confirm
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <Button
-                onClick={handlePost}
-                disabled={posting || !form.title.trim() || !form.content.trim()}
-                className="w-full gap-2"
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm font-medium mb-1">Audience</Label>
+              <select
+                value={form.target_audience}
+                onChange={e => setForm(f => ({ ...f, target_audience: e.target.value }))}
+                className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 mt-1"
               >
-                {scheduleConfirmed && form.scheduled_date ? (
-                  <><Clock className="h-4 w-4" /> {posting ? 'Scheduling...' : 'Schedule Announcement'}</>
-                ) : (
-                  <><Send className="h-4 w-4" /> {posting ? 'Posting...' : form.send_push ? 'Post + Send Push' : 'Post Announcement'}</>
-                )}
-              </Button>
+                <option value="all">All Residents</option>
+                <option value="students">Students Only</option>
+                <option value="staff">Staff Only</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1">Priority</Label>
+              <select
+                value={form.priority}
+                onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
+                className="w-full text-sm bg-white border border-border rounded-lg px-3 py-2 mt-1"
+              >
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+              </select>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
+              <input
+                type="checkbox"
+                id="is_emergency"
+                checked={form.is_emergency}
+                onChange={e => setForm(f => ({ ...f, is_emergency: e.target.checked }))}
+                className="h-4 w-4 accent-red-500"
+              />
+              <label htmlFor="is_emergency" className="text-sm font-medium text-red-600 cursor-pointer flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4" /> Mark as Emergency
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
+              <input
+                type="checkbox"
+                id="send_push"
+                checked={form.send_push}
+                onChange={e => setForm(f => ({ ...f, send_push: e.target.checked }))}
+                className="h-4 w-4 accent-primary"
+              />
+              <label htmlFor="send_push" className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
+                <Bell className="h-4 w-4 text-primary" /> Send push notification
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-1">Schedule for later (optional)</Label>
+            {scheduleConfirmed && form.scheduled_date ? (
+              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg mt-1">
+                <span className="text-sm font-medium text-amber-700 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  {new Date(form.scheduled_date).toLocaleString()}
+                </span>
+                <button className="text-xs text-amber-700 underline" onClick={() => { setScheduleConfirmed(false); setTempScheduleDate(form.scheduled_date); }}>
+                  Change
+                </button>
+              </div>
+            ) : (
+              <div className="relative mt-1">
+                <Input
+                  type="datetime-local"
+                  value={tempScheduleDate}
+                  onChange={e => setTempScheduleDate(e.target.value)}
+                  className={tempScheduleDate ? 'pr-24' : ''}
+                />
+                {tempScheduleDate && (
+                  <Button
+                    size="sm"
+                    onClick={() => { setForm(f => ({ ...f, scheduled_date: tempScheduleDate })); setScheduleConfirmed(true); }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-2 text-xs"
+                  >
+                    Confirm
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </BottomSheet>
 
       {statsModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setStatsModal(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-border flex items-center justify-between">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl flex flex-col" style={{ maxHeight: '85dvh' }} onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
               <div>
                 <h3 className="font-bold">Read Receipts</h3>
                 <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{statsModal.title}</p>
@@ -506,7 +499,7 @@ export default function AnnouncementsAdmin() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 flex-1 overflow-y-auto">
               {statsLoading ? (
                 <div className="text-center py-10"><div className="animate-spin w-8 h-8 rounded-full border-2 border-primary border-t-transparent mx-auto" /></div>
               ) : statsData ? (

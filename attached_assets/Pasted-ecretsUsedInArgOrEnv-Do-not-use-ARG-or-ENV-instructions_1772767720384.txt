@@ -1,0 +1,18 @@
+ecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "DOWNLOAD_SECRET") (line 11)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "JWT_SECRET") (line 11)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "SENDGRID_API_KEY") (line 11)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "TOKEN_EXPIRE_MINUTES") (line 11)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "DOWNLOAD_SECRET") (line 12)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "JWT_SECRET") (line 12)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "SENDGRID_API_KEY") (line 12)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "TOKEN_EXPIRE_MINUTES") (line 12)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+UndefinedVar: Usage of undefined variable '$NIXPACKS_PATH' (line 18)(https://docs.docker.com/go/dockerfile/rule/undefined-var/)
+ details: Variables should be defined before their use

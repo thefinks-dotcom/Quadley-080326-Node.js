@@ -14,6 +14,7 @@ import {
   Heart, ArrowLeft, Users, AlertTriangle, CheckCircle, Clock,
   Plus, Search, X, ChevronDown, FileText, Shield
 } from 'lucide-react';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 
 const RELATIONSHIP_TYPES = [
   'Romantic / Personal Intimate',
@@ -314,17 +315,17 @@ export default function RelationshipDisclosuresPage() {
         </p>
       </div>
 
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg">Log Relationship Disclosure</h3>
-              <button onClick={() => setShowAddModal(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
+      <BottomSheet
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Log Relationship Disclosure"
+        footer={
+          <Button onClick={submitDisclosure} disabled={saving || !form.disclosed_by_name || !form.other_party_name} className="w-full">
+            {saving ? 'Saving...' : 'Log Disclosure'}
+          </Button>
+        }
+      >
+        <div className="space-y-4">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
                 <Shield className="h-4 w-4 inline mr-1" />
                 Relationship disclosures are confidential governance records. Only college administrators can view them.
@@ -447,25 +448,20 @@ export default function RelationshipDisclosuresPage() {
                 />
               </div>
 
-              <Button onClick={submitDisclosure} disabled={saving || !form.disclosed_by_name || !form.other_party_name} className="w-full">
-                {saving ? 'Saving...' : 'Log Disclosure'}
-              </Button>
-            </div>
-          </div>
         </div>
-      )}
+      </BottomSheet>
 
       {selectedDisclosure && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setSelectedDisclosure(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-border flex items-center justify-between">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl flex flex-col" style={{ maxHeight: '90dvh' }} onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
               <h3 className="font-bold text-lg">Disclosure Details</h3>
               <button onClick={() => setSelectedDisclosure(null)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-muted rounded-xl">
                   <p className="text-xs text-muted-foreground mb-0.5">Party 1</p>
@@ -558,10 +554,12 @@ export default function RelationshipDisclosuresPage() {
                   />
                 </div>
 
-                <Button onClick={updateDisclosure} disabled={updating} className="w-full">
-                  {updating ? 'Saving...' : 'Save Update'}
-                </Button>
               </div>
+            </div>
+            <div className="p-5 pt-3 shrink-0 border-t border-border">
+              <Button onClick={updateDisclosure} disabled={updating} className="w-full">
+                {updating ? 'Saving...' : 'Save Update'}
+              </Button>
             </div>
           </div>
         </div>

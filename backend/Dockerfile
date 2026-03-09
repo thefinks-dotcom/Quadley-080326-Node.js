@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+ARG NIXPACKS_PATH
+ENV PATH="${NIXPACKS_PATH:+$NIXPACKS_PATH:}$PATH"
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

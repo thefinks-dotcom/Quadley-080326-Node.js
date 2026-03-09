@@ -1,0 +1,411 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import {
+  Users,
+  Building2,
+  Upload,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Settings,
+  ArrowRight,
+  Shield,
+  TrendingUp,
+  Activity,
+  ChevronRight
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+const API = process.env.REACT_APP_BACKEND_URL;
+
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [tenant, setTenant] = useState(null);
+  const [tenants, setTenants] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    pendingTenants: 0,
+    activeTenants: 0,
+    activeUsers: 0,
+    inactiveUsers: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Get user from localStorage (set during login)
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData) {
+        navigate('/login');
+        return;
+      }
+      setUser(userData);
+
+      const isSuperAdmin = userData.role === 'super_admin';
+
+      // For super admin, fetch all tenants
+      if (isSuperAdmin) {
+        try {
+          const tenantsRes = await axios.get(`${API}/api/tenants`);
+          setTenants(tenantsRes.data);
+          const pending = tenantsRes.data.filter(t => t.status === 'pending').length;
+          const active = tenantsRes.data.filter(t => t.status === 'active').length;
+          setStats(prev => ({ ...prev, pendingTenants: pending, activeTenants: active }));
+        } catch (e) {
+          console.error('Failed to fetch tenants', e);
+        }
+      } else {
+        // Get tenant info for admin
+        try {
+          const tenantRes = await axios.get(`${API}/api/tenants/${userData.tenant_id}`);
+          setTenant(tenantRes.data);
+        } catch (e) {
+          console.error('Failed to fetch tenant', e);
+        }
+      }
+
+      // Get user stats
+      try {
+        const usersRes = await axios.get(`${API}/api/users/list`);
+        setStats(prev => ({
+          ...prev,
+          totalUsers: usersRes.data.length,
+          activeUsers: usersRes.data.filter(u => u.active !== false).length,
+          inactiveUsers: usersRes.data.filter(u => u.active === false).length
+        }));
+      } catch (e) {
+        console.error('Failed to fetch users', e);
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch dashboard data', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-muted">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-border mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isSuperAdmin = user?.role === 'super_admin';
+  const pendingTenants = tenants.filter(t => t.status === 'pending');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-muted via-background to-muted">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-xl">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  {isSuperAdmin ? 'Super Admin Portal' : 'Admin Portal'}
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  {isSuperAdmin ? 'Manage all tenants and system settings' : tenant?.tenant_name || 'Manage your college'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Button
+            onClick={() => navigate('/dashboard')}
+            variant="outline"
+            className="flex items-center gap-2 self-start"
+          >
+            <ArrowRight className="h-4 w-4 rotate-180" />
+            Back to App
+          </Button>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {isSuperAdmin && (
+            <Card 
+              className="bg-gradient-to-br from-warning/10 to-warning/10 border-border cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+              onClick={() => navigate('/admin/tenants?status=pending')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Pending Approval</p>
+                    <p className="text-3xl font-bold text-foreground mt-1">{stats.pendingTenants}</p>
+                  </div>
+                  <div className="p-2 bg-warning/40/50 rounded-lg">
+                    <Clock className="h-5 w-5 text-foreground" />
+                  </div>
+                </div>
+                <p className="text-xs text-primary mt-3">Click to review →</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {isSuperAdmin && (
+            <Card 
+              className="bg-gradient-to-br from-success/10 to-success/10 border-success cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+              onClick={() => navigate('/admin/tenants?status=active')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-success">Active Tenants</p>
+                    <p className="text-3xl font-bold text-success mt-1">{stats.activeTenants}</p>
+                  </div>
+                  <div className="p-2 bg-success/40/50 rounded-lg">
+                    <Building2 className="h-5 w-5 text-success" />
+                  </div>
+                </div>
+                <p className="text-xs text-success mt-3">Click to manage →</p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card 
+            className="bg-gradient-to-br from-muted to-muted border-border cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+            onClick={() => navigate('/admin/users')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary">Total Users</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{stats.totalUsers}</p>
+                </div>
+                <div className="p-2 bg-muted/50 rounded-lg">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+              <p className="text-xs text-primary mt-3">Click to view all →</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-gradient-to-br from-success/10 to-success/10 border-success cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+            onClick={() => navigate('/admin/users')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-success">Active Users</p>
+                  <p className="text-3xl font-bold text-success mt-1">{stats.activeUsers}</p>
+                </div>
+                <div className="p-2 bg-success/40/50 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                </div>
+              </div>
+              <p className="text-xs text-success mt-3">Click to view all →</p>
+            </CardContent>
+          </Card>
+
+          {stats.inactiveUsers > 0 && (
+            <Card 
+              className="bg-gradient-to-br from-destructive/10 to-muted border-destructive/20 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+              onClick={() => navigate('/admin/users')}
+            >
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-destructive">Inactive Users</p>
+                    <p className="text-3xl font-bold text-destructive mt-1">{stats.inactiveUsers}</p>
+                  </div>
+                  <div className="p-2 bg-destructive/40/50 rounded-lg">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                  </div>
+                </div>
+                <p className="text-xs text-destructive mt-3">Click to review →</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {isSuperAdmin && (
+                <button
+                  onClick={() => navigate('/admin/super')}
+                  className="flex items-center gap-4 p-4 rounded-xl border-2 border-border bg-gradient-to-br from-muted to-muted hover:border-border hover:from-muted hover:to-muted transition-all group text-left"
+                >
+                  <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:scale-105 transition-transform">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Super Admin Dashboard</h3>
+                    <p className="text-sm text-primary">Full tenant management & analytics</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </button>
+              )}
+
+              {isSuperAdmin && (
+                <button
+                  onClick={() => navigate('/admin/tenants')}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-border hover:bg-muted transition-all group text-left"
+                >
+                  <div className="p-3 bg-gradient-to-br from-success to-success rounded-lg group-hover:scale-105 transition-transform">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">Manage Tenants</h3>
+                    <p className="text-sm text-muted-foreground">Approve & configure colleges</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
+                </button>
+              )}
+
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-border hover:bg-muted transition-all group text-left"
+              >
+                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:scale-105 transition-transform">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">User Management</h3>
+                  <p className="text-sm text-muted-foreground">View & manage users</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
+              </button>
+
+              <button
+                onClick={() => navigate('/admin/users/csv-upload')}
+                className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-border hover:bg-muted transition-all group text-left"
+              >
+                <div className="p-3 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:scale-105 transition-transform">
+                  <Upload className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Import Users</h3>
+                  <p className="text-sm text-muted-foreground">Bulk import via CSV</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending Tenants (Super Admin Only) */}
+        {isSuperAdmin && pendingTenants.length > 0 && (
+          <Card className="mb-8 border-border">
+            <CardHeader className="bg-muted rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg text-foreground">Pending Approvals</CardTitle>
+              </div>
+              <CardDescription className="text-foreground">
+                These tenants are waiting for approval
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-3">
+                {pendingTenants.slice(0, 5).map((t) => (
+                  <div
+                    key={t.tenant_id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
+                        {t.tenant_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{t.tenant_name}</p>
+                        <p className="text-sm text-muted-foreground">{t.domain} • {t.contact_email}</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/admin/tenants')}
+                    >
+                      Review
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {pendingTenants.length > 5 && (
+                <Button
+                  variant="link"
+                  className="mt-4 w-full"
+                  onClick={() => navigate('/admin/tenants')}
+                >
+                  View all {pendingTenants.length} pending tenants
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tenant Info (Admin Only) */}
+        {!isSuperAdmin && tenant && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tenant Information</CardTitle>
+              <CardDescription>Your college configuration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tenant ID</p>
+                  <p className="font-semibold text-foreground">{tenant.tenant_id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Domain</p>
+                  <p className="font-semibold text-foreground">{tenant.domain}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge className={`mt-1 ${
+                    tenant.status === 'active' ? 'bg-success/10 text-success hover:bg-success/10' :
+                    tenant.status === 'pending' ? 'bg-muted text-foreground hover:bg-muted' :
+                    'bg-destructive/10 text-destructive hover:bg-destructive/10'
+                  }`}>
+                    {tenant.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Capacity</p>
+                  <p className="font-semibold text-foreground">{tenant.capacity} users</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Contact Email</p>
+                  <p className="font-semibold text-foreground">{tenant.contact_email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Created</p>
+                  <p className="font-semibold text-foreground">
+                    {new Date(tenant.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;

@@ -10,6 +10,7 @@ import {
   ArrowLeft, AlertTriangle, CheckCircle, Clock, Users, ShieldCheck,
   Send, X, RefreshCw, XCircle
 } from 'lucide-react';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'college_admin'];
 
@@ -312,32 +313,30 @@ export default function RollcallDetailPage() {
         )}
       </div>
 
-      {showReportForm && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setShowReportForm(false)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-base">Send Clearance Report</h3>
-              <button onClick={() => setShowReportForm(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              This report will be sent to all admins confirming your floor residents are accounted for.
-            </p>
-            <textarea
-              className="w-full text-sm bg-muted border border-border rounded-xl px-3 py-2 min-h-[80px] resize-none"
-              placeholder="e.g. All residents on Floor 2 are accounted for..."
-              value={reportText}
-              onChange={e => setReportText(e.target.value)}
-              autoFocus
-            />
-            <Button onClick={handleSendReport} disabled={sendingReport || !reportText.trim()} className="w-full mt-3 gap-2">
-              <Send className="h-4 w-4" />
-              {sendingReport ? 'Sending...' : 'Send Clearance Report to Admin'}
-            </Button>
-          </div>
+      <BottomSheet
+        open={showReportForm}
+        onClose={() => setShowReportForm(false)}
+        title="Send Clearance Report"
+        footer={
+          <Button onClick={handleSendReport} disabled={sendingReport || !reportText.trim()} className="w-full gap-2">
+            <Send className="h-4 w-4" />
+            {sendingReport ? 'Sending...' : 'Send Clearance Report to Admin'}
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            This report will be sent to all admins confirming your floor residents are accounted for.
+          </p>
+          <textarea
+            className="w-full text-sm bg-muted border border-border rounded-xl px-3 py-2 min-h-[80px] resize-none"
+            placeholder="e.g. All residents on Floor 2 are accounted for..."
+            value={reportText}
+            onChange={e => setReportText(e.target.value)}
+            autoFocus
+          />
         </div>
-      )}
+      </BottomSheet>
     </div>
   );
 }

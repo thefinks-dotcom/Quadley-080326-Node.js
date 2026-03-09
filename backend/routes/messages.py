@@ -1,18 +1,64 @@
 """Messages and conversations routes - Multi-tenant aware"""
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from typing import List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 import uuid
+import logging
 
 from models import Message, MessageCreate, MessageGroup, MessageGroupCreate
 from utils.auth import get_tenant_db_for_user
 from utils.security import sanitize_html
 
+logger = logging.getLogger(__name__)
+
+class MessageReportCreate(BaseModel):
+    category: str  # harassment | threats | inappropriate | bullying | other
+    details: Optional[str] = None
+
+class MessageReportAction(BaseModel):
+    action: str  # suspend | warn | dismiss | remove_message
+
 router = APIRouter(tags=["messages"])
 
 # In-memory typing status (would use Redis in production)
 typing_status = {}
+
+
+async def _check_ai_moderation(content: str, tenant_code: str) -> dict | None:
+    """
+    Call OpenAI Moderation API if enabled for this tenant.
+    Returns the flagged result dict, or None if not flagged / not configured.
+    Failures are non-blocking — always returns None on any error.
+    """
+    import os
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return None
+    try:
+        from utils.multi_tenant import master_db
+        tenant = await master_db.tenants.find_one(
+            {"code": tenant_code}, {"_id": 0, "ai_moderation_enabled": 1}
+        )
+        if not tenant or not tenant.get("ai_moderation_enabled"):
+            return None
+
+        import httpx
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            res = await client.post(
+                "https://api.openai.com/v1/moderations",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={"input": content},
+            )
+            if res.status_code == 200:
+                result = res.json().get("results", [{}])[0]
+                return result if result.get("flagged") else None
+    except Exception as e:
+        logger.warning(f"AI moderation check skipped (non-blocking): {e}")
+    return None
 
 class TypingStatus(BaseModel):
     is_typing: bool
@@ -78,7 +124,14 @@ async def delete_message(
     
     if message["sender_id"] != current_user.id:
         raise HTTPException(status_code=403, detail="Can only delete your own messages")
-    
+
+    # EVIDENCE PRESERVATION: Cannot delete a message under active review (OSA compliance)
+    if message.get("has_report"):
+        raise HTTPException(
+            status_code=403,
+            detail="This message cannot be deleted — it is under active review."
+        )
+
     await tenant_db.messages.delete_one({"id": message_id})
     return {"message": "Message deleted"}
 
@@ -90,9 +143,35 @@ async def send_message(
 ):
     """Send a new message (direct or group)"""
     tenant_db, current_user = tenant_data
-    
+
+    # SAFETY: Check messaging suspension (admin kill switch)
+    user_doc = await tenant_db.users.find_one(
+        {"id": current_user.id}, {"_id": 0, "messaging_suspended": 1}
+    )
+    if user_doc and user_doc.get("messaging_suspended"):
+        raise HTTPException(
+            status_code=403,
+            detail="Your messaging access has been suspended. Please contact your RA or administrator."
+        )
+
     # Sanitize message content
     clean_content = sanitize_html(msg_data.content, max_length=5000)
+
+    # AI CONTENT MODERATION (optional, per-tenant)
+    ai_flag = await _check_ai_moderation(clean_content, current_user.tenant_code)
+    if ai_flag:
+        flagged_cats = [
+            k.replace("/", " / ").replace("_", " ")
+            for k, v in ai_flag.get("categories", {}).items() if v
+        ]
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "content_flagged",
+                "categories": flagged_cats,
+                "message": "This message was flagged by AI content moderation."
+            }
+        )
     
     # Generate conversation_id for direct messages (sorted user IDs)
     conversation_id = None
@@ -522,6 +601,212 @@ async def mark_group_messages_read(
     )
     
     return {"message": f"Marked {result.modified_count} messages as read"}
+
+
+@router.post("/messages/{message_id}/report")
+async def report_message(
+    message_id: str,
+    report_data: MessageReportCreate,
+    background_tasks: BackgroundTasks,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Report a message — preserves evidence, notifies admins, auto-suspends at threshold."""
+    tenant_db, current_user = tenant_data
+
+    message = await tenant_db.messages.find_one({"id": message_id}, {"_id": 0})
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    # Verify caller is a conversation participant
+    conv_id = message.get("conversation_id") or message.get("group_id")
+    is_participant = (
+        message.get("sender_id") == current_user.id or
+        message.get("receiver_id") == current_user.id
+    )
+    if not is_participant and conv_id:
+        parts = (conv_id or "").rsplit("_", 1)
+        if len(parts) == 2 and current_user.id in (parts[0], parts[1]):
+            is_participant = True
+    if not is_participant:
+        group = await tenant_db.message_groups.find_one(
+            {"id": conv_id, "members": current_user.id}, {"_id": 0, "id": 1}
+        )
+        is_participant = bool(group)
+    if not is_participant:
+        raise HTTPException(status_code=403, detail="You cannot report this message")
+
+    # Prevent duplicate reports from the same user
+    existing = await tenant_db.message_reports.find_one(
+        {"message_id": message_id, "reporter_id": current_user.id}, {"_id": 0, "id": 1}
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="You have already reported this message")
+
+    reported_user_id = message.get("sender_id")
+
+    report_doc = {
+        "id": str(uuid.uuid4()),
+        "message_id": message_id,
+        "message_content_snapshot": message.get("content", ""),
+        "conversation_id": conv_id,
+        "reporter_id": current_user.id,
+        "reporter_name": f"{current_user.first_name} {current_user.last_name}",
+        "reported_user_id": reported_user_id,
+        "reported_user_name": message.get("sender_name", "Unknown"),
+        "category": report_data.category,
+        "details": report_data.details or "",
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "tenant_code": current_user.tenant_code,
+    }
+    await tenant_db.message_reports.insert_one(report_doc)
+
+    # Flag the message to prevent deletion (evidence preservation)
+    await tenant_db.messages.update_one(
+        {"id": message_id}, {"$set": {"has_report": True}}
+    )
+
+    # Count open reports against this user for auto-suspend threshold
+    open_report_count = await tenant_db.message_reports.count_documents({
+        "reported_user_id": reported_user_id, "status": "pending"
+    })
+
+    auto_suspended = False
+    if open_report_count >= 3:
+        await tenant_db.users.update_one(
+            {"id": reported_user_id},
+            {"$set": {"messaging_suspended": True}}
+        )
+        auto_suspended = True
+
+    # Background: email all tenant admins
+    background_tasks.add_task(
+        _notify_admins_of_report, tenant_db, report_doc, auto_suspended
+    )
+
+    return {
+        "message": "Report submitted. Thank you for helping keep this community safe.",
+        "report_id": report_doc["id"],
+        "auto_suspended": auto_suspended
+    }
+
+
+async def _notify_admins_of_report(tenant_db, report_doc: dict, auto_suspended: bool):
+    """Background task: email all tenant admins about a new message report."""
+    try:
+        from utils.email import send_email
+        admins = await tenant_db.users.find(
+            {"role": {"$in": ["admin", "college_admin", "ra"]}, "active": True, "email": {"$exists": True}},
+            {"_id": 0, "email": 1, "first_name": 1}
+        ).to_list(50)
+
+        subject = f"{'🚨 AUTO-SUSPENDED — ' if auto_suspended else ''}Message Report: {report_doc['category'].title()}"
+        suspension_note = (
+            "<p style='background:#fee2e2;padding:12px;border-radius:8px;color:#991b1b;'>"
+            "<strong>⚠️ This user has been automatically suspended from messaging</strong> "
+            "due to reaching the report threshold (3+ reports). Review and take action.</p>"
+        ) if auto_suspended else ""
+
+        html = f"""
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+          <h2 style="color:#dc2626;">Message Report — Action Required</h2>
+          {suspension_note}
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px;font-weight:bold;width:160px;">Category</td>
+                <td style="padding:8px;">{report_doc['category'].title()}</td></tr>
+            <tr style="background:#f9fafb;"><td style="padding:8px;font-weight:bold;">Reported User</td>
+                <td style="padding:8px;">{report_doc['reported_user_name']}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Reported By</td>
+                <td style="padding:8px;">{report_doc['reporter_name']}</td></tr>
+            <tr style="background:#f9fafb;"><td style="padding:8px;font-weight:bold;">Details</td>
+                <td style="padding:8px;">{report_doc.get('details') or '—'}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Message (snapshot)</td>
+                <td style="padding:8px;background:#fef2f2;border-left:3px solid #dc2626;">
+                  <em>{report_doc['message_content_snapshot'][:500]}</em></td></tr>
+            <tr style="background:#f9fafb;"><td style="padding:8px;font-weight:bold;">Report ID</td>
+                <td style="padding:8px;font-family:monospace;font-size:12px;">{report_doc['id']}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Reported At</td>
+                <td style="padding:8px;">{report_doc['created_at']}</td></tr>
+          </table>
+          <p style="color:#6b7280;font-size:12px;margin-top:24px;">
+            Under the Online Safety Act 2021, you have a non-delegable duty to review and act on this report.
+            Log in to Quadley to manage this report.
+          </p>
+        </div>"""
+
+        for admin in admins:
+            send_email(to=admin["email"], subject=subject, html_content=html)
+    except Exception as e:
+        logger.error(f"Failed to send report notification emails: {e}")
+
+
+@router.get("/admin/message-reports")
+async def get_message_reports(
+    status: Optional[str] = Query(default=None),
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """List all message reports for this tenant. Admin/RA only."""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    query = {}
+    if status:
+        query["status"] = status
+    reports = await tenant_db.message_reports.find(
+        query, {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    return reports
+
+
+@router.put("/admin/message-reports/{report_id}/action")
+async def action_on_report(
+    report_id: str,
+    body: MessageReportAction,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Take action on a report: suspend | warn | dismiss | remove_message"""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    report = await tenant_db.message_reports.find_one({"id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    action = body.action
+    update_fields = {
+        "status": "resolved",
+        "action_taken": action,
+        "actioned_by": current_user.id,
+        "actioned_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    if action == "suspend":
+        await tenant_db.users.update_one(
+            {"id": report["reported_user_id"]},
+            {"$set": {"messaging_suspended": True}}
+        )
+    elif action == "warn":
+        pass  # Future: send in-app warning notification
+    elif action == "remove_message":
+        # OSA compliance: remove content but preserve the report record
+        await tenant_db.messages.update_one(
+            {"id": report["message_id"]},
+            {"$set": {"content": "[Message removed by moderator]", "removed": True}}
+        )
+        update_fields["status"] = "content_removed"
+    elif action == "dismiss":
+        # Remove the report flag from the message if dismissed
+        await tenant_db.messages.update_one(
+            {"id": report["message_id"]},
+            {"$set": {"has_report": False}}
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    await tenant_db.message_reports.update_one({"id": report_id}, {"$set": update_fields})
+    return {"message": f"Action '{action}' applied to report {report_id}"}
 
 
 @router.get("/admin/messages/overview")

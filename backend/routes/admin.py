@@ -51,6 +51,76 @@ async def list_users(
     return users
 
 
+@router.get("/ai-moderation")
+async def get_ai_moderation_status(
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Get AI content moderation status for this tenant. Admin only."""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    import os
+    tenant = await master_db.tenants.find_one(
+        {"code": current_user.tenant_code}, {"_id": 0, "ai_moderation_enabled": 1}
+    )
+    return {
+        "ai_moderation_enabled": bool((tenant or {}).get("ai_moderation_enabled", False)),
+        "openai_configured": bool(os.environ.get("OPENAI_API_KEY")),
+    }
+
+
+@router.put("/ai-moderation")
+async def toggle_ai_moderation(
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Toggle AI content moderation for this tenant. Admin only."""
+    tenant_db, current_user = tenant_data
+    if current_user.role not in ["admin", "super_admin", "college_admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    tenant = await master_db.tenants.find_one(
+        {"code": current_user.tenant_code}, {"_id": 0, "ai_moderation_enabled": 1}
+    )
+    new_state = not bool((tenant or {}).get("ai_moderation_enabled", False))
+    await master_db.tenants.update_one(
+        {"code": current_user.tenant_code},
+        {"$set": {"ai_moderation_enabled": new_state}}
+    )
+    status = "enabled" if new_state else "disabled"
+    return {
+        "ai_moderation_enabled": new_state,
+        "message": f"AI content moderation {status} for this campus."
+    }
+
+
+@router.put("/users/{user_id}/messaging-suspend")
+async def toggle_messaging_suspend(
+    user_id: str,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """Toggle messaging suspension for a user (admin kill switch). Admin/RA only."""
+    tenant_db, current_user = tenant_data
+
+    if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "messaging_suspended": 1, "first_name": 1, "last_name": 1})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_state = not user_doc.get("messaging_suspended", False)
+    await tenant_db.users.update_one(
+        {"id": user_id}, {"$set": {"messaging_suspended": new_state}}
+    )
+
+    action = "suspended" if new_state else "reinstated"
+    return {
+        "user_id": user_id,
+        "messaging_suspended": new_state,
+        "message": f"Messaging {action} for {user_doc.get('first_name', '')} {user_doc.get('last_name', '')}"
+    }
+
+
 @router.get("/users/directory")
 async def get_user_directory(
     tenant_data: tuple = Depends(get_tenant_db_for_user)

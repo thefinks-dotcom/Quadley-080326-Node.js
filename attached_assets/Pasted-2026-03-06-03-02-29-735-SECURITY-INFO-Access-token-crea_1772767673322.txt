@@ -1,0 +1,29 @@
+2026-03-06 03:02:29,735 - SECURITY - INFO - Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+2026-03-06 03:02:29,735 | SECURITY | INFO | Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+INFO:security:Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+2026-03-06 03:02:29,735 - SECURITY - INFO - [LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.17 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+2026-03-06 03:02:29,735 | SECURITY | INFO | [LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.17 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+INFO:security:[LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.17 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+INFO:     100.64.0.17:34538 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-03-06 03:02:32,272 - SECURITY - INFO - Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+2026-03-06 03:02:32,272 | SECURITY | INFO | Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+INFO:security:Access token created for user: a7a87069-dae3-484f-921a-4a5d75ec4591
+2026-03-06 03:02:32,272 - SECURITY - INFO - [LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.20 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+2026-03-06 03:02:32,272 | SECURITY | INFO | [LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.20 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+INFO:security:[LOGIN_SUCCESS] user=admin@gracecollege.edu user_id=a7a87069-dae3-484f-921a-4a5d75ec4591 ip=100.64.0.20 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+WARNING:utils.ip_anomaly:IP Anomaly Alert [MEDIUM]: new_ip — admin@gracecollege.edu @ 100.64.0.20
+ERROR:utils.email:Failed to send email to gen@quadley.com: HTTP Error 401: Unauthorized
+ERROR:utils.ip_anomaly:Failed to send IP anomaly email to gen@quadley.com: Failed to send email: HTTP Error 401: Unauthorized
+INFO:     100.64.0.20:45906 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-03-06 03:02:35,336 - SECURITY - INFO - Access token created for user: c054500c-a184-4972-b7bb-1476277e429f
+2026-03-06 03:02:35,336 | SECURITY | INFO | Access token created for user: c054500c-a184-4972-b7bb-1476277e429f
+INFO:security:Access token created for user: c054500c-a184-4972-b7bb-1476277e429f
+2026-03-06 03:02:35,336 - SECURITY - INFO - [LOGIN_SUCCESS] user=teststudent@test.com user_id=c054500c-a184-4972-b7bb-1476277e429f ip=100.64.0.21 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+2026-03-06 03:02:35,336 | SECURITY | INFO | [LOGIN_SUCCESS] user=teststudent@test.com user_id=c054500c-a184-4972-b7bb-1476277e429f ip=100.64.0.21 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+INFO:security:[LOGIN_SUCCESS] user=teststudent@test.com user_id=c054500c-a184-4972-b7bb-1476277e429f ip=100.64.0.21 details={'mfa_required': False, 'mfa_enabled': False, 'tenant': 'GRAC7421'}
+WARNING:utils.ip_anomaly:IP Anomaly Alert [MEDIUM]: new_ip — teststudent@test.com @ 100.64.0.21
+ERROR:utils.email:Failed to send email to gen@quadley.com: HTTP Error 401: Unauthorized
+ERROR:utils.ip_anomaly:Failed to send IP anomaly email to gen@quadley.com: Failed to send email: HTTP Error 401: Unauthorized
+WARNING:utils.ip_anomaly:IP Anomaly Alert [HIGH]: rapid_ip_change — teststudent@test.com @ 100.64.0.21
+ERROR:utils.email:Failed to send email to gen@quadley.com: HTTP Error 401: Unauthorized
+ERROR:utils.ip_anomaly:Failed to send IP anomaly email to gen@quadley.com: Failed to send email: HTTP Error 401: Unauthorized
