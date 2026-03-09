@@ -52,10 +52,13 @@ SKIP_PREFIXES = (
 )
 SKIP_EXTENSIONS = (".pack.gz", ".pack", ".pyc")
 
-files = subprocess.check_output(["git", "ls-files"]).decode().strip().split("\n")
+tracked = subprocess.check_output(["git", "ls-files"]).decode().strip().split("\n")
+untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"]).decode().strip().split("\n")
+files = list(set(tracked + untracked))
 files = [
     f for f in files
-    if not any(f.startswith(p) for p in SKIP_PREFIXES)
+    if f
+    and not any(f.startswith(p) for p in SKIP_PREFIXES)
     and not any(f.endswith(e) for e in SKIP_EXTENSIONS)
 ]
 print(f"Building tree for {len(files)} files...")
