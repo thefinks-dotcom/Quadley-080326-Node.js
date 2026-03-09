@@ -297,7 +297,37 @@ export default function SafeDisclosureScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+      {/* Hero Header */}
+      <View style={{
+        backgroundColor: primaryColor,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xl,
+        borderBottomLeftRadius: borderRadius.xxl,
+        borderBottomRightRadius: borderRadius.xxl,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
+            </TouchableOpacity>
+          )}
+          {!navigation.canGoBack() && (
+            <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="shield-checkmark" size={22} color={colors.textInverse} />
+            </View>
+          )}
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Support & Safety</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>Confidential disclosures</Text>
+          </View>
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -306,52 +336,17 @@ export default function SafeDisclosureScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: 60 }}
         >
-          {/* Header Info Box */}
-          <View
-            style={{
-              backgroundColor: colors.background,
-              borderLeftWidth: 4,
-              borderLeftColor: colors.primary,
-              padding: 20,
-              margin: 16,
-              borderRadius: borderRadius.md,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: colors.textSecondary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 16,
-                }}
-              >
-                <Ionicons name="shield-checkmark" size={24} color={colors.textInverse} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
-                  Support & Safety
-                </Text>
-                <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 16 }}>
-                  This is a safe, confidential space to disclose any form of gender-based violence or harassment. 
-                  Your wellbeing and safety are our priority.
-                </Text>
-                <View style={{ backgroundColor: colors.surface, padding: spacing.lg, borderRadius: borderRadius.md }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
-                    Important Information:
-                  </Text>
-                  <View style={{ gap: 6 }}>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>• All disclosures are handled with strict confidentiality</Text>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>• You control what happens next - we support your choices</Text>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>• Support services are available regardless of formal report</Text>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>• You can choose to remain anonymous</Text>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>• Crisis support is available 24/7</Text>
-                  </View>
-                </View>
-              </View>
+          {/* Important Info Card */}
+          <View style={{ backgroundColor: colors.surface, padding: spacing.lg, margin: 16, borderRadius: borderRadius.md }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
+              Important Information
+            </Text>
+            <View style={{ gap: 6 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>• All disclosures are handled with strict confidentiality</Text>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>• You control what happens next — we support your choices</Text>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>• Support services are available regardless of formal report</Text>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>• You can choose to remain anonymous</Text>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>• Crisis support is available 24/7</Text>
             </View>
           </View>
 
