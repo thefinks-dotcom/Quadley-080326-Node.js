@@ -73,6 +73,35 @@ export default function RAFloorManagementScreen({ navigation }) {
     staleTime: 60 * 1000,
   });
 
+  const { data: activeRollcalls = [], isLoading: loadingEmergencies, refetch: refetchEmergencies } = useQuery({
+    queryKey: ['ra-active-rollcalls'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/emergency-rollcall/active');
+        return res.data || [];
+      } catch { return []; }
+    },
+    enabled: activeTab === 'emergencies',
+    refetchInterval: activeTab === 'emergencies' ? 20000 : false,
+  });
+
+  const [expandedRollcall, setExpandedRollcall] = useState(null);
+  const [rollcallSummaries, setRollcallSummaries] = useState({});
+
+  const loadRollcallSummary = async (rollcallId) => {
+    if (rollcallSummaries[rollcallId]) {
+      setExpandedRollcall(expandedRollcall === rollcallId ? null : rollcallId);
+      return;
+    }
+    try {
+      const res = await api.get(`/emergency-rollcall/${rollcallId}/summary`);
+      setRollcallSummaries(prev => ({ ...prev, [rollcallId]: res.data }));
+      setExpandedRollcall(rollcallId);
+    } catch {
+      Alert.alert('Error', 'Could not load floor responses');
+    }
+  };
+
   useEffect(() => { refetch(); }, []);
 
   useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
@@ -279,6 +308,7 @@ export default function RAFloorManagementScreen({ navigation }) {
         {[
           { key: 'events', label: 'Floor Events', count: floorEvents?.length || 0, icon: 'calendar-outline' },
           { key: 'students', label: 'Floor Students', count: allUsers?.length || 0, icon: 'people-outline' },
+          { key: 'emergencies', label: 'Emergencies', count: activeRollcalls?.length || 0, icon: 'warning-outline', alert: activeRollcalls?.length > 0 },
         ].map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -390,6 +420,105 @@ export default function RAFloorManagementScreen({ navigation }) {
             }
             contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 100 }}
           />
+        )
+      )}
+
+      {/* Emergencies Tab */}
+      {activeTab === 'emergencies' && (
+        loadingEmergencies ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#D32F2F" />
+          </View>
+        ) : activeRollcalls.length === 0 ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+            <View style={{ width: 72, height: 72, backgroundColor: '#E8F5E9', borderRadius: 36, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+              <Ionicons name="shield-checkmark" size={36} color="#2E7D32" />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>All Clear</Text>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 8, textAlign: 'center' }}>
+              No active emergencies on your floor right now.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
+            refreshControl={<RefreshControl refreshing={loadingEmergencies} onRefresh={refetchEmergencies} tintColor="#D32F2F" />}
+          >
+            {activeRollcalls.map(rc => {
+              const summary = rollcallSummaries[rc.id];
+              const floorData = summary?.floors?.[raFloor];
+              return (
+                <View key={rc.id} style={{ backgroundColor: '#FFF', borderRadius: borderRadius.lg, marginBottom: spacing.md, overflow: 'hidden', borderWidth: 2, borderColor: '#D32F2F', ...shadows.sm }}>
+                  <View style={{ backgroundColor: '#D32F2F', padding: spacing.lg }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Ionicons name="warning" size={18} color="#fff" />
+                      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', marginLeft: 6, letterSpacing: 0.5, textTransform: 'uppercase' }}>Emergency Roll Call</Text>
+                    </View>
+                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>{rc.announcement_title || 'Emergency'}</Text>
+                    {rc.announcement_content ? (
+                      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 }}>{rc.announcement_content}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={{ padding: spacing.lg }}>
+                    {summary ? (
+                      <>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                          {raFloor ? `Floor ${raFloor} Status` : 'Your Floor Status'}
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                          <View style={{ flex: 1, backgroundColor: '#E8F5E9', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
+                            <Ionicons name="home" size={20} color="#2E7D32" />
+                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#2E7D32' }}>
+                              {floorData?.evacuated?.length || 0}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#2E7D32', fontWeight: '600' }}>Evacuated</Text>
+                          </View>
+                          <View style={{ flex: 1, backgroundColor: '#E3F2FD', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
+                            <Ionicons name="shield-checkmark" size={20} color="#1565C0" />
+                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#1565C0' }}>
+                              {floorData?.not_at_college?.length || 0}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#1565C0', fontWeight: '600' }}>Off-Campus</Text>
+                          </View>
+                          <View style={{ flex: 1, backgroundColor: '#FFF3E0', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
+                            <Ionicons name="time" size={20} color="#E65100" />
+                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#E65100' }}>
+                              {floorData?.pending?.length || 0}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#E65100', fontWeight: '600' }}>Pending</Text>
+                          </View>
+                        </View>
+
+                        {floorData?.pending?.length > 0 && (
+                          <>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: '#E65100', marginBottom: 8 }}>
+                              Awaiting response ({floorData.pending.length}):
+                            </Text>
+                            {floorData.pending.map((s, idx) => (
+                              <View key={s.user_id || idx} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                                <Ionicons name="person-outline" size={16} color={colors.textTertiary} style={{ marginRight: 8 }} />
+                                <Text style={{ fontSize: 14, color: colors.textPrimary, flex: 1 }}>{s.user_name}</Text>
+                                <View style={{ backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                                  <Text style={{ fontSize: 11, color: '#E65100', fontWeight: '600' }}>No response</Text>
+                                </View>
+                              </View>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => loadRollcallSummary(rc.id)}
+                        style={{ backgroundColor: '#D32F2F', borderRadius: borderRadius.md, padding: 14, alignItems: 'center' }}
+                      >
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>View Floor Responses</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
         )
       )}
 

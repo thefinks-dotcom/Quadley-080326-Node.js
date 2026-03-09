@@ -73,6 +73,8 @@ export default function ChatScreen({ route, navigation }) {
   const flatListRef = useRef();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  // convId starts as id (user ID for new convs), upgrades to actual conversation_id after first send
+  const [convId, setConvId] = useState(id);
   const [otherTyping, setOtherTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -116,16 +118,17 @@ export default function ChatScreen({ route, navigation }) {
   }, [name, navigation]);
 
   const { data: messages, isLoading, refetch } = useQuery({
-    queryKey: ['chatMessages', id, type, userId],
+    queryKey: ['chatMessages', convId, type, userId],
     queryFn: async () => {
       try {
         const endpoint = type === 'direct'
-          ? `${ENDPOINTS.CONVERSATIONS}/${id}/messages`
-          : `${ENDPOINTS.MESSAGE_GROUPS}/${id}/messages`;
+          ? `${ENDPOINTS.CONVERSATIONS}/${convId}/messages`
+          : `${ENDPOINTS.MESSAGE_GROUPS}/${convId}/messages`;
         const response = await api.get(endpoint);
         return response.data || [];
       } catch (error) {
-        if (error.response?.status === 404) return [];
+        // 404 = no messages yet; 403 = new conv not yet created — both are empty, not errors
+        if (error.response?.status === 404 || error.response?.status === 403) return [];
         throw error;
       }
     },
@@ -135,19 +138,19 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     const checkTyping = async () => {
       try {
-        const response = await api.get(`/messages/typing/${id}`);
+        const response = await api.get(`/messages/typing/${convId}`);
         setOtherTyping(response.data?.is_typing && response.data?.user_id !== user?.id);
       } catch {}
     };
     const interval = setInterval(checkTyping, 2000);
     return () => clearInterval(interval);
-  }, [id, user?.id]);
+  }, [convId, user?.id]);
 
   const sendTypingIndicator = useCallback(async (typing) => {
     try {
-      await api.post(`/messages/typing/${id}`, { is_typing: typing });
+      await api.post(`/messages/typing/${convId}`, { is_typing: typing });
     } catch {}
-  }, [id]);
+  }, [convId]);
 
   const handleTextChange = (text) => {
     setMessage(text);
@@ -178,12 +181,15 @@ export default function ChatScreen({ route, navigation }) {
       setSelectedImage(null);
       setIsTyping(false);
       sendTypingIndicator(false);
-      if (data?.conversation_id) {
-        queryClient.invalidateQueries(['chatMessages', data.conversation_id]);
+      // For new conversations, upgrade convId to the real conversation_id returned by the server.
+      // This makes all subsequent polls use the correct endpoint instead of the bare user ID.
+      if (data?.conversation_id && data.conversation_id !== convId) {
+        setConvId(data.conversation_id);
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', data.conversation_id] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', convId] });
       }
-      queryClient.invalidateQueries(['chatMessages', id]);
-      queryClient.invalidateQueries(['conversations']);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
     onError: (error) => {
       const detail = error.response?.data?.detail;
