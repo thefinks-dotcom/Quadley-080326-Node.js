@@ -1,0 +1,125 @@
+{
+  "identity": {
+    "name": "Quadley",
+    "persona": "E1 - The Anti-AI Designer",
+    "tone": "Professional, Academic, Trustworthy, Modern, Organized",
+    "archetype": "Swiss & High-Contrast (Admin) + Organic & Earthy (Student)",
+    "theme_strategy": "Modern Academic - Deep Navy anchor with crisp whites and sophisticated neutrals."
+  },
+  "typography": {
+    "headings": {
+      "family": "Manrope, sans-serif",
+      "weights": ["600", "700", "800"],
+      "tracking": "tight",
+      "usage": "All section headers, modal titles, and hero text."
+    },
+    "body": {
+      "family": "Public Sans, sans-serif",
+      "weights": ["400", "500"],
+      "tracking": "normal",
+      "usage": "General text, data tables, form inputs."
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "usage": "IDs, code snippets, technical data."
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "name": "Oxford Navy",
+        "hex": "#0F172A",
+        "tailwind": "slate-900",
+        "description": "The anchor color. Used for primary actions, sidebar backgrounds, and strong headings."
+      },
+      "secondary": {
+        "name": "Academic Gold",
+        "hex": "#B45309",
+        "tailwind": "amber-700",
+        "description": "Used for accents, highlights, and 'premium' features."
+      },
+      "success": {
+        "name": "Campus Green",
+        "hex": "#15803D",
+        "tailwind": "green-700",
+        "description": "For positive states, growth metrics, and wellbeing indicators."
+      },
+      "background": {
+        "light": "#F8FAFC",
+        "dark": "#020617",
+        "paper": "#FFFFFF"
+      },
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#475569",
+        "muted": "#94A3B8"
+      }
+    },
+    "gradients": {
+      "hero": "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
+      "subtle": "bg-gradient-to-b from-white to-slate-50"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid",
+    "spacing": "Generous. Use p-6 or p-8 for cards. gap-6 for grids.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "sidebar": "Fixed width (280px), dark themed for high contrast.",
+    "card_style": "Flat, 1px border (border-slate-200), shadow-sm. No heavy drop shadows."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 rounded-md px-6 py-2.5 font-medium transition-all shadow-sm hover:shadow-md",
+      "secondary": "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-md px-6 py-2.5 font-medium transition-all",
+      "ghost": "text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md px-4 py-2"
+    },
+    "inputs": {
+      "style": "bg-white border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 rounded-md h-11 px-4 transition-all"
+    },
+    "cards": {
+      "base": "bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300",
+      "interactive": "cursor-pointer hover:-translate-y-1 hover:border-slate-300"
+    },
+    "badges": {
+      "style": "rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-sm",
+    "texture": "Use subtle noise overlays on dark backgrounds to prevent banding.",
+    "icons": "Lucide React (stroke-width=1.5 for elegance)",
+    "radius": "rounded-xl for containers, rounded-md for inner elements"
+  },
+  "image_urls": {
+    "hero_backgrounds": [
+      "https://images.unsplash.com/photo-1680444873773-7c106c23ac52?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "https://images.unsplash.com/photo-1600903308878-bf5e554ab841?crop=entropy&cs=srgb&fm=jpg&q=85"
+    ],
+    "student_life": [
+      "https://images.unsplash.com/photo-1758270705172-07b53627dfcb?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "https://images.unsplash.com/photo-1758270705317-3ef6142d306f?crop=entropy&cs=srgb&fm=jpg&q=85"
+    ],
+    "placeholders": {
+      "user_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+      "logo": "https://placehold.co/40x40/0F172A/FFFFFF?text=Q"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. Update tailwind.config.js to use the new color palette (Slate 900 as primary).",
+    "2. Update index.css to refine the CSS variables for a cleaner, higher contrast look.",
+    "3. Replace 'Montserrat' with 'Manrope' and 'Public Sans' via Google Fonts import.",
+    "4. Refactor the Sidebar to be a dark, high-contrast vertical navigation.",
+    "5. Update the Dashboard layouts to use the Bento Grid system.",
+    "6. Ensure all interactive elements have data-testid attributes.",
+    "7. Use the provided image URLs for hero sections and dummy data.",
+    "8. Do NOT use gradients for buttons; keep them solid and authoritative."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid 'AI Slop' - no generic centered layouts.",
+    "Use 2-3x more spacing than typical.",
+    "Dark colors must be solid, not gradients.",
+    "Interactive elements must have micro-interactions (hover, focus).",
+    "Use 'sonner' for toasts.",
+    "Ensure accessibility (contrast ratios)."
+  ]
+}

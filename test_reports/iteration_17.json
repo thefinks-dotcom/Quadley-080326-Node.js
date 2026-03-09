@@ -1,0 +1,86 @@
+{
+  "summary": "Completed testing of subscription_tier bug fix. All 11 backend tests passed (100%). Verified: 1) GET /api/tenants returns subscription_tier for all tenants, 2) GET /api/tenants/{code} returns subscription_tier correctly, 3) PUT /api/tenants/{code}/subscription allows super admin to change tier directly, 4) Subscription tier persists after update (no reset to basic), 5) Access control - non-super-admin cannot update subscription.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_features": {
+    "subscription_tier_in_list_tenants": {
+      "status": "PASS",
+      "endpoint": "GET /api/tenants",
+      "details": [
+        "All tenants now return subscription_tier field",
+        "Murphy Shark correctly shows 'pro' tier",
+        "max_users field also correctly populated",
+        "primary_color and secondary_color fields present"
+      ]
+    },
+    "subscription_tier_in_get_tenant": {
+      "status": "PASS",
+      "endpoint": "GET /api/tenants/{code}",
+      "details": [
+        "Single tenant endpoint returns subscription_tier",
+        "Murphy Shark (MURP1021) shows subscription_tier='pro', max_users=500",
+        "All TenantResponse fields properly populated"
+      ]
+    },
+    "subscription_update_endpoint": {
+      "status": "PASS",
+      "endpoint": "PUT /api/tenants/{code}/subscription",
+      "details": [
+        "Super admin can update subscription tier",
+        "Tier changes persist correctly (basic→pro→enterprise)",
+        "Custom max_users can be set with subscription update",
+        "Default max_users applied based on tier (basic=100, pro=500, enterprise=-1)"
+      ]
+    },
+    "subscription_persistence": {
+      "status": "PASS",
+      "details": [
+        "Subscription tier persists after update",
+        "No reset to 'basic' on subsequent GET requests",
+        "max_users persists correctly with tier changes"
+      ]
+    },
+    "access_control": {
+      "status": "PASS",
+      "details": [
+        "Tenant admin (non-super-admin) correctly denied subscription update (403)",
+        "Invalid tier values correctly rejected (400)"
+      ]
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_subscription_tier.py",
+    "/app/test_reports/pytest/pytest_results_subscription_tier.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ TenantResponse model now includes subscription_tier, max_users, primary_color, secondary_color fields",
+    "✓ list_tenants endpoint correctly populates all TenantResponse fields from database",
+    "✓ get_tenant endpoint correctly populates all TenantResponse fields from database",
+    "✓ New PUT /api/tenants/{code}/subscription endpoint properly validates tier values",
+    "✓ Access control correctly restricts subscription updates to super_admin only"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_subscription_tier.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials_verified": {
+    "super_admin": "gen@quadley.app / Quadley2025! ✓",
+    "murphy_shark_admin": "epinker@icloud.com / AbC!123! ✓",
+    "murphy_shark_tenant_code": "MURP1021 ✓"
+  },
+  "seed_data_creation": "None - used existing test data. Subscription tier changes during tests are restored to original values.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Subscription tier bug fix fully tested and working. Key findings: 1) TenantResponse model now properly includes subscription_tier, max_users, primary_color, secondary_color fields, 2) Both list_tenants and get_tenant endpoints correctly populate these fields, 3) New PUT /api/tenants/{code}/subscription endpoint works for super admins, 4) Murphy Shark tenant has 'pro' tier with max_users=500, 5) Access control properly restricts subscription updates to super_admin only."
+}

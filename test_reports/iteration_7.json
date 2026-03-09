@@ -1,0 +1,127 @@
+{
+  "summary": "Full regression testing completed for Quadley Mobile App. Backend API tests: 18/19 passed (95%). All key mobile features verified through code review. Web frontend login has rate limiting issue (429) but API login works correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/notifications",
+        "issue": "Endpoint returns 404 - notifications list endpoint not found",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "/api/auth/login",
+        "issue": "Rate limiting (429) triggered after multiple login attempts - affects web frontend testing",
+        "priority": "MEDIUM"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Web frontend login",
+        "issue": "RA login failed due to rate limiting (429) after multiple attempts. Admin login works correctly.",
+        "affected_selectors": []
+      }
+    ],
+    "design_issues": []
+  },
+  "verified_features": {
+    "RA_Floor_Events_openCreate": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "RAFloorEventsScreen.js line 27-28: openCreateImmediately = route?.params?.openCreate === true; modalVisible initialized with this value"
+    },
+    "HomeScreen_RA_Tools_New_Event": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "HomeScreen.js line 209: RA Tools 'New Event' passes { openCreate: true } params to RAFloorEvents"
+    },
+    "FloorScreen_Create_Event_Button": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "FloorScreen.js lines 173, 217: Both FAB and button pass { openCreate: true } to RAFloorEvents"
+    },
+    "Announcements_Read_Sorting": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "AnnouncementsScreen.js lines 70-87: sortedAnnouncements sorts read items to bottom using readAnnouncements state"
+    },
+    "CoCurricular_Joined_Sorting": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "CoCurricularScreen.js lines 76-84: filteredActivities sorts joined activities to top; line 146 shows 'Joined' badge"
+    },
+    "SafeDisclosure_Keyboard_Fix": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "SafeDisclosureScreen.js: blurOnSubmit={false}, returnKeyType='next', keyboardShouldPersistTaps='handled' - prevents keyboard dismissal"
+    },
+    "Push_Notifications_Logout_Fix": {
+      "status": "VERIFIED_CODE_REVIEW",
+      "details": "NotificationContext.js line 96-98: useEffect cleanup calls removeListeners(); line 112: subscription?.remove() uses optional chaining"
+    },
+    "Login_RA": {
+      "status": "PASS",
+      "details": "API login works: epink@icloud.com returns role=ra, floor='Level 1 - Wing A'"
+    },
+    "Login_Admin": {
+      "status": "PASS",
+      "details": "API login works: epinker@icloud.com returns role=admin"
+    },
+    "Events_API": {
+      "status": "PASS",
+      "details": "GET /api/events returns 66 events"
+    },
+    "Announcements_API": {
+      "status": "PASS",
+      "details": "GET /api/announcements returns 50 announcements"
+    },
+    "Jobs_API": {
+      "status": "PASS",
+      "details": "GET /api/jobs returns 4 jobs"
+    },
+    "Maintenance_API": {
+      "status": "PASS",
+      "details": "GET /api/maintenance returns 1 request"
+    },
+    "CoCurricular_API": {
+      "status": "PASS",
+      "details": "GET /api/cocurricular/groups/all returns 1 activity"
+    },
+    "Floor_Users_API": {
+      "status": "PASS",
+      "details": "GET /api/floor/users returns 3 users"
+    },
+    "Create_Event_API": {
+      "status": "PASS",
+      "details": "POST /api/events with category field creates event successfully"
+    }
+  },
+  "test_report_links": [
+    "/app/tests/test_quadley_regression.py",
+    "/app/test_reports/pytest/pytest_results_regression.xml"
+  ],
+  "action_items": [
+    "Consider implementing /api/notifications endpoint for mobile app notification list",
+    "Review rate limiting settings - may be too aggressive for testing scenarios"
+  ],
+  "critical_code_review_comments": [
+    "✓ All 14+ modules properly organized in HomeScreen with correct navigation",
+    "✓ RA Tools section only visible to RA users (isRA check on line 204)",
+    "✓ openCreate param properly implemented across RAFloorEventsScreen, HomeScreen, and FloorScreen",
+    "✓ Keyboard handling in SafeDisclosureScreen uses correct React Native patterns",
+    "✓ Push notification cleanup uses optional chaining to prevent crashes",
+    "✓ Category tabs in CoCurricularScreen properly filter activities",
+    "Note: Events API requires 'category' field - mobile app should include this when creating events"
+  ],
+  "updated_files": [
+    "/app/tests/test_quadley_regression.py"
+  ],
+  "success_rate": {
+    "backend": "95% (18/19 tests passed)",
+    "frontend": "Web frontend tested - admin login works, RA login rate-limited"
+  },
+  "test_credentials_used": {
+    "ra": "epink@icloud.com / AbC!123!AbC!123! (works via API)",
+    "admin": "epinker@icloud.com / AbC!123! (works via API and web)"
+  },
+  "seed_data_creation": "Used existing seed data from previous iterations",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All key mobile features verified through code review. Backend APIs working correctly. Web frontend has rate limiting that may affect testing - wait a few minutes between login attempts. The mobile app is an Expo React Native app - actual UI testing requires Expo Go on a physical device. Notifications endpoint (/api/notifications) returns 404 - may need to be implemented."
+}

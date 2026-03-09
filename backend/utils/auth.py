@@ -141,16 +141,21 @@ async def get_current_user(
     from models import User
     from utils.token_blacklist import is_token_blacklisted
     from utils.multi_tenant import master_db, get_tenant_db
-    
+
     token = None
-    
-    # Bearer token only — cookie auth removed to prevent CSRF bypass (PEN test A.9.4)
-    if credentials:
+
+    # httpOnly cookie takes priority (OWASP A02 — XSS cannot steal httpOnly cookies).
+    # SameSite=Lax blocks cross-site POST/PUT/DELETE, mitigating CSRF (RFC 6265bis §8.8.2).
+    # Bearer header accepted as fallback for mobile / API clients.
+    cookie_token = request.cookies.get("access_token")
+    if cookie_token:
+        token = cookie_token
+    elif credentials:
         token = credentials.credentials
-    
+
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     # Check if token has been blacklisted (logged out)
     if await is_token_blacklisted(db, token):
         raise HTTPException(status_code=401, detail="Token has been revoked")
@@ -287,16 +292,21 @@ async def get_tenant_db_for_user(
     from models import User
     from utils.token_blacklist import is_token_blacklisted
     from utils.multi_tenant import get_tenant_db
-    
+
     token = None
-    
-    # Bearer token only — cookie auth removed to prevent CSRF bypass (PEN test A.9.4)
-    if credentials:
+
+    # httpOnly cookie takes priority (OWASP A02 — XSS cannot steal httpOnly cookies).
+    # SameSite=Lax blocks cross-site POST/PUT/DELETE, mitigating CSRF (RFC 6265bis §8.8.2).
+    # Bearer header accepted as fallback for mobile / API clients.
+    cookie_token = request.cookies.get("access_token")
+    if cookie_token:
+        token = cookie_token
+    elif credentials:
         token = credentials.credentials
-    
+
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     # Check if token has been blacklisted
     if await is_token_blacklisted(db, token):
         raise HTTPException(status_code=401, detail="Token has been revoked")

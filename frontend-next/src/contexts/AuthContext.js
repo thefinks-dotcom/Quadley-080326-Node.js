@@ -18,10 +18,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
+    // SECURITY (OWASP A03): Remove any stale token from localStorage.
+    // Auth is now handled via httpOnly cookies set by the backend.
+    try { localStorage.removeItem('token'); } catch {}
+    delete axios.defaults.headers.common['Authorization'];
   }, []);
 
   useEffect(() => {
@@ -30,20 +30,12 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Cookie is sent automatically — no token header needed.
       const response = await axios.get(`${API}/auth/me`);
       const { enabled_modules, ...userData } = response.data;
       setUser(userData);
       setEnabledModules(enabled_modules || null);
     } catch {
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
       setUser(null);
       setEnabledModules(null);
     } finally {
@@ -56,8 +48,6 @@ export function AuthProvider({ children }) {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          delete axios.defaults.headers.common['Authorization'];
           try { sessionStorage.removeItem('quadley_dashboard_cache'); } catch {}
           setUser(null);
           setEnabledModules(null);
@@ -68,26 +58,20 @@ export function AuthProvider({ children }) {
     return () => { axios.interceptors.response.eject(interceptor); };
   }, []);
 
-  const login = (token, userData, modules) => {
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  // token param kept for call-site compatibility but is not stored.
+  // The backend sets an httpOnly cookie on login / MFA completion.
+  const login = (_token, userData, modules) => {
     try { sessionStorage.removeItem('quadley_dashboard_cache'); } catch {}
     setUser(userData);
     setEnabledModules(modules || null);
   };
 
   const logout = () => {
-    const token = localStorage.getItem('token');
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
     try { sessionStorage.removeItem('quadley_dashboard_cache'); } catch {}
     setUser(null);
     setEnabledModules(null);
-    if (token) {
-      axios.post(`${API}/auth/logout`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).catch(() => {});
-    }
+    // Backend clears the httpOnly cookie and blacklists the token.
+    axios.post(`${API}/auth/logout`, {}).catch(() => {});
   };
 
   return (

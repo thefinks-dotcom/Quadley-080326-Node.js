@@ -1,0 +1,27 @@
+genfink@Gens-MacBook-Air android % find ~/Downloads ~/Documents -name "*.keystore" -o -name "*.jks" 2>/dev/null
+/Users/genfink/Downloads/Quadley-app-main 11/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 10/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 6/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 8/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 2/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 5/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 9/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 7/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 4/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 3/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 12/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 13/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 14/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-3/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main/mobile/node_modules/react-native/template/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-28.01.26/mobile/@genfink__quadley-mobile.bak.jks
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 6/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 2/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 5/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-Quadley-App-2.0 7/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 4/mobile/android/app/debug.keystore
+/Users/genfink/Downloads/Quadley-app-main 3/mobile/android/app/debug.keystore
+/Users/genfink/Documents/grace-release.keystore
+/Users/genfink/Documents/GitHub/Quadley-app/mobile/android/app/debug.keystore
+genfink@Gens-MacBook-Air android % 

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { AuthContext, API } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { MessageSquare, Users, Plus, Send, X, ChevronLeft, Search, Check } from 'lucide-react';
+import { MessageSquare, Users, Plus, Send, X, ChevronLeft, Search, Check, Flag, AlertTriangle, ShieldOff } from 'lucide-react';
 
 const AVATAR_COLORS = [
   ['#7C3AED', '#A78BFA'],
@@ -41,6 +42,7 @@ const Avatar = ({ name = '', isGroup = false, size = 44 }) => {
 
 const MessagesModule = () => {
   const { user } = useContext(AuthContext);
+  const router = useRouter();
   const [view, setView] = useState('list');
   const [conversations, setConversations] = useState([]);
   const [selectedConv, setSelectedConv] = useState(null);
@@ -54,6 +56,16 @@ const MessagesModule = () => {
   const [sending, setSending] = useState(false);
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [showNudge, setShowNudge] = useState(false);
+  const [nudgeLevel, setNudgeLevel] = useState(0);
+  const [nudgeWarning, setNudgeWarning] = useState('');
+  const [pendingContent, setPendingContent] = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportCategory, setReportCategory] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [messagingSuspended, setMessagingSuspended] = useState(false);
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
   const textareaRef = useRef(null);
@@ -136,6 +148,30 @@ const MessagesModule = () => {
     e?.preventDefault();
     const content = newMessage.trim();
     if (!content || !selectedConv || sending) return;
+
+    // Content moderation — check before sending
+    const check = checkContent(content);
+    if (check.level === 1) {
+      // Tier 1: block entirely, show modal
+      setNudgeLevel(1);
+      setNudgeWarning(check.warning);
+      setPendingContent(content);
+      setShowNudge(true);
+      return;
+    }
+    if (check.level === 2) {
+      // Tier 2: nudge — prompt user to think twice
+      setNudgeLevel(2);
+      setNudgeWarning(check.warning);
+      setPendingContent(content);
+      setShowNudge(true);
+      return;
+    }
+
+    await _doSend(content);
+  };
+
+  const _doSend = async (content) => {
     const tempId = `temp-${Date.now()}`;
     setMessages(prev => [...prev, {
       id: tempId, sender_id: user?.id,
@@ -152,10 +188,27 @@ const MessagesModule = () => {
       await axios.post(`${API}/messages`, data);
       fetchMessages();
       fetchConversations();
-    } catch {
+    } catch (err) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setNewMessage(content);
-      toast.error('Failed to send message');
+      const detail = err.response?.data?.detail;
+      if (detail && typeof detail === 'object' && detail.code === 'content_flagged') {
+        const cats = (detail.categories || [])
+          .map(c => c.replace(/_/g, ' '))
+          .filter(Boolean)
+          .join(', ');
+        setNudgeLevel(1);
+        setNudgeWarning(
+          `This message was blocked by content moderation${cats ? ` (${cats})` : ''}. ` +
+          `Please edit or delete your message.`
+        );
+        setPendingContent(content);
+        setShowNudge(true);
+      } else if (typeof detail === 'string' && detail.includes('suspended')) {
+        setMessagingSuspended(true);
+      } else {
+        toast.error('Failed to send message');
+      }
     } finally {
       setSending(false);
     }
@@ -223,6 +276,48 @@ const MessagesModule = () => {
 
   const formatFullDate = (ts) =>
     new Date(ts).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const checkContent = (text) => {
+    const t = text.toLowerCase();
+    const tier1 = [
+      /\b(kill\s*(your)?self|kys)\b/, /\bsuicide\b/, /\bself.?harm\b/,
+      /\bi.?will\s+kill\b/, /\bi.?will\s+hurt\b/, /i('ll| will) (find|hurt|kill) you/,
+      /\bdeath\s+threat\b/, /bomb|shoot\s+up|mass\s+shooting/,
+    ];
+    const tier2 = [
+      /\b(you('re| are)\s+(stupid|worthless|ugly|fat|dumb|pathetic|useless|a\s+loser))\b/,
+      /\b(hate\s+you|go\s+die|drop\s+dead)\b/,
+      /\b(freak|weirdo|retard|idiot)\b/,
+      /\bno\s*one\s+(likes|cares\s+about)\s+you\b/,
+    ];
+    for (const r of tier1) {
+      if (r.test(t)) return { level: 1, warning: 'This message contains language that may indicate a threat or self-harm. It cannot be sent.' };
+    }
+    for (const r of tier2) {
+      if (r.test(t)) return { level: 2, warning: 'This message contains language that may be harmful or harassing to the recipient.' };
+    }
+    return { level: 0, warning: '' };
+  };
+
+  const reportMessage = async () => {
+    if (!reportTarget || !reportCategory) { toast.error('Please select a category'); return; }
+    setReportSubmitting(true);
+    try {
+      await axios.post(`${API}/messages/${reportTarget.id}/report`, {
+        category: reportCategory,
+        details: reportDetails.trim() || undefined,
+      });
+      toast.success('Report submitted. Thank you for helping keep this community safe.');
+      setShowReportModal(false);
+      setReportTarget(null);
+      setReportCategory('');
+      setReportDetails('');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to submit report');
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   const filteredConvs = conversations.filter(c => {
     const name = c.type === 'group' ? c.group_name : c.other_user?.name || '';
@@ -308,7 +403,7 @@ const MessagesModule = () => {
                     </div>
                   )}
 
-                  <div className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'} ${sameSenderPrev ? 'mt-0.5' : 'mt-3'}`}>
+                  <div className={`group flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'} ${sameSenderPrev ? 'mt-0.5' : 'mt-3'}`}>
                     {!isMe && (
                       <div className="w-7 flex-shrink-0">
                         {isGroup && isLastInGroup && !isMe && (
@@ -323,18 +418,30 @@ const MessagesModule = () => {
                           {msg.sender_name}
                         </p>
                       )}
-                      <div
-                        className={`px-3.5 py-2.5 text-sm break-words leading-relaxed ${
-                          isMe
-                            ? `text-white ${isLastInGroup ? 'rounded-2xl rounded-br-sm' : 'rounded-2xl'} ${msg._optimistic ? 'opacity-60' : ''}`
-                            : `bg-white text-foreground ${isLastInGroup ? 'rounded-2xl rounded-bl-sm' : 'rounded-2xl'}`
-                        }`}
-                        style={isMe
-                          ? { background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})`, boxShadow: `0 2px 8px ${colorFrom}44` }
-                          : { boxShadow: '0 1px 4px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.06)' }
-                        }
-                      >
-                        {msg.content}
+                      <div className={`flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <div
+                          className={`px-3.5 py-2.5 text-sm break-words leading-relaxed ${
+                            isMe
+                              ? `text-white ${isLastInGroup ? 'rounded-2xl rounded-br-sm' : 'rounded-2xl'} ${msg._optimistic ? 'opacity-60' : ''}`
+                              : `bg-white text-foreground ${isLastInGroup ? 'rounded-2xl rounded-bl-sm' : 'rounded-2xl'} ${msg.removed ? 'italic opacity-50' : ''}`
+                          }`}
+                          style={isMe
+                            ? { background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})`, boxShadow: `0 2px 8px ${colorFrom}44` }
+                            : { boxShadow: '0 1px 4px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.06)' }
+                          }
+                        >
+                          {msg.content}
+                        </div>
+                        {!isMe && !msg.removed && !msg._optimistic && (
+                          <button
+                            onClick={() => { setReportTarget(msg); setShowReportModal(true); }}
+                            className="opacity-0 group-hover:opacity-100 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-red-100 transition-all"
+                            style={{ opacity: msg.has_report ? 0.8 : undefined }}
+                            title="Report message"
+                          >
+                            <Flag className={`h-3 w-3 ${msg.has_report ? 'text-red-500' : 'text-muted-foreground'}`} />
+                          </button>
+                        )}
                       </div>
                       {isLastInGroup && (
                         <p className={`text-[10px] text-muted-foreground mt-1 ${isMe ? 'text-right' : 'text-left ml-1'}`}>
@@ -351,45 +458,154 @@ const MessagesModule = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input bar */}
-        <div className="flex-shrink-0 bg-white border-t border-border px-4 pt-3"
-          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-          <form onSubmit={sendMessage} className="flex items-end gap-2">
-            <textarea
-              ref={textareaRef}
-              placeholder="Message..."
-              value={newMessage}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              className="flex-1 resize-none bg-muted rounded-2xl px-4 py-2.5 text-sm outline-none border-none leading-relaxed"
-              style={{ minHeight: 42, maxHeight: 120 }}
-              data-testid="message-input"
-            />
-            <button
-              type="submit"
-              disabled={!newMessage.trim() || sending}
-              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-30 transition-all active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
-              data-testid="send-btn"
-            >
-              <Send className="h-4 w-4 text-white" />
-            </button>
-          </form>
-        </div>
+        {/* Input bar / Suspended banner */}
+        {messagingSuspended ? (
+          <div className="flex-shrink-0 bg-red-50 border-t border-red-200 px-4 py-4"
+            style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+            <div className="flex items-center gap-3">
+              <ShieldOff className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-red-700">Messaging suspended</p>
+                <p className="text-xs text-red-500 mt-0.5">Contact your RA or administrator to resolve this.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 bg-white border-t border-border px-4 pt-3"
+            style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+            <form onSubmit={sendMessage} className="flex items-end gap-2">
+              <textarea
+                ref={textareaRef}
+                placeholder="Message..."
+                value={newMessage}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                className="flex-1 resize-none bg-muted rounded-2xl px-4 py-2.5 text-sm outline-none border-none leading-relaxed"
+                style={{ minHeight: 42, maxHeight: 120 }}
+                data-testid="message-input"
+              />
+              <button
+                type="submit"
+                disabled={!newMessage.trim() || sending}
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-30 transition-all active:scale-95"
+                style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
+                data-testid="send-btn"
+              >
+                <Send className="h-4 w-4 text-white" />
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Content nudge modal */}
+        {showNudge && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] px-6">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                </div>
+                <h3 className="font-bold text-base">{nudgeLevel === 1 ? 'Message Blocked' : 'Think before you send'}</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">{nudgeWarning}</p>
+              {nudgeLevel === 1 ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowNudge(false)}
+                    className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-muted text-foreground">
+                    Edit message
+                  </button>
+                  <button
+                    onClick={() => { setShowNudge(false); setNewMessage(''); setPendingContent(''); }}
+                    className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-red-100 text-red-700">
+                    Delete
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowNudge(false)}
+                    className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-muted text-foreground">
+                    Edit message
+                  </button>
+                  <button
+                    onClick={() => { setShowNudge(false); setNewMessage(''); setPendingContent(''); }}
+                    className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-red-100 text-red-700">
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Report modal */}
+        {showReportModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-end z-[70]"
+            onClick={() => setShowReportModal(false)}>
+            <div className="bg-white w-full rounded-t-3xl flex flex-col"
+              style={{ maxHeight: '80dvh' }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-6 pb-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Flag className="h-5 w-5 text-red-500" />
+                  <h3 className="font-bold text-base">Report message</h3>
+                </div>
+                <button onClick={() => setShowReportModal(false)}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-2">
+                <p className="text-xs text-muted-foreground mb-4">
+                  Reports are confidential and reviewed by your RA or admin. The message content is preserved as evidence.
+                </p>
+                <div className="space-y-2 mb-4">
+                  {['harassment', 'threats', 'inappropriate', 'bullying', 'other'].map(cat => (
+                    <button key={cat}
+                      onClick={() => setReportCategory(cat)}
+                      className={`w-full text-left px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
+                        reportCategory === cat ? 'text-white' : 'bg-muted text-foreground'
+                      }`}
+                      style={reportCategory === cat ? { background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` } : {}}>
+                      {{ harassment: 'Harassment', threats: 'Threats or violence', inappropriate: 'Inappropriate content', bullying: 'Bullying', other: 'Other' }[cat]}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Additional details (optional)..."
+                  value={reportDetails}
+                  onChange={e => setReportDetails(e.target.value)}
+                  rows={2}
+                  className="w-full bg-muted rounded-2xl px-4 py-3 text-sm outline-none border-none resize-none"
+                />
+              </div>
+              <div className="p-6 pt-3 shrink-0 border-t border-border">
+                <button
+                  onClick={reportMessage}
+                  disabled={!reportCategory || reportSubmitting}
+                  className="w-full py-3.5 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition-opacity"
+                  style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
+                  {reportSubmitting ? 'Submitting...' : 'Submit report'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Group members sheet */}
         {showGroupMembers && (
           <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setShowGroupMembers(false)}>
-            <div className="bg-white w-full rounded-t-3xl p-6 max-h-[60vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: '60dvh' }} onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-6 pb-4 shrink-0">
                 <h3 className="font-bold text-lg">Members ({groupMembers.length})</h3>
                 <button onClick={() => setShowGroupMembers(false)}
                   className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-2">
                 {groupMembers.map(m => {
                   const fullName = `${m.first_name || ''} ${m.last_name || ''}`.trim();
                   return (
@@ -515,6 +731,13 @@ const MessagesModule = () => {
       <div className="flex-shrink-0" style={{ background: 'hsl(var(--primary))' }}>
         <div className="px-4 flex items-center gap-3 pb-3"
           style={{ paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+            aria-label="Back to dashboard">
+            <ChevronLeft className="h-5 w-5 text-white" />
+          </button>
           <div className="flex-1">
             <p className="font-bold text-white text-xl">Messages</p>
             {totalUnread > 0 && (

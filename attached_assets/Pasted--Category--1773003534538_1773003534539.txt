@@ -1,0 +1,101 @@
+
+  ┌────────────────────┬────────┬───────────────────────────────────────────┐
+  │ Category           │ Status │ Key Observations                          │
+  ├────────────────────┼────────┼───────────────────────────────────────────┤
+  │ A01: Broken Access │ Secure │ Strict tenant isolation via               │
+  │ Control            │        │ get_tenant_db_for_user. Robust RBAC       │
+  │                    │        │ (SuperAdmin, Admin, RA, Student). Signed  │
+  │                    │        │ HMAC URLs for sensitive reports.          │
+  │ A02: Cryptographic │ Secure │ Uses bcrypt for passwords. JWT secrets    │
+  │ Failures           │        │ validated for length (>32 chars).         │
+  │                    │        │ Sensitive PII in safe_disclosures is      │
+  │                    │        │ encrypted at rest.                        │
+  │ A03: Injection     │ Low    │ XSS middleware sanitizes all incoming     │
+  │                    │ Risk   │ JSON. CSV injection protection            │
+  │                    │        │ implemented. Frontend stores JWT in       │
+  │                    │        │ localStorage (XSS risk).                  │
+  │ A04: Insecure      │ Secure │ Account lockout logic implemented. MFA is │
+  │ Design             │        │ mandatory for privileged accounts. Safe   │
+  │                    │        │ disclosure logic follows AU legal         │
+  │                    │        │ standards.                                │
+  │ A05: Security      │ Secure │ Production CORS restricts to explicit     │
+  │ Misconfiguration   │        │ origins (no wildcards). Server banners    │
+  │                    │        │ stripped. Security headers (CSP, HSTS,    │
+  │                    │        │ etc.) enforced.                           │
+  │ A06: Outdated      │ Low    │ Dependencies are relatively modern        │
+  │ Components         │ Risk   │ (FastAPI 0.128, Next.js 15.3). Regular    │
+  │                    │        │ auditing via pip-audit or yarn audit is   │
+  │                    │        │ recommended.                              │
+  │ A07:               │ Secure │ Strong password complexity requirements.  │
+  │ Identification     │        │ MFA implemented with backup codes.        │
+  │ Failures           │        │ Session invalidation on logout.           │
+  │ A08: Integrity     │ Secure │ Image uploads validated using magic       │
+  │ Failures           │        │ number signatures, not just extensions.   │
+  │ A09: Logging &     │ Secure │ Dedicated security logger and audit       │
+  │ Monitoring         │        │ middleware track sensitive operations     │
+  │                    │        │ (Auth, POST/PUT/DELETE).                  │
+  │ A10: SSRF          │ Secure │ Custom domain verification uses DNS-based │
+  │                    │        │ lookups (dnspython) rather than           │
+  │                    │        │ server-side HTTP requests.                │
+  └────────────────────┴────────┴───────────────────────────────────────────┘
+
+  ---
+
+  1. Broken Access Control (A01:2021)
+  The application implements a robust multi-tenant architecture.
+   * Isolation: The get_tenant_db_for_user dependency in utils/auth.py ensures
+     that users are confined to their own database. This effectively prevents
+     cross-tenant IDOR (Insecure Direct Object Reference) vulnerabilities.
+   * Privileged Access: Routes like admin.py and safe_disclosure.py correctly
+     check user roles (admin, super_admin) before granting access to sensitive
+     data or export functions.
+   * Signed URLs: The SafeDisclosure export uses time-limited HMAC-signed URLs,
+     preventing unauthorized access to generated reports.
+
+
+  2. Injection (A03:2021)
+   * XSS Protection: The backend includes a XSSSanitizationMiddleware that uses
+     bleach to clean all incoming JSON request bodies. This is a strong defense
+     against stored XSS.
+   * CSV Injection: In admin.py, the sanitize_csv_value function explicitly
+     strips formula-triggering characters (=, +, -, @) to prevent CSV injection
+     when administrators export or import data.
+   * Frontend Risk: The frontend stores the JWT token in localStorage. While
+     standard for many SPAs, this means if an XSS vulnerability were ever found
+     in a third-party library, the token could be stolen. Moving to httpOnly
+     cookies is the recommended long-term mitigation.
+
+
+  3. Identification and Authentication Failures (A07:2021)
+   * Password Policy: auth.py enforces a 12-character minimum with requirements
+     for uppercase, lowercase, numbers, and special characters. It also checks
+     against common passwords.
+   * Brute Force Protection: Persistent account lockout (3 attempts, 15-minute
+     lockout) is implemented in utils/account_lockout.py.
+   * Multi-Factor Authentication (MFA): MFA is integrated into the login flow,
+     requiring a second step for privileged users before sensitive operations
+     can be performed.
+
+
+  4. Software and Data Integrity Failures (A08:2021)
+   * File Uploads: In server.py, the validate_file_signature function inspects
+     the "magic numbers" (first few bytes) of uploaded files to ensure that a
+     .jpg is actually an image and not a disguised executable or script.
+
+
+  5. Security Logging and Monitoring Failures (A09:2021)
+   * Audit Trail: The AuditLogMiddleware and log_security_event functions ensure
+     that all authentication attempts and data-modifying operations (POST, PUT,
+     DELETE) are logged with IP addresses and timestamps, facilitating incident
+     response.
+
+
+  Recommendations
+   1. Frontend Tokens: Consider moving JWT storage from localStorage to httpOnly
+      cookies to eliminate the risk of token theft via XSS.
+   2. Rate Limiting: While the slowapi rate limiter is present, ensure it is
+      backed by a persistent store like Redis in production to prevent bypass
+      via server restarts.
+   3. Dependency Audits: Regularly run pip-audit for the backend and yarn audit
+      for the frontend to catch newly discovered vulnerabilities in third-party
+      packages.

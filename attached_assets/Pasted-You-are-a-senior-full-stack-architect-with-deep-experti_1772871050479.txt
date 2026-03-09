@@ -1,0 +1,20 @@
+You are a senior full-stack architect with deep expertise in multi-tenant SaaS systems, white-label mobile applications, and MongoDB Atlas data architecture. I have built a white-label app platform called **Quadley** — a modular application designed for residential colleges, where each college gets its own branded version of the app with its own color scheme, logo, and selected feature modules, all managed by a super admin.
+
+I just built the **Grace College** iOS app, but when it launches it opens as the Quadley app instead of the Grace College branded app. This suggests my tenant configuration, white-labeling pipeline, or build system is not working correctly.
+
+I need you to do three things:
+
+**1. Diagnose the white-label branding failure.**
+Explain the most likely reasons a tenant app (Grace College) would launch showing the parent platform's (Quadley) branding instead of the tenant's own colors and logo. Cover the iOS-specific build configuration issues that typically cause this — bundle identifiers, `Info.plist`, asset catalogs, build schemes, and environment variable injection at build time.
+
+**2. Describe the correct architecture for this system.**
+Provide a full description of how a properly built multi-tenant white-label mobile app platform should be architected, covering:
+- How tenant configuration (colors, logo, enabled modules) is stored and injected at build time or runtime
+- How the super admin controls module availability per tenant
+- How each college's app is generated or configured from a single codebase
+- How the modular feature system should be structured so tenants can enable or disable modules independently
+
+**3. Audit the MongoDB Atlas data isolation model.**
+Explain how tenant data should be siloed in MongoDB Atlas so that Grace College's data is completely separated from other colleges' data and from Quadley platform data. Cover the tradeoffs between database-per-tenant, collection-per-tenant, and document-level tenant ID patterns, and identify which approach is most appropriate for this use case. Flag any common misconfiguration patterns that could cause data leakage between tenants.
+
+Be specific and technical throughout. Where relevant, flag the exact points where misconfiguration is most likely to occur so I can audit my current implementation against the correct design.

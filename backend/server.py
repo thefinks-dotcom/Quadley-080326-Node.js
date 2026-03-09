@@ -66,6 +66,15 @@ api_router = APIRouter(prefix="/api")
 APP_VERSION = "1.0.8"
 
 # Health check endpoint for Kubernetes deployment
+@app.get("/")
+async def root():
+    """Root endpoint for deployment healthchecks"""
+    return {
+        "status": "healthy",
+        "service": "Quadley API",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Kubernetes liveness/readiness probes"""

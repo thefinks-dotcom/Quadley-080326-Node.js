@@ -1,0 +1,181 @@
+{
+  "summary": "IP Anomaly Detection feature testing complete. Backend: 32/32 tests passed. Frontend: All UI components verified working - stats display, severity breakdown, filters, alert list, resolve button, settings panel with toggles and inputs.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_features": {
+    "backend_apis": {
+      "GET /api/security/alerts/stats": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Super admin gets stats with total, unresolved, last_24h, last_7d, by_severity, by_type",
+          "Tenant admin can access stats (filtered by tenant)",
+          "by_severity contains low, medium, high, critical",
+          "by_type contains new_ip, rapid_ip_change, brute_force"
+        ]
+      },
+      "GET /api/security/alerts": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Super admin can list alerts with pagination (alerts, total, limit, offset)",
+          "Tenant admin can list alerts (filtered by tenant)",
+          "Supports severity filter",
+          "Supports alert_type filter",
+          "Supports resolved filter"
+        ]
+      },
+      "POST /api/security/alerts/{alert_id}/resolve": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Returns 404 for non-existent alert",
+          "Super admin can resolve alert",
+          "Returns message and alert_id on success"
+        ]
+      },
+      "POST /api/security/alerts/resolve-all": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Super admin can resolve all alerts",
+          "Tenant admin can resolve all (filtered by tenant)",
+          "Returns count of resolved alerts"
+        ]
+      },
+      "GET /api/security/alerts/settings": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Super admin can get settings",
+          "Tenant admin can get settings (read-only)",
+          "Returns: new_ip_alerts_enabled, rapid_ip_window_minutes, rapid_ip_threshold, brute_force_window_minutes, brute_force_threshold, alert_email_enabled"
+        ]
+      },
+      "POST /api/security/alerts/settings": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Returns 403 for tenant admins (super admin only)",
+          "Returns 400 for invalid/unknown settings keys",
+          "Super admin can update boolean settings",
+          "Super admin can update numeric settings",
+          "Returns message and updated settings"
+        ]
+      },
+      "GET /api/security/login-history": {
+        "status": "PASS",
+        "tests": [
+          "Returns 401 without auth",
+          "Returns 403 for students",
+          "Returns 403 for tenant admins (super admin only)",
+          "Super admin can view login history",
+          "Supports email filter",
+          "Returns records array with email, ip_address, timestamp, success fields"
+        ]
+      },
+      "Login anomaly detection integration": {
+        "status": "PASS",
+        "tests": [
+          "Successful login records IP in ip_login_history",
+          "Failed login records with success=false",
+          "New IP alert created on first login from new IP"
+        ]
+      }
+    },
+    "frontend_ui": {
+      "security_alerts_page": {
+        "status": "PASS",
+        "route": "/admin/security (super admin) and /college-admin/security (tenant admin)",
+        "data_testid": "security-alerts-page",
+        "components_verified": [
+          "security-stats-grid - Shows Unresolved, Last 24h, Last 7 Days, Total stats",
+          "severity-breakdown - Shows Critical, High, Medium, Low counts",
+          "security-filters - Severity, Type, Status dropdowns",
+          "alerts-list - Displays alert cards with resolve buttons",
+          "security-settings-toggle-btn - Opens settings panel",
+          "security-refresh-btn - Refreshes data"
+        ]
+      },
+      "settings_panel": {
+        "status": "PASS",
+        "data_testid": "security-settings-panel",
+        "components_verified": [
+          "setting-new-ip-toggle - Toggle for new IP alerts",
+          "setting-rapid-window - Input for rapid IP window minutes",
+          "setting-rapid-threshold - Input for rapid IP threshold",
+          "setting-bf-window - Input for brute force window minutes",
+          "setting-bf-threshold - Input for brute force threshold",
+          "setting-email-toggle - Toggle for email alerts to admins",
+          "save-settings-btn - Save Settings button"
+        ]
+      },
+      "alert_row": {
+        "status": "PASS",
+        "components_verified": [
+          "Alert type with icon (New IP Address, Rapid IP Change, Brute-Force)",
+          "Severity badge (critical/high/medium/low)",
+          "Alert details message",
+          "User email and IP address",
+          "Timestamp",
+          "Resolve button (resolve-btn-{alert_id})",
+          "Resolved badge when alert is resolved"
+        ]
+      },
+      "navigation": {
+        "status": "PASS",
+        "super_admin_dashboard": "Security Alerts button at /admin/super with data-testid='security-alerts-nav-btn'",
+        "routes": [
+          "/admin/security for super_admin",
+          "/college-admin/security for tenant admins"
+        ]
+      }
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ip_anomaly.py",
+    "/app/test_reports/pytest/pytest_results_ip_anomaly.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✓ All security endpoints correctly require admin role",
+    "✓ Settings update and login history endpoints correctly restricted to super_admin",
+    "✓ Tenant admins can only see alerts from their tenant",
+    "✓ Students get 403 on all security endpoints",
+    "✓ Login IP recording works for both successful and failed logins",
+    "✓ New IP alerts created automatically on first login from new IP",
+    "✓ All data-testid attributes present for testing",
+    "✓ UI correctly displays stats, severity breakdown, filters, and alert list",
+    "✓ Resolve button works and shows success toast",
+    "✓ Settings panel toggles and inputs working"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ip_anomaly.py"
+  ],
+  "success_rate": {
+    "backend": "100% (32/32 tests passed)",
+    "frontend": "100% (All UI components verified)"
+  },
+  "test_credentials_verified": {
+    "super_admin": "gen@quadley.com / Quadley2025! ✓",
+    "tenant_admin_ormond": "admin@ormond.com / Quadley2025! ✓",
+    "student_ormond": "student2@ormond.com / Quadley2025! ✓"
+  },
+  "seed_data_creation": "IP anomaly alerts created during testing via login (visible in UI)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "IP Anomaly Detection feature fully tested. Backend tests: /app/backend/tests/test_ip_anomaly.py (32 tests). Settings management restricted to super_admin. Login history restricted to super_admin. Tenant admins can read alerts/stats/settings but not modify settings. Students get 403 on all endpoints. Login triggers IP recording and anomaly detection automatically. student1@ormond.com is rate-limited/locked - use student2@ormond.com for testing."
+}
