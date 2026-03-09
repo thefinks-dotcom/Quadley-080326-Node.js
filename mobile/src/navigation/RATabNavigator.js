@@ -65,7 +65,7 @@ function HomeStack() {
       <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />
       {/* RA Specific Screens accessible from Home */}
       <Stack.Screen name="RAIncidentReporting" component={RAIncidentReportingScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ title: 'Floor Management' }} />
+      <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RAFloorEvents" component={RAFloorEventsScreen} options={{ title: 'Floor Events' }} />
       {/* Core Modules */}
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
@@ -80,7 +80,7 @@ function HomeStack() {
       <Stack.Screen name="Wellbeing" component={WellbeingScreen} options={{ title: 'Wellbeing' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       {/* Additional Modules */}
-      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ title: 'Study' }} />
+      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CoCurricular" component={CoCurricularScreen} options={{ title: 'Activities' }} />
       <Stack.Screen name="Messages" component={MessagesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.name || 'Chat' })} />
@@ -108,7 +108,7 @@ function RADutiesStack() {
       }}
     >
       <Stack.Screen name="RAIncidentReporting" component={RAIncidentReportingScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ title: 'Floor Management' }} />
+      <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RAFloorEvents" component={RAFloorEventsScreen} options={{ title: 'Floor Events' }} />
     </Stack.Navigator>
   );

@@ -14,7 +14,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import { colors as defaultColors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 
-export default function AcademicsScreen() {
+export default function AcademicsScreen({ navigation }) {
   const { branding } = useTenant();
   const { themeColors: colors } = useAppTheme();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -209,7 +209,7 @@ export default function AcademicsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="academics-screen">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']} data-testid="academics-screen">
       <AnimatedScreen>
       {/* Hero Header */}
       <View style={{
