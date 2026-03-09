@@ -100,7 +100,7 @@ function HomeStack() {
       <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.name || 'Chat' })} />
       <Stack.Screen name="Floor" component={FloorScreen} options={{ title: 'My Floor' }} />
       <Stack.Screen name="Birthdays" component={BirthdaysScreen} options={{ title: 'Birthdays' }} />
-      <Stack.Screen name="SafeDisclosure" component={SafeDisclosureScreen} options={{ title: 'Safe Disclosure' }} />
+      <Stack.Screen name="SafeDisclosure" component={SafeDisclosureScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Parcels" component={ParcelsScreen} options={{ title: 'My Parcels' }} />
       <Stack.Screen name="Bookings" component={BookingsScreen} options={{ title: 'Bookings' }} />
     </Stack.Navigator>

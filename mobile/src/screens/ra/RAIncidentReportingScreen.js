@@ -170,99 +170,112 @@ export default function RAIncidentReportingScreen({ navigation }) {
     </TouchableOpacity>
   );
 
+  const sortedIncidents = [...(incidents || [])].sort((a, b) => {
+    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return dateB - dateA;
+  });
+  const filteredIncidents = activeTab === 'open'
+    ? sortedIncidents.filter(i => i.status !== 'resolved')
+    : sortedIncidents;
+  const openCount = sortedIncidents.filter(i => i.status !== 'resolved').length;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }}>
-      {/* Quick Actions */}
-      <View style={{ flexDirection: 'row', padding: spacing.lg, gap: 12 }}>
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          style={{
-            flex: 1,
-            backgroundColor: colors.primary,
-            padding: spacing.lg,
-            borderRadius: borderRadius.lg,
-            alignItems: 'center',
-          }}
-        >
-          <Ionicons name="add-circle" size={28} color={colors.textInverse} />
-          <Text style={{ color: colors.textInverse, fontWeight: '600', marginTop: 8 }}>New Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('RAFloorManagement')}
-          style={{
-            flex: 1,
-            backgroundColor: colors.surface,
-            padding: spacing.lg,
-            borderRadius: borderRadius.lg,
-            alignItems: 'center',
-            borderWidth: 2,
-            borderColor: primaryColor,
-          }}
-        >
-          <Ionicons name="people" size={28} color={primaryColor} />
-          <Text style={{ color: colors.primary, fontWeight: '600', marginTop: 8 }}>Floor Residents</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Stats */}
-      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16 }}>
-        <View style={{ flex: 1, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: borderRadius.md, marginRight: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.primary }}>
-            {incidents?.filter(i => i.status !== 'resolved').length || 0}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary }}>Open Reports</Text>
-        </View>
-        <View style={{ flex: 1, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: borderRadius.md, marginLeft: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: primaryColor }}>
-            {floorResidents?.length || 0}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary }}>Floor Residents</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+      {/* Hero Header */}
+      <View style={{
+        backgroundColor: primaryColor,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xl,
+        borderBottomLeftRadius: borderRadius.xxl,
+        borderBottomRightRadius: borderRadius.xxl,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
+            </TouchableOpacity>
+          )}
+          {!navigation.canGoBack() && (
+            <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="document-text" size={22} color={colors.textInverse} />
+            </View>
+          )}
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Incidents</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
+              {openCount > 0 ? `${openCount} open report${openCount !== 1 ? 's' : ''}` : `${sortedIncidents.length} report${sortedIncidents.length !== 1 ? 's' : ''}`}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Ionicons name="add" size={24} color={colors.textInverse} />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tabs */}
-      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 }}>
-        <TouchableOpacity
-          onPress={() => setActiveTab('reports')}
-          style={{
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            backgroundColor: activeTab === 'reports' ? primaryColor : colors.border,
-            borderRadius: 20,
-            marginRight: 8,
-          }}
-        >
-          <Text style={{ color: activeTab === 'reports' ? colors.textInverse : colors.textSecondary, fontWeight: '500' }}>
-            All Reports
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab('open')}
-          style={{
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            backgroundColor: activeTab === 'open' ? primaryColor : colors.border,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ color: activeTab === 'open' ? colors.textInverse : colors.textSecondary, fontWeight: '500' }}>
-            Open Only
-          </Text>
-        </TouchableOpacity>
+      {/* Pill Tabs */}
+      <View style={{
+        flexDirection: 'row',
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        marginBottom: spacing.md,
+        backgroundColor: colors.surfaceSecondary,
+        borderRadius: borderRadius.md,
+        padding: 3,
+      }}>
+        {[
+          { key: 'reports', label: 'All Reports', count: sortedIncidents.length },
+          { key: 'open', label: 'Open Only', count: openCount },
+        ].map(tab => (
+          <TouchableOpacity
+            key={tab.key}
+            onPress={() => setActiveTab(tab.key)}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: spacing.sm + 2,
+              borderRadius: borderRadius.sm + 2,
+              backgroundColor: activeTab === tab.key ? colors.surface : 'transparent',
+              ...(activeTab === tab.key ? shadows.sm : {}),
+            }}
+          >
+            <Text style={{ fontWeight: '600', fontSize: 13, color: activeTab === tab.key ? colors.textPrimary : colors.textTertiary }}>
+              {tab.label}
+            </Text>
+            <View style={{
+              backgroundColor: activeTab === tab.key ? primaryColor + '18' : colors.border,
+              paddingHorizontal: 6, paddingVertical: 1,
+              borderRadius: 10, marginLeft: 6,
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: activeTab === tab.key ? primaryColor : colors.textTertiary }}>
+                {tab.count}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Incidents List */}
-      {isLoading ? (
+      {!incidents && isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={primaryColor} />
         </View>
       ) : (
         <FlatList
-          data={activeTab === 'open' ? incidents?.filter(i => i.status !== 'resolved') : incidents}
+          data={filteredIncidents}
           keyExtractor={(item, index) => item.id || `item-${index}`}
           renderItem={renderIncident}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={primaryColor} />
           }
           ListEmptyComponent={
             <View style={{ padding: 40, alignItems: 'center' }}>
@@ -270,7 +283,7 @@ export default function RAIncidentReportingScreen({ navigation }) {
               <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12 }}>No incident reports</Text>
             </View>
           }
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
 
