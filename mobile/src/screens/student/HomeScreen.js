@@ -251,7 +251,7 @@ export default function HomeScreen({ navigation }) {
       modules: [
         { icon: 'document-text-outline', label: 'Incidents', screen: 'RAIncidentReporting' },
         { icon: 'people-circle-outline', label: 'Floor Mgmt', screen: 'RAFloorManagement' },
-        { icon: 'calendar-outline', label: 'Floor Events', screen: 'RAFloorEvents' },
+        { icon: 'calendar-outline', label: 'Floor Events', screen: 'RAFloorManagement' },
       ],
     }] : []),
   ];

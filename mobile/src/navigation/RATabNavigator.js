@@ -32,7 +32,6 @@ import BookingsScreen from '../screens/student/BookingsScreen';
 // RA Specific Screens
 import RAIncidentReportingScreen from '../screens/ra/RAIncidentReportingScreen';
 import RAFloorManagementScreen from '../screens/ra/RAFloorManagementScreen';
-import RAFloorEventsScreen from '../screens/ra/RAFloorEventsScreen';
 
 import { colors as defaultColors } from '../theme';
 import { useAppTheme } from '../contexts/ThemeContext';
@@ -66,7 +65,6 @@ function HomeStack() {
       {/* RA Specific Screens accessible from Home */}
       <Stack.Screen name="RAIncidentReporting" component={RAIncidentReportingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RAFloorEvents" component={RAFloorEventsScreen} options={{ title: 'Floor Events' }} />
       {/* Core Modules */}
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
       <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'Events' }} />
@@ -109,7 +107,6 @@ function RADutiesStack() {
     >
       <Stack.Screen name="RAIncidentReporting" component={RAIncidentReportingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RAFloorManagement" component={RAFloorManagementScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RAFloorEvents" component={RAFloorEventsScreen} options={{ title: 'Floor Events' }} />
     </Stack.Navigator>
   );
 }
