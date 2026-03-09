@@ -1,0 +1,27 @@
+genfink@Gens-MacBook-Air mobile % cd ios && pod install
+/opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1408:in 'block in Gem::Specification#activate_dependencies': Could not find 'ffi' (>= 1.15.0) among 118 total gem(s) (Gem::MissingSpecError)
+Checked in 'GEM_PATH=/Users/genfink/.gem/ruby/4.0.0:/opt/homebrew/lib/ruby/gems/4.0.0:/opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/gems/4.0.0:/opt/homebrew/Cellar/cocoapods/1.16.2_2/libexec' at: /opt/homebrew/Cellar/cocoapods/1.16.2_2/libexec/specifications/ethon-0.15.0.gemspec, execute `gem env` for more information
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Array#each'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1376:in 'Gem::Specification#activate'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1410:in 'block in Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Array#each'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1376:in 'Gem::Specification#activate'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1410:in 'block in Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Array#each'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1376:in 'Gem::Specification#activate'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1410:in 'block in Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Array#each'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1394:in 'Gem::Specification#activate_dependencies'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems/specification.rb:1376:in 'Gem::Specification#activate'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems.rb:239:in 'block in Gem.find_and_activate_spec_for_exe'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems.rb:238:in 'Thread::Mutex#synchronize'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems.rb:238:in 'Gem.find_and_activate_spec_for_exe'
+	from /opt/homebrew/Cellar/ruby/4.0.1/lib/ruby/4.0.0/rubygems.rb:282:in 'Gem.activate_and_load_bin_path'
+	from /opt/homebrew/Cellar/cocoapods/1.16.2_2/libexec/bin/pod:25:in '<main>'
+genfink@Gens-MacBook-Air ios % cd ..
+open ios/Quadley.xcworkspace
+The file /Users/genfink/Quadley-080326-Node.js/mobile/ios/Quadley.xcworkspace does not exist.
+genfink@Gens-MacBook-Air mobile % 
