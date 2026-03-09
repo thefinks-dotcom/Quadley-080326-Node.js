@@ -3,7 +3,9 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { colors } from '../theme';
 
-// Build-time branding from app.config.js (set per-tenant at build)
+// Build-time tenant identity — set by TENANT env var at `expo prebuild` time
+const BUILD_TENANT = Constants.expoConfig?.extra?.tenant || 'quadley';
+const BUILD_TENANT_NAME = Constants.expoConfig?.extra?.tenantName || 'Quadley';
 const BUILD_PRIMARY = Constants.expoConfig?.extra?.primaryColor || colors.primary;
 const BUILD_SECONDARY = Constants.expoConfig?.extra?.secondaryColor || colors.textPrimary;
 
@@ -79,8 +81,34 @@ export const TenantProvider = ({ children }) => {
       const storedTenant = await SecureStore.getItemAsync('tenant');
       if (storedTenant) {
         const tenantData = JSON.parse(storedTenant);
+
+        // MISMATCH GUARD: If this is a white-label build (e.g. grace_college) and the
+        // stored tenant is from a different app (e.g. quadley), discard it.
+        // Prevents branding and module contamination across builds on the same device.
+        if (
+          BUILD_TENANT !== 'quadley' &&
+          tenantData.code &&
+          tenantData.code !== BUILD_TENANT
+        ) {
+          console.log(`[Tenant] Stored tenant '${tenantData.code}' != build tenant '${BUILD_TENANT}', clearing.`);
+          await SecureStore.deleteItemAsync('tenant');
+          return;
+        }
+
         setTenant(tenantData);
-        setEnabledModules(tenantData.enabled_modules || ALL_MODULES);
+
+        // Use stored enabled_modules if present (even an empty array is valid).
+        // Only fall back to ALL_MODULES for the generic Quadley build; white-label
+        // builds should wait for the background /auth/me refresh to set the real list
+        // rather than briefly showing every module.
+        if (Array.isArray(tenantData.enabled_modules)) {
+          setEnabledModules(tenantData.enabled_modules);
+        } else if (BUILD_TENANT === 'quadley') {
+          setEnabledModules(ALL_MODULES);
+        }
+        // else: white-label build with missing enabled_modules — leave as []
+        // and let background getCurrentUser() populate it.
+
         const normalized = normalizeBranding(tenantData.branding);
         if (normalized) {
           setBranding(prev => ({
@@ -101,7 +129,11 @@ export const TenantProvider = ({ children }) => {
   const saveTenant = async (tenantData) => {
     try {
       setTenant(tenantData);
-      setEnabledModules(tenantData?.enabled_modules || ALL_MODULES);
+      if (Array.isArray(tenantData?.enabled_modules)) {
+        setEnabledModules(tenantData.enabled_modules);
+      } else if (BUILD_TENANT === 'quadley') {
+        setEnabledModules(ALL_MODULES);
+      }
       
       const normalized = normalizeBranding(tenantData?.branding);
       if (normalized) {
@@ -155,17 +187,25 @@ export const TenantProvider = ({ children }) => {
 
   // Check if a specific module is enabled
   const isModuleEnabled = (moduleName) => {
-    // Super admin sees all modules
-    if (!tenant || tenant.code === null) {
+    // Super admin (code === null) sees all modules
+    if (tenant?.code === null) {
       return true;
+    }
+    // White-label build with no active session: respect enabledModules list.
+    // Generic Quadley build with no session: show all (admin/demo context).
+    if (!tenant) {
+      return BUILD_TENANT === 'quadley' ? true : enabledModules.includes(moduleName);
     }
     return enabledModules.includes(moduleName);
   };
 
   // Get list of enabled modules
   const getEnabledModules = () => {
-    if (!tenant || tenant.code === null) {
+    if (tenant?.code === null) {
       return ALL_MODULES;
+    }
+    if (!tenant) {
+      return BUILD_TENANT === 'quadley' ? ALL_MODULES : enabledModules;
     }
     return enabledModules;
   };
