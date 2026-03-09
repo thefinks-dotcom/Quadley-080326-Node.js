@@ -463,12 +463,52 @@ async def login_with_mfa(
             severity="WARNING"
         )
         raise HTTPException(status_code=401, detail="Invalid MFA code")
-    
-    return {
+
+    # Issue a fresh access token now that MFA is confirmed
+    new_token = create_access_token(data={
+        "sub": current_user.id,
+        "tenant": tenant_code,
+        "role": current_user.role,
+    })
+
+    # Fetch tenant info for the response
+    tenant_data = None
+    if tenant_code:
+        try:
+            tenant_doc = await master_db.tenants.find_one({"code": tenant_code}, {"_id": 0})
+            if tenant_doc:
+                tenant_data = {
+                    "code": tenant_doc.get("code"),
+                    "name": tenant_doc.get("name"),
+                    "logo_url": tenant_doc.get("logo_url"),
+                    "primary_color": tenant_doc.get("primary_color"),
+                    "secondary_color": tenant_doc.get("secondary_color"),
+                    "enabled_modules": tenant_doc.get("enabled_modules", []),
+                }
+        except Exception:
+            pass
+
+    response = JSONResponse(content={
         "verified": True,
         "message": "MFA verification successful",
-        "user": current_user.model_dump(mode='json')
-    }
+        "access_token": new_token,
+        "token_type": "bearer",
+        "user": current_user.model_dump(mode='json'),
+        "tenant": tenant_data,
+    })
+
+    # Set httpOnly cookie — matches behaviour of non-MFA login path
+    response.set_cookie(
+        key="access_token",
+        value=new_token,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=COOKIE_MAX_AGE,
+        path="/",
+    )
+
+    return response
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
