@@ -138,21 +138,24 @@ export default function SafeDisclosureScreen({ navigation }) {
       );
     },
     onError: (error) => {
-      const errorMsg = error.response?.data?.detail || error.message || 'Failed to submit disclosure';
-      
-      // Check for token expiry
-      if (errorMsg.toLowerCase().includes('token') || 
-          errorMsg.toLowerCase().includes('expired') ||
-          errorMsg.toLowerCase().includes('not authenticated') ||
-          error.response?.status === 401) {
+      if (error.response?.status === 401) {
         Alert.alert(
           'Session Expired',
           'Your session has expired. Please log in again and resubmit the form. Your form data has been preserved.',
           [{ text: 'OK' }]
         );
-      } else {
-        Alert.alert('Error', errorMsg);
+        return;
       }
+      const detail = error.response?.data?.detail;
+      let errorMsg;
+      if (Array.isArray(detail)) {
+        errorMsg = detail.map(e => e.msg || JSON.stringify(e)).join('; ');
+      } else if (typeof detail === 'string') {
+        errorMsg = detail;
+      } else {
+        errorMsg = error.message || 'Failed to submit disclosure';
+      }
+      Alert.alert('Error', errorMsg);
     },
   });
 
@@ -198,12 +201,52 @@ export default function SafeDisclosureScreen({ navigation }) {
     }));
   };
 
+  const mapHappenedTo = (value) => {
+    if (value === 'It happened to me') return 'self';
+    if (value === 'It happened to someone else') return 'third_party';
+    return 'unsure';
+  };
+
   const handleSubmit = () => {
     if (!formData.incident_type || !formData.description.trim() || !formData.happened_to) {
       Alert.alert('Error', 'Please complete all required fields (incident type, who it happened to, and description)');
       return;
     }
-    submitDisclosure.mutate(formData);
+
+    const demographics = {
+      respondent_type: formData.respondent_type,
+      sex: formData.sex,
+      gender_identity: formData.gender_identity,
+      aboriginal_torres_strait: formData.aboriginal_torres_strait,
+      sexual_orientation: formData.sexual_orientation,
+      year_of_birth: formData.year_of_birth,
+      cald: formData.cald,
+      country_of_birth: formData.country_of_birth,
+      languages_at_home: formData.languages_at_home,
+      living_with_disability: formData.living_with_disability,
+      neurodiverse: formData.neurodiverse,
+    };
+
+    const payload = {
+      is_anonymous: formData.is_anonymous,
+      incident_type: formData.incident_type,
+      incident_date: formData.incident_date || undefined,
+      incident_location: formData.incident_location || undefined,
+      description: formData.description,
+      reporter_relationship: mapHappenedTo(formData.happened_to),
+      individuals_involved: formData.individuals_involved || undefined,
+      witness_details: formData.witness_details || undefined,
+      reported_elsewhere: formData.reported_elsewhere ? [formData.reported_elsewhere] : [],
+      immediate_danger: formData.immediate_danger,
+      medical_attention_needed: formData.medical_attention_needed,
+      police_notified: formData.police_notified,
+      support_requested: formData.support_requested,
+      preferred_contact: formData.preferred_contact || undefined,
+      additional_notes: formData.additional_notes || undefined,
+      demographics: formData.help_with_data === true ? demographics : {},
+    };
+
+    submitDisclosure.mutate(payload);
   };
 
   const handleCall = (phone) => {
