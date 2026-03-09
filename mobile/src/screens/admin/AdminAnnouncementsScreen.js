@@ -33,6 +33,7 @@ export default function AdminAnnouncementsScreen() {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [selectedAnnouncementStats, setSelectedAnnouncementStats] = useState(null);
+  const [selectedRollcall, setSelectedRollcall] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
@@ -106,13 +107,31 @@ export default function AdminAnnouncementsScreen() {
     setStatsModalVisible(true);
     setLoadingStats(true);
     setSelectedAnnouncementStats(null);
-    
+    setSelectedRollcall(null);
+
     try {
-      const response = await api.get(`${ENDPOINTS.ANNOUNCEMENTS}/${item.id}/read-stats`);
-      setSelectedAnnouncementStats(response.data);
+      const [statsRes, rollcallRes] = await Promise.allSettled([
+        api.get(`${ENDPOINTS.ANNOUNCEMENTS}/${item.id}/read-stats`),
+        item.is_emergency
+          ? api.get(`${ENDPOINTS.EMERGENCY_ROLLCALL}/by-announcement/${item.id}`)
+          : Promise.resolve(null),
+      ]);
+
+      if (statsRes.status === 'fulfilled') setSelectedAnnouncementStats(statsRes.value.data);
+      else Alert.alert('Error', 'Failed to load read statistics');
+
+      if (item.is_emergency && rollcallRes.status === 'fulfilled' && rollcallRes.value?.data) {
+        const rc = rollcallRes.value.data;
+        // Also fetch the full floor summary
+        try {
+          const summaryRes = await api.get(`${ENDPOINTS.EMERGENCY_ROLLCALL}/${rc.id}/summary`);
+          setSelectedRollcall(summaryRes.data);
+        } catch {
+          setSelectedRollcall(rc);
+        }
+      }
     } catch (error) {
-      console.error('Failed to load stats:', error);
-      Alert.alert('Error', 'Failed to load read statistics');
+      Alert.alert('Error', 'Failed to load details');
     } finally {
       setLoadingStats(false);
     }
@@ -525,6 +544,85 @@ export default function AdminAnnouncementsScreen() {
                   </View>
                 )}
               </View>
+
+              {/* Emergency Roll Call Summary */}
+              {selectedAnnouncement?.is_emergency && selectedRollcall && (
+                <View style={{ paddingHorizontal: 16, marginBottom: 32 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+                    <Ionicons name="warning" size={18} color="#D32F2F" />
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#D32F2F', marginLeft: 8 }}>
+                      Emergency Roll Call Responses
+                    </Text>
+                  </View>
+
+                  {/* Status counts */}
+                  <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
+                    <View style={{ flex: 1, backgroundColor: '#E8F5E9', borderRadius: borderRadius.lg, padding: 16, alignItems: 'center' }}>
+                      <Ionicons name="home" size={22} color="#2E7D32" />
+                      <Text style={{ fontSize: 28, fontWeight: '700', color: '#2E7D32', marginTop: 4 }}>
+                        {selectedRollcall.total_evacuated ?? selectedRollcall.evacuated ?? 0}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: '#2E7D32', textAlign: 'center', fontWeight: '600' }}>Evacuated</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: '#E3F2FD', borderRadius: borderRadius.lg, padding: 16, alignItems: 'center' }}>
+                      <Ionicons name="shield-checkmark" size={22} color="#1565C0" />
+                      <Text style={{ fontSize: 28, fontWeight: '700', color: '#1565C0', marginTop: 4 }}>
+                        {selectedRollcall.total_not_at_college ?? selectedRollcall.not_at_college ?? 0}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: '#1565C0', textAlign: 'center', fontWeight: '600' }}>Not at College</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: '#FFF3E0', borderRadius: borderRadius.lg, padding: 16, alignItems: 'center' }}>
+                      <Ionicons name="time" size={22} color="#E65100" />
+                      <Text style={{ fontSize: 28, fontWeight: '700', color: '#E65100', marginTop: 4 }}>
+                        {selectedRollcall.total_pending ?? selectedRollcall.pending ?? 0}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: '#E65100', textAlign: 'center', fontWeight: '600' }}>Pending</Text>
+                    </View>
+                  </View>
+
+                  {/* Floor breakdown */}
+                  {selectedRollcall.floors && Object.keys(selectedRollcall.floors).length > 0 && (
+                    <>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>By Floor</Text>
+                      {Object.entries(selectedRollcall.floors).map(([floor, data]) => {
+                        const evacuated = data.evacuated?.length || 0;
+                        const notAt = data.not_at_college?.length || 0;
+                        const pending = data.pending?.length || 0;
+                        const total = evacuated + notAt + pending;
+                        return (
+                          <View key={floor} style={{ backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: 12, marginBottom: 8 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>{floor}</Text>
+                              <Text style={{ fontSize: 12, color: colors.textSecondary }}>{evacuated + notAt}/{total} responded</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: 6 }}>
+                              <View style={{ flex: evacuated || 0.001, height: 8, backgroundColor: '#4CAF50', borderRadius: 4 }} />
+                              <View style={{ flex: notAt || 0.001, height: 8, backgroundColor: '#2196F3', borderRadius: 4 }} />
+                              <View style={{ flex: pending || 0.001, height: 8, backgroundColor: '#FF9800', borderRadius: 4 }} />
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* Pending students */}
+                  {selectedRollcall.pending?.length > 0 && (
+                    <>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#E65100', marginTop: 8, marginBottom: 8 }}>
+                        Not yet responded ({selectedRollcall.pending.length})
+                      </Text>
+                      {selectedRollcall.pending.slice(0, 20).map((s, idx) => (
+                        <View key={s.user_id || idx} style={{ backgroundColor: '#FFF3E0', borderRadius: borderRadius.md, padding: 10, marginBottom: 6, flexDirection: 'row', alignItems: 'center' }}>
+                          <Ionicons name="person-outline" size={16} color="#E65100" style={{ marginRight: 8 }} />
+                          <Text style={{ fontSize: 14, color: colors.textPrimary, flex: 1 }}>{s.user_name}</Text>
+                          <Text style={{ fontSize: 12, color: colors.textSecondary }}>{s.user_floor || 'No floor'}</Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                </View>
+              )}
             </ScrollView>
           ) : null}
         </SafeAreaView>
