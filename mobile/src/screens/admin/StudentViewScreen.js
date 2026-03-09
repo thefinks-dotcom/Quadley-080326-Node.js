@@ -122,7 +122,6 @@ export default function StudentViewScreen({ navigation }) {
       modules: [
         { icon: 'calendar-outline', label: 'Calendar', screen: 'Calendar', module: 'events' },
         { icon: 'ticket-outline', label: 'Events', screen: 'Events', module: 'events' },
-        { icon: 'chatbubbles-outline', label: 'Messages', screen: 'Messages', module: 'messages' },
         { icon: 'newspaper-outline', label: 'News', screen: 'Announcements', module: 'announcements' },
         { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining', module: 'dining' },
       ],
