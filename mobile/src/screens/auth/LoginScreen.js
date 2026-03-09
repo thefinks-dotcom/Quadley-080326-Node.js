@@ -36,10 +36,12 @@ export default function LoginScreen({ navigation }) {
   const { tenant, branding } = useTenant();
   const passwordRef = useRef(null);
 
-  const primaryColor = branding?.primaryColor || buildPrimaryColor;
-  const displayName = tenant?.name || buildTenantName;
-  const tenantCode = tenant?.code || buildTenantCode;
-  const tenantLogo = TENANT_LOGOS[tenantCode] || buildLogo;
+  // Login screen ALWAYS shows the build's white-label branding.
+  // Stored tenant data (from a previous session on a different build) must not
+  // bleed into the login screen identity — the build IS the tenant here.
+  const primaryColor = buildPrimaryColor;
+  const displayName = buildTenantName;
+  const tenantLogo = buildLogo;
 
   useEffect(() => {
     warmupConnection(false).catch(() => {});

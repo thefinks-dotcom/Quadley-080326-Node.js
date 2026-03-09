@@ -516,11 +516,37 @@ async def get_me(current_user: User = Depends(get_current_user)):
     user_data = current_user.model_dump(mode='json')
     if current_user.role == 'super_admin':
         user_data['enabled_modules'] = ALL_MODULES
-    elif current_user.tenant_code:
-        tenant = await master_db.tenants.find_one({"code": current_user.tenant_code}, {"_id": 0, "enabled_modules": 1})
-        user_data['enabled_modules'] = tenant.get('enabled_modules', ALL_MODULES) if tenant else ALL_MODULES
     else:
-        user_data['enabled_modules'] = ALL_MODULES
+        tenant_code = current_user.tenant_code or ''
+        # Handle old tokens / sessions where tenant_code was not embedded in the JWT.
+        # Search tenant DBs to find which tenant this user belongs to, so they
+        # still get the correct module list even with a legacy token.
+        if not tenant_code:
+            try:
+                active_tenants = await master_db.tenants.find(
+                    {"status": "active"}, {"_id": 0, "code": 1}
+                ).to_list(100)
+                for t in active_tenants:
+                    try:
+                        t_db = get_tenant_db(t['code'])
+                        found = await t_db.users.find_one(
+                            {"id": current_user.id}, {"_id": 0, "id": 1}
+                        )
+                        if found:
+                            tenant_code = t['code']
+                            break
+                    except Exception:
+                        continue
+            except Exception as e:
+                logger.warning(f"Tenant lookup fallback failed for user {current_user.id}: {e}")
+
+        if tenant_code:
+            tenant = await master_db.tenants.find_one(
+                {"code": tenant_code}, {"_id": 0, "enabled_modules": 1}
+            )
+            user_data['enabled_modules'] = tenant.get('enabled_modules', ALL_MODULES) if tenant else ALL_MODULES
+        else:
+            user_data['enabled_modules'] = ALL_MODULES
     return user_data
 
 
