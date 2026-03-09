@@ -64,14 +64,16 @@ export const TenantProvider = ({ children }) => {
     loadTenantFromStorage();
   }, []);
 
-  // Normalize branding from snake_case (backend) to camelCase (frontend)
-  // Only returns values actually set by the DB — null fields won't overwrite build-time defaults
-  const normalizeBranding = (raw) => {
-    if (!raw) return null;
-    const pc = raw.primary_color || raw.primaryColor || null;
-    const sc = raw.secondary_color || raw.secondaryColor || null;
-    const lu = raw.logo_url || raw.logoUrl || null;
-    // If nothing is set, treat as no branding
+  // Normalize branding from snake_case (backend) to camelCase (frontend).
+  // Accepts either the nested `branding` sub-object or the full tenant document so
+  // that the top-level `logo_url` field returned by the backend is never lost.
+  const normalizeBranding = (raw, topLevel = null) => {
+    if (!raw && !topLevel) return null;
+    const src = raw || {};
+    const pc = src.primary_color || src.primaryColor || null;
+    const sc = src.secondary_color || src.secondaryColor || null;
+    // Prefer logo_url from the branding sub-object; fall back to top-level logo_url
+    const lu = src.logo_url || src.logoUrl || topLevel?.logo_url || topLevel?.logoUrl || null;
     if (!pc && !sc && !lu) return null;
     return { primaryColor: pc, secondaryColor: sc, logoUrl: lu };
   };
@@ -109,7 +111,7 @@ export const TenantProvider = ({ children }) => {
         // else: white-label build with missing enabled_modules — leave as []
         // and let background getCurrentUser() populate it.
 
-        const normalized = normalizeBranding(tenantData.branding);
+        const normalized = normalizeBranding(tenantData.branding, tenantData);
         if (normalized) {
           setBranding(prev => ({
             ...prev,
@@ -135,7 +137,7 @@ export const TenantProvider = ({ children }) => {
         setEnabledModules(ALL_MODULES);
       }
       
-      const normalized = normalizeBranding(tenantData?.branding);
+      const normalized = normalizeBranding(tenantData?.branding, tenantData);
       if (normalized) {
         setBranding(prev => ({
           ...prev,

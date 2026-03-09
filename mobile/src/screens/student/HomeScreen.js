@@ -25,6 +25,10 @@ import { useAppTheme } from '../../contexts/ThemeContext';
 const buildPrimaryColor = Constants.expoConfig?.extra?.primaryColor || defaultColors.primary;
 const buildSecondaryColor = Constants.expoConfig?.extra?.secondaryColor || defaultColors.background;
 const buildTenantCode = Constants.expoConfig?.extra?.tenant || 'quadley';
+// For white-label builds the app icon is baked in at build time and should always be shown.
+// Only the generic Quadley build supports overriding the logo via a DB-stored URL.
+const BUILD_IS_WHITE_LABEL = buildTenantCode !== 'quadley';
+const buildStaticLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
 
 // Swiss Technical Quick Access Button
 const QuickAccessButton = ({ icon, label, onPress, badge, primaryColor, secondaryColor, colors }) => (
@@ -270,7 +274,11 @@ export default function HomeScreen({ navigation }) {
                 borderRadius: borderRadius.md,
               }}>
                 <Image
-                  source={branding?.logoUrl ? { uri: branding.logoUrl } : (TENANT_LOGOS[tenant?.code] || TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley)}
+                  source={
+                    BUILD_IS_WHITE_LABEL
+                      ? buildStaticLogo
+                      : (branding?.logoUrl ? { uri: branding.logoUrl } : (TENANT_LOGOS[tenant?.code] || buildStaticLogo))
+                  }
                   style={{ width: 36, height: 36, borderRadius: borderRadius.sm }}
                   resizeMode="contain"
                 />
