@@ -12,7 +12,6 @@ import { colors, spacing, borderRadius, shadows, typography } from '../../theme'
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { useQuery } from '@tanstack/react-query';
@@ -21,8 +20,9 @@ import { ENDPOINTS } from '../../config/api';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { buildCategoryAccents } from '../../utils/colorUtils';
 import TENANT_LOGOS from '../../utils/tenantLogos';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
 
-const buildTenantCode = Constants.expoConfig?.extra?.tenant || 'quadley';
+const buildTenantCode = BUILD_CONFIG.tenant;
 
 const QuickAccessButton = ({ icon, label, onPress, accent }) => (
   <TouchableOpacity
@@ -65,7 +65,7 @@ const QuickAccessButton = ({ icon, label, onPress, accent }) => (
 export default function StudentViewScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { user } = useAuth();
-  const { tenant, branding } = useTenant();
+  const { tenant, branding, isModuleEnabled } = useTenant();
 
   const { data: announcements, refetch: refetchAnnouncements } = useQuery({
     queryKey: ['announcements'],
@@ -116,44 +116,52 @@ export default function StudentViewScreen({ navigation }) {
 
   const categoryAccents = useMemo(() => buildCategoryAccents(primaryColor), [primaryColor]);
 
-  const moduleCategories = [
+  const allModuleCategories = [
     {
       title: 'Campus Life',
       modules: [
-        { icon: 'calendar-outline', label: 'Calendar', screen: 'Calendar' },
-        { icon: 'ticket-outline', label: 'Events', screen: 'Events' },
-        { icon: 'chatbubbles-outline', label: 'Messages', screen: 'Messages' },
-        { icon: 'newspaper-outline', label: 'News', screen: 'Announcements' },
+        { icon: 'calendar-outline', label: 'Calendar', screen: 'Calendar', module: 'events' },
+        { icon: 'ticket-outline', label: 'Events', screen: 'Events', module: 'events' },
+        { icon: 'chatbubbles-outline', label: 'Messages', screen: 'Messages', module: 'messages' },
+        { icon: 'newspaper-outline', label: 'News', screen: 'Announcements', module: 'announcements' },
+        { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining', module: 'dining' },
       ],
     },
     {
       title: 'Community',
       modules: [
-        { icon: 'people-outline', label: 'My Floor', screen: 'Floor' },
-        { icon: 'star-outline', label: 'Shoutouts', screen: 'Recognition' },
-        { icon: 'gift-outline', label: 'Birthdays', screen: 'Birthdays' },
-        { icon: 'flag-outline', label: 'Activities', screen: 'CoCurricular' },
+        { icon: 'people-outline', label: 'My Floor', screen: 'Floor', module: 'floor' },
+        { icon: 'star-outline', label: 'Shoutouts', screen: 'Recognition', module: 'recognition' },
+        { icon: 'gift-outline', label: 'Birthdays', screen: 'Birthdays', module: 'birthdays' },
+        { icon: 'flag-outline', label: 'Activities', screen: 'CoCurricular', module: 'cocurricular' },
       ],
     },
     {
       title: 'Services',
       modules: [
-        { icon: 'construct-outline', label: 'Fixes', screen: 'Maintenance' },
-        { icon: 'cube-outline', label: 'Parcels', screen: 'Parcels' },
-        { icon: 'calendar-number-outline', label: 'Bookings', screen: 'Bookings' },
-        { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining' },
+        { icon: 'construct-outline', label: 'Fixes', screen: 'Maintenance', module: 'maintenance' },
+        { icon: 'cube-outline', label: 'Parcels', screen: 'Parcels', module: 'parcels' },
+        { icon: 'calendar-number-outline', label: 'Bookings', screen: 'Bookings', module: 'bookings' },
       ],
     },
     {
       title: 'Growth & Wellbeing',
       modules: [
-        { icon: 'book-outline', label: 'Study', screen: 'Academics' },
-        { icon: 'briefcase-outline', label: 'Jobs', screen: 'Jobs' },
-        { icon: 'heart-outline', label: 'Wellbeing', screen: 'Wellbeing' },
-        { icon: 'shield-checkmark-outline', label: 'Safety', screen: 'SafeDisclosure' },
+        { icon: 'book-outline', label: 'Study', screen: 'Academics', module: 'academics' },
+        { icon: 'briefcase-outline', label: 'Jobs', screen: 'Jobs', module: 'jobs' },
+        { icon: 'heart-outline', label: 'Wellbeing', screen: 'Wellbeing', module: 'wellbeing' },
+        { icon: 'shield-checkmark-outline', label: 'Safety', screen: 'SafeDisclosure', module: 'safe_disclosure' },
       ],
     },
   ];
+
+  // Filter to only show modules that are enabled for this tenant — same logic as HomeScreen
+  const moduleCategories = allModuleCategories
+    .map(category => ({
+      ...category,
+      modules: category.modules.filter(m => !m.module || isModuleEnabled(m.module)),
+    }))
+    .filter(category => category.modules.length > 0);
 
   const handleModulePress = (screen) => {
     try {
