@@ -87,6 +87,7 @@ export default function RAFloorManagementScreen({ navigation }) {
 
   const [expandedRollcall, setExpandedRollcall] = useState(null);
   const [rollcallSummaries, setRollcallSummaries] = useState({});
+  const [rollcallPeopleModal, setRollcallPeopleModal] = useState({ visible: false, title: '', people: [], color: '', icon: '' });
 
   const loadRollcallSummary = async (rollcallId) => {
     if (rollcallSummaries[rollcallId]) {
@@ -306,33 +307,43 @@ export default function RAFloorManagementScreen({ navigation }) {
         backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 3,
       }}>
         {[
-          { key: 'events', label: 'Floor Events', count: floorEvents?.length || 0, icon: 'calendar-outline' },
-          { key: 'students', label: 'Floor Students', count: allUsers?.length || 0, icon: 'people-outline' },
-          { key: 'emergencies', label: 'Emergencies', count: activeRollcalls?.length || 0, icon: 'warning-outline', alert: activeRollcalls?.length > 0 },
-        ].map(tab => (
-          <TouchableOpacity
-            key={tab.key}
-            onPress={() => setActiveTab(tab.key)}
-            style={{
-              flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-              paddingVertical: spacing.sm + 2, borderRadius: borderRadius.sm + 2,
-              backgroundColor: activeTab === tab.key ? colors.surface : 'transparent',
-              ...(activeTab === tab.key ? shadows.sm : {}),
-            }}
-          >
-            <Text style={{ fontWeight: '600', fontSize: 13, color: activeTab === tab.key ? colors.textPrimary : colors.textTertiary }}>
-              {tab.label}
-            </Text>
-            <View style={{
-              backgroundColor: activeTab === tab.key ? primaryColor + '18' : 'transparent',
-              paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, marginLeft: 6,
-            }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: activeTab === tab.key ? primaryColor : colors.textTertiary }}>
-                {tab.count}
+          { key: 'events', line1: 'Floor', line2: 'Events', count: floorEvents?.length || 0, icon: 'calendar-outline' },
+          { key: 'students', line1: 'Floor', line2: 'Students', count: allUsers?.length || 0, icon: 'people-outline' },
+          { key: 'emergencies', line1: 'Emer-', line2: 'gencies', count: activeRollcalls?.length || 0, icon: 'warning-outline', alert: activeRollcalls?.length > 0 },
+        ].map(tab => {
+          const isActive = activeTab === tab.key;
+          const iconColor = isActive ? (tab.alert ? '#D32F2F' : primaryColor) : colors.textTertiary;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              style={{
+                flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                paddingVertical: 12, paddingHorizontal: 4, borderRadius: borderRadius.sm + 2,
+                backgroundColor: isActive ? colors.surface : 'transparent',
+                ...(isActive ? shadows.sm : {}),
+              }}
+            >
+              <Ionicons name={tab.icon} size={18} color={iconColor} />
+              <Text style={{ fontWeight: '700', fontSize: 10, color: isActive ? colors.textPrimary : colors.textTertiary, textAlign: 'center', marginTop: 3, lineHeight: 13 }}>
+                {tab.line1}
               </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              <Text style={{ fontWeight: '700', fontSize: 10, color: isActive ? colors.textPrimary : colors.textTertiary, textAlign: 'center', lineHeight: 13 }}>
+                {tab.line2}
+              </Text>
+              {tab.count > 0 && (
+                <View style={{
+                  backgroundColor: isActive ? (tab.alert ? '#D32F2F' : primaryColor) : colors.border,
+                  paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, marginTop: 3,
+                }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: isActive ? '#fff' : colors.textTertiary }}>
+                    {tab.count}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Events Tab */}
@@ -466,27 +477,25 @@ export default function RAFloorManagementScreen({ navigation }) {
                           {raFloor ? `Floor ${raFloor} Status` : 'Your Floor Status'}
                         </Text>
                         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-                          <View style={{ flex: 1, backgroundColor: '#E8F5E9', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
-                            <Ionicons name="home" size={20} color="#2E7D32" />
-                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#2E7D32' }}>
-                              {floorData?.evacuated?.length || 0}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: '#2E7D32', fontWeight: '600' }}>Evacuated</Text>
-                          </View>
-                          <View style={{ flex: 1, backgroundColor: '#E3F2FD', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
-                            <Ionicons name="shield-checkmark" size={20} color="#1565C0" />
-                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#1565C0' }}>
-                              {floorData?.not_at_college?.length || 0}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: '#1565C0', fontWeight: '600' }}>Off-Campus</Text>
-                          </View>
-                          <View style={{ flex: 1, backgroundColor: '#FFF3E0', borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}>
-                            <Ionicons name="time" size={20} color="#E65100" />
-                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#E65100' }}>
-                              {floorData?.pending?.length || 0}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: '#E65100', fontWeight: '600' }}>Pending</Text>
-                          </View>
+                          {[
+                            { key: 'evacuated', label: 'Evacuated', icon: 'home', color: '#2E7D32', bg: '#E8F5E9', people: floorData?.evacuated || [] },
+                            { key: 'not_at_college', label: 'Off-Campus', icon: 'shield-checkmark', color: '#1565C0', bg: '#E3F2FD', people: floorData?.not_at_college || [] },
+                            { key: 'pending', label: 'Pending', icon: 'time', color: '#E65100', bg: '#FFF3E0', people: floorData?.pending || [] },
+                          ].map(tile => (
+                            <TouchableOpacity
+                              key={tile.key}
+                              onPress={() => setRollcallPeopleModal({ visible: true, title: tile.label, people: tile.people, color: tile.color, icon: tile.icon })}
+                              activeOpacity={0.75}
+                              style={{ flex: 1, backgroundColor: tile.bg, borderRadius: borderRadius.md, padding: 12, alignItems: 'center' }}
+                            >
+                              <Ionicons name={tile.icon} size={20} color={tile.color} />
+                              <Text style={{ fontSize: 22, fontWeight: '700', color: tile.color }}>{tile.people.length}</Text>
+                              <Text style={{ fontSize: 11, color: tile.color, fontWeight: '600' }}>{tile.label}</Text>
+                              {tile.people.length > 0 && (
+                                <Ionicons name="chevron-down" size={12} color={tile.color} style={{ marginTop: 2, opacity: 0.7 }} />
+                              )}
+                            </TouchableOpacity>
+                          ))}
                         </View>
 
                         {floorData?.pending?.length > 0 && (
