@@ -203,15 +203,17 @@ const Login = () => {
     if (useBackupCode ? trimmed.length !== 8 : trimmed.length !== 6) return;
     setMfaLoading(true);
     try {
-      await axios.post(`${API}/auth/login/mfa`, {
+      const mfaRes = await axios.post(`${API}/auth/login/mfa`, {
         mfa_code: trimmed,
         backup_code: useBackupCode
       }, {
         headers: { Authorization: `Bearer ${mfaToken}` }
       });
-      login(mfaToken, mfaUser);
+      const { access_token: newToken, user: freshUser, tenant: freshTenant } = mfaRes.data;
+      const freshModules = freshTenant?.enabled_modules || mfaModules || null;
+      login(newToken || mfaToken, freshUser || mfaUser, freshModules);
       toast.success('Welcome back!');
-      router.push(getRedirectPath(mfaUser));
+      router.push(getRedirectPath(freshUser || mfaUser));
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Invalid MFA code');
     } finally {
