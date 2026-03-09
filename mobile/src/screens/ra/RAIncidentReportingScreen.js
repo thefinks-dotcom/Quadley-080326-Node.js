@@ -300,7 +300,7 @@ export default function RAIncidentReportingScreen({ navigation }) {
               </TouchableOpacity>
               <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary }}>New Incident Report</Text>
               <TouchableOpacity onPress={handleSubmit} disabled={createIncident.isPending}>
-                <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '600' }}>
+                <Text style={{ color: primaryColor, fontSize: 16, fontWeight: '600' }}>
                   {createIncident.isPending ? 'Submitting...' : 'Submit'}
                 </Text>
               </TouchableOpacity>
