@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
 import { colors } from '../theme';
+import BUILD_CONFIG from '../config/tenantBuild.generated';
 
-// Build-time tenant identity — set by TENANT env var at `expo prebuild` time
-const BUILD_TENANT = Constants.expoConfig?.extra?.tenant || 'quadley';
-const BUILD_TENANT_NAME = Constants.expoConfig?.extra?.tenantName || 'Quadley';
-const BUILD_PRIMARY = Constants.expoConfig?.extra?.primaryColor || colors.primary;
-const BUILD_SECONDARY = Constants.expoConfig?.extra?.secondaryColor || colors.textPrimary;
+// Build-time tenant identity — hardcoded by app.config.js at `expo prebuild` time.
+// These values are ALWAYS correct for this binary regardless of Metro env vars.
+const BUILD_TENANT = BUILD_CONFIG.tenant;
+const BUILD_TENANT_NAME = BUILD_CONFIG.tenantName;
+const BUILD_PRIMARY = BUILD_CONFIG.primaryColor || colors.primary;
+const BUILD_SECONDARY = BUILD_CONFIG.secondaryColor || colors.textPrimary;
 
 // All available modules
 export const ALL_MODULES = [

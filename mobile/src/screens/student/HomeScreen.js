@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
@@ -22,9 +22,9 @@ import TENANT_LOGOS from '../../utils/tenantLogos';
 import { useAppTheme } from '../../contexts/ThemeContext';
 
 // Build-time fallback colors
-const buildPrimaryColor = Constants.expoConfig?.extra?.primaryColor || defaultColors.primary;
-const buildSecondaryColor = Constants.expoConfig?.extra?.secondaryColor || defaultColors.background;
-const buildTenantCode = Constants.expoConfig?.extra?.tenant || 'quadley';
+const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
+const buildSecondaryColor = BUILD_CONFIG.secondaryColor || defaultColors.background;
+const buildTenantCode = BUILD_CONFIG.tenant;
 // For white-label builds the app icon is baked in at build time and should always be shown.
 // Only the generic Quadley build supports overriding the logo via a DB-stored URL.
 const BUILD_IS_WHITE_LABEL = buildTenantCode !== 'quadley';
