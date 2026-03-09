@@ -298,23 +298,14 @@ export default function MessagesScreen({ navigation }) {
       />
       </AnimatedScreen>
 
-      {/* FABs */}
-      <View style={{ position: 'absolute', bottom: 90, right: 24 }}>
-        <TouchableOpacity
-          onPress={() => setNewGroupModalVisible(true)}
-          testID="new-group-fab"
-          style={{ width: 44, height: 44, backgroundColor: primaryColor, borderRadius: borderRadius.lg, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm, ...shadows.md }}
-        >
-          <Ionicons name="people" size={20} color={colors.textInverse} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setNewMessageModalVisible(true)}
-          testID="new-message-fab"
-          style={{ width: 52, height: 52, backgroundColor: primaryColor, borderRadius: borderRadius.xl, justifyContent: 'center', alignItems: 'center', ...shadows.lg }}
-        >
-          <Ionicons name="create" size={24} color={colors.textInverse} />
-        </TouchableOpacity>
-      </View>
+      {/* FAB */}
+      <TouchableOpacity
+        onPress={() => setNewMessageModalVisible(true)}
+        testID="new-message-fab"
+        style={{ position: 'absolute', bottom: 90, right: 24, width: 52, height: 52, backgroundColor: primaryColor, borderRadius: borderRadius.xl, justifyContent: 'center', alignItems: 'center', ...shadows.lg }}
+      >
+        <Ionicons name="create" size={24} color={colors.textInverse} />
+      </TouchableOpacity>
 
       {/* New Message Modal */}
       <Modal visible={newMessageModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setNewMessageModalVisible(false)}>

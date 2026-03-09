@@ -94,7 +94,7 @@ function HomeStack() {
       <Stack.Screen name="Wellbeing" component={WellbeingScreen} options={{ title: 'Wellbeing' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       {/* Additional Modules */}
-      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ title: 'Study' }} />
+      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CoCurricular" component={CoCurricularScreen} options={{ title: 'Activities' }} />
       <Stack.Screen name="Messages" component={MessagesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.name || 'Chat' })} />
