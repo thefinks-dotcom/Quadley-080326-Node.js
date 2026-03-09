@@ -217,18 +217,32 @@ export default function AcademicsScreen({ navigation }) {
         borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{
-            width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)',
-            borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center',
-          }}>
-            <Ionicons name="book" size={22} color={colors.textInverse} />
-          </View>
-          <View style={{ marginLeft: spacing.md }}>
+          {navigation.canGoBack() ? (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
+            >
+              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="book" size={22} color={colors.textInverse} />
+            </View>
+          )}
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
             <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Study</Text>
             <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
               {groupCount} groups · {tutorCount} tutors
             </Text>
           </View>
+          {activeTab === 'study-groups' && (
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
+            >
+              <Ionicons name="add" size={24} color={colors.textInverse} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -304,21 +318,6 @@ export default function AcademicsScreen({ navigation }) {
       />
       </AnimatedScreen>
 
-      {/* FAB */}
-      {activeTab === 'study-groups' && (
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}
-          data-testid="create-group-fab"
-          style={{
-            position: 'absolute', bottom: 24, right: 24,
-            width: 52, height: 52, backgroundColor: primaryColor,
-            borderRadius: borderRadius.xl, justifyContent: 'center', alignItems: 'center',
-            ...shadows.lg,
-          }}>
-          <Ionicons name="add" size={26} color={colors.textInverse} />
-        </TouchableOpacity>
-      )}
 
       {/* Create Study Group Modal */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setModalVisible(false)}>

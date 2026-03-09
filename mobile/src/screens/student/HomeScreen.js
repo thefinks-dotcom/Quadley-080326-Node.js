@@ -198,7 +198,6 @@ export default function HomeScreen({ navigation }) {
       title: 'Campus Life',
       modules: [
         { icon: 'calendar-outline', label: 'Calendar', screen: 'Calendar', module: 'events' },
-        { icon: 'chatbubbles-outline', label: 'Messages', screen: 'Messages', module: 'messages' },
         { icon: 'ticket-outline', label: 'Events', screen: 'Events', module: 'events' },
         { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining', module: 'dining' },
       ],

@@ -66,7 +66,6 @@ export default function ChatScreen({ route, navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
-  const secondaryColor = branding?.secondaryColor || colors.background;
 
   const { id, name, type, userId, isNew } = route.params || {};
   const { user } = useAuth();
@@ -493,11 +492,11 @@ export default function ChatScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={[]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={[]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
       >
         <FlatList
           ref={flatListRef}

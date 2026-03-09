@@ -207,6 +207,13 @@ export default function MessagesScreen({ navigation }) {
               {totalUnread > 0 ? `${totalUnread} unread` : `${conversations?.length || 0} conversations`}
             </Text>
           </View>
+          <TouchableOpacity
+            onPress={() => setNewMessageModalVisible(true)}
+            testID="new-message-header-btn"
+            style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Ionicons name="create-outline" size={22} color={colors.textInverse} />
+          </TouchableOpacity>
         </View>
         {/* Search integrated into header */}
         <View style={{
@@ -297,15 +304,6 @@ export default function MessagesScreen({ navigation }) {
         }
       />
       </AnimatedScreen>
-
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setNewMessageModalVisible(true)}
-        testID="new-message-fab"
-        style={{ position: 'absolute', bottom: 90, right: 24, width: 52, height: 52, backgroundColor: primaryColor, borderRadius: borderRadius.xl, justifyContent: 'center', alignItems: 'center', ...shadows.lg }}
-      >
-        <Ionicons name="create" size={24} color={colors.textInverse} />
-      </TouchableOpacity>
 
       {/* New Message Modal */}
       <Modal visible={newMessageModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setNewMessageModalVisible(false)}>

@@ -32,6 +32,7 @@ export default function RAFloorManagementScreen({ navigation }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState('events');
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -54,6 +55,22 @@ export default function RAFloorManagementScreen({ navigation }) {
     },
     refetchOnMount: true,
     staleTime: 0,
+  });
+
+  const raFloor = user?.floor || user?.student_floor;
+  const { data: allUsers, isLoading: loadingStudents } = useQuery({
+    queryKey: ['floorStudents', raFloor],
+    queryFn: async () => {
+      const response = await api.get('/users');
+      const users = response.data || [];
+      if (!raFloor) return users.filter(u => u.role === 'student');
+      return users.filter(u =>
+        u.role === 'student' &&
+        (u.floor === raFloor || u.student_floor === raFloor)
+      );
+    },
+    enabled: activeTab === 'students',
+    staleTime: 60 * 1000,
   });
 
   useEffect(() => { refetch(); }, []);
@@ -240,40 +257,140 @@ export default function RAFloorManagementScreen({ navigation }) {
           <View style={{ flex: 1, marginLeft: spacing.md }}>
             <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Floor Management</Text>
             <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-              {floorEvents?.length || 0} event{floorEvents?.length !== 1 ? 's' : ''}
+              {raFloor ? `Floor ${raFloor}` : 'Your Floor'}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => setCreateModalVisible(true)}
-            style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <Ionicons name="add" size={24} color={colors.textInverse} />
-          </TouchableOpacity>
+          {activeTab === 'events' && (
+            <TouchableOpacity
+              onPress={() => setCreateModalVisible(true)}
+              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
+            >
+              <Ionicons name="add" size={24} color={colors.textInverse} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* Events List */}
-      {!floorEvents && isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={primaryColor} />
-        </View>
-      ) : (
-        <FlatList
-          data={floorEvents}
-          keyExtractor={(item, index) => item.id || `item-${index}`}
-          renderItem={renderEvent}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={primaryColor} />}
-          ListEmptyComponent={
-            <View style={{ padding: 40, alignItems: 'center' }}>
-              <Ionicons name="calendar-outline" size={48} color={colors.textTertiary} />
-              <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12 }}>No floor events yet</Text>
-              <Text style={{ fontSize: 14, color: colors.textTertiary, marginTop: 4, textAlign: 'center' }}>
-                Tap + to create your first event
+      {/* Pill Tabs */}
+      <View style={{
+        flexDirection: 'row', marginHorizontal: spacing.lg, marginTop: spacing.lg, marginBottom: spacing.md,
+        backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 3,
+      }}>
+        {[
+          { key: 'events', label: 'Floor Events', count: floorEvents?.length || 0, icon: 'calendar-outline' },
+          { key: 'students', label: 'Floor Students', count: allUsers?.length || 0, icon: 'people-outline' },
+        ].map(tab => (
+          <TouchableOpacity
+            key={tab.key}
+            onPress={() => setActiveTab(tab.key)}
+            style={{
+              flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+              paddingVertical: spacing.sm + 2, borderRadius: borderRadius.sm + 2,
+              backgroundColor: activeTab === tab.key ? colors.surface : 'transparent',
+              ...(activeTab === tab.key ? shadows.sm : {}),
+            }}
+          >
+            <Text style={{ fontWeight: '600', fontSize: 13, color: activeTab === tab.key ? colors.textPrimary : colors.textTertiary }}>
+              {tab.label}
+            </Text>
+            <View style={{
+              backgroundColor: activeTab === tab.key ? primaryColor + '18' : 'transparent',
+              paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, marginLeft: 6,
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: activeTab === tab.key ? primaryColor : colors.textTertiary }}>
+                {tab.count}
               </Text>
             </View>
-          }
-          contentContainerStyle={{ paddingTop: spacing.lg, paddingBottom: 100 }}
-        />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Events Tab */}
+      {activeTab === 'events' && (
+        !floorEvents && isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={primaryColor} />
+          </View>
+        ) : (
+          <FlatList
+            data={floorEvents}
+            keyExtractor={(item, index) => item.id || `item-${index}`}
+            renderItem={renderEvent}
+            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={primaryColor} />}
+            ListEmptyComponent={
+              <View style={{ padding: 40, alignItems: 'center' }}>
+                <Ionicons name="calendar-outline" size={48} color={colors.textTertiary} />
+                <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12 }}>No floor events yet</Text>
+                <Text style={{ fontSize: 14, color: colors.textTertiary, marginTop: 4, textAlign: 'center' }}>
+                  Tap + to create your first event
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 100 }}
+          />
+        )
+      )}
+
+      {/* Students Tab */}
+      {activeTab === 'students' && (
+        loadingStudents ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={primaryColor} />
+          </View>
+        ) : (
+          <FlatList
+            data={allUsers}
+            keyExtractor={(item, index) => item.id || `student-${index}`}
+            ListHeaderComponent={
+              <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}>
+                <Text style={{ fontSize: 13, color: colors.textTertiary, fontWeight: '500' }}>
+                  {allUsers?.length || 0} student{allUsers?.length !== 1 ? 's' : ''} on {raFloor ? `Floor ${raFloor}` : 'your floor'}
+                </Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <View style={{
+                backgroundColor: colors.surface, marginHorizontal: spacing.lg, marginBottom: spacing.sm,
+                borderRadius: borderRadius.lg, padding: spacing.lg, flexDirection: 'row', alignItems: 'center',
+                borderWidth: 1, borderColor: colors.border, ...shadows.sm,
+              }}>
+                <View style={{
+                  width: 44, height: 44, backgroundColor: primaryColor + '15',
+                  borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 12,
+                }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: primaryColor }}>
+                    {item.first_name?.[0]}{item.last_name?.[0]}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                    {item.first_name} {item.last_name}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+                    {item.room ? `Room ${item.room}` : item.floor || item.student_floor || 'Floor resident'}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  {item.email && (
+                    <Text style={{ fontSize: 11, color: colors.textTertiary }} numberOfLines={1}>
+                      {item.email}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={
+              <View style={{ padding: 40, alignItems: 'center' }}>
+                <Ionicons name="people-outline" size={48} color={colors.textTertiary} />
+                <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12 }}>No students found</Text>
+                <Text style={{ fontSize: 14, color: colors.textTertiary, marginTop: 4, textAlign: 'center' }}>
+                  Students on your floor will appear here
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 100 }}
+          />
+        )
       )}
 
       {/* Event Detail Modal */}
