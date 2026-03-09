@@ -123,6 +123,21 @@ export const TenantProvider = ({ children }) => {
     }
   };
 
+  const updateEnabledModules = async (modules) => {
+    if (!Array.isArray(modules)) return;
+    setEnabledModules(modules);
+    try {
+      const storedTenant = await SecureStore.getItemAsync('tenant');
+      if (storedTenant) {
+        const tenantData = JSON.parse(storedTenant);
+        tenantData.enabled_modules = modules;
+        await SecureStore.setItemAsync('tenant', JSON.stringify(tenantData));
+      }
+    } catch (error) {
+      console.log('Error updating enabled modules:', error);
+    }
+  };
+
   const clearTenant = async () => {
     try {
       setTenant(null);
@@ -162,6 +177,7 @@ export const TenantProvider = ({ children }) => {
     loading,
     saveTenant,
     clearTenant,
+    updateEnabledModules,
     isModuleEnabled,
     getEnabledModules,
     isSuperAdmin: !tenant || tenant.code === null

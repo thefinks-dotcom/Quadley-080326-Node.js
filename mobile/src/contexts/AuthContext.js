@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const lastBackgroundTime = useRef(null);
   const loginAttempts = useRef(0);
   
-  const { saveTenant, clearTenant } = useTenant();
+  const { saveTenant, clearTenant, updateEnabledModules } = useTenant();
 
   useEffect(() => {
     initializeApp();
@@ -82,6 +82,9 @@ export const AuthProvider = ({ children }) => {
           // Validate session is still active
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
+          if (Array.isArray(currentUser?.enabled_modules)) {
+            updateEnabledModules(currentUser.enabled_modules);
+          }
           console.log('[AUTH] Session still valid');
         } catch (err) {
           console.log('[AUTH] Session invalid after returning to foreground:', err.message);
@@ -130,8 +133,10 @@ export const AuthProvider = ({ children }) => {
         authService.setTokenForVerification(storedToken);
         authService.getCurrentUser()
           .then(currentUser => {
-            // Update with latest user data
             setUser(currentUser);
+            if (Array.isArray(currentUser?.enabled_modules)) {
+              updateEnabledModules(currentUser.enabled_modules);
+            }
           })
           .catch(() => {
             // Token invalid - clear auth silently
@@ -310,6 +315,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
+      if (Array.isArray(currentUser?.enabled_modules)) {
+        updateEnabledModules(currentUser.enabled_modules);
+      }
       return currentUser;
     } catch (err) {
       console.log('Error refreshing user:', err);
