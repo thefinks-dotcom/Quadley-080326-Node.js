@@ -1,0 +1,40 @@
+yarn install v1.22.22
+[1/5] Validating package.json...
+[2/5] Resolving packages...
+(node:9) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+success Already up-to-date.
+Done in 0.20s.
+yarn run v1.22.22
+$ next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+   ▲ Next.js 15.5.12
+   - Environments: .env.local
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 12.5s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/34) ...
+   Generating static pages (8/34) 
+   Generating static pages (16/34) 
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/college-admin/wellbeing". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at g (/app/.next/server/chunks/2766.js:17:48819)
+    at m (/app/.next/server/chunks/2766.js:32:166204)
+    at z (/app/.next/server/app/college-admin/wellbeing/page.js:1:2615)
+    at n3 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:82831)
+    at n6 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:84601)
+    at n5 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:104801)
+    at n7 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:102219)
+    at n8 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:83183)
+    at n6 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:84647)
+    at n6 (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:2:101560)
+Error occurred prerendering page "/college-admin/wellbeing". Read more: https://nextjs.org/docs/messages/prerender-error
+Export encountered an error on /college-admin/wellbeing/page: /college-admin/wellbeing, exiting the build.
+   Generating static pages (25/34) 
+ ⨯ Next.js build worker exited with code: 1 and signal: null
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+error Command failed with exit code 1.
+Build Failed: build daemon returned an error < failed to solve: process "/bin/bash -ol pipefail -c yarn install --frozen-lockfile && yarn build" did not complete successfully: exit code: 1 >

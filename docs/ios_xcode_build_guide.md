@@ -1,178 +1,228 @@
-# iOS Xcode Build Guide — Quadley & Grace College
+# iOS Build Guide — Quadley & Grace College
+### Terminal + Xcode, step by step
+
+---
 
 ## Prerequisites
 
-Before starting, ensure you have the following on your Mac:
+Run all of the following in Terminal on your Mac before starting.
 
-- **macOS** (Ventura 13+ recommended)
-- **Xcode 15+** — download from the Mac App Store
-- **Node.js 18+** — download from https://nodejs.org
-- **Yarn** — run `npm install -g yarn`
-- **CocoaPods** — run `sudo gem install cocoapods`
-- **Expo CLI** — run `npm install -g expo-cli`
-- **The Quadley repo cloned locally** — `git clone https://github.com/thefinks-dotcom/Quadley-080326-Node.js.git`
+### 1. Install Xcode
+Download from the Mac App Store. Once installed, accept the license:
+```bash
+sudo xcodebuild -license accept
+```
+Install the Xcode command line tools:
+```bash
+xcode-select --install
+```
+
+### 2. Install Node.js (if not already installed)
+```bash
+# Check if you have it
+node --version
+
+# If not, install via Homebrew
+brew install node
+```
+If you don't have Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+
+### 3. Install Yarn
+```bash
+npm install -g yarn
+```
+
+### 4. Install CocoaPods
+```bash
+sudo gem install cocoapods
+```
+Verify:
+```bash
+pod --version
+```
+
+### 5. Install Expo CLI
+```bash
+npm install -g expo-cli
+```
+
+### 6. Clone the Repository
+```bash
+git clone https://github.com/thefinks-dotcom/Quadley-080326-Node.js.git
+cd Quadley-080326-Node.js
+```
 
 ---
 
-## Part 1: Building the Quadley iOS App
+## Build 1: Quadley iOS App
 
-### Step 1 — Install Dependencies
+Work from the `mobile/` folder for all terminal steps.
 
-Open Terminal and navigate to the mobile folder:
-
+### Step 1 — Install JavaScript dependencies
 ```bash
-cd Quadley-080326-Node.js/mobile
+cd mobile
 yarn install
 ```
+Wait for this to finish (may take 2–5 minutes on first run).
 
-### Step 2 — Generate Native iOS Project (Prebuild)
-
+### Step 2 — Generate the native iOS project
 ```bash
 TENANT=quadley npx expo prebuild --platform ios --clean
 ```
+This creates the `mobile/ios/` folder with the full Xcode project. You will see:
+```
+📱 Building app for tenant: quadley (Quadley)
+✔ Created native iOS project
+```
 
-This creates a `mobile/ios/` folder containing the full Xcode project. The `--clean` flag ensures a fresh build.
-
-### Step 3 — Install iOS (CocoaPods) Dependencies
-
+### Step 3 — Install iOS native dependencies (CocoaPods)
 ```bash
 cd ios
 pod install
 cd ..
 ```
+This links all native iOS libraries. Expect 2–5 minutes.
 
-### Step 4 — Open in Xcode
-
+### Step 4 — Confirm the workspace file exists
 ```bash
-open ios/quadleyapp.xcworkspace
+ls ios/*.xcworkspace
 ```
+You should see: `ios/Quadley.xcworkspace`
 
-> Always open the `.xcworkspace` file, NOT the `.xcodeproj` file.
+### Step 5 — Open in Xcode
+```bash
+open ios/Quadley.xcworkspace
+```
+> Always open the `.xcworkspace` file — never the `.xcodeproj` file directly.
 
-### Step 5 — Configure Signing in Xcode
+### Step 6 — Configure signing in Xcode
+1. In the left sidebar, click the project root **Quadley** (blue icon at the top)
+2. Under **Targets**, select **Quadley**
+3. Click the **Signing & Capabilities** tab
+4. Check **Automatically manage signing**
+5. Under **Team**, select your Apple Developer account from the dropdown
+6. Verify the **Bundle Identifier** shows `com.quadley.app`
+7. Resolve any signing warnings shown (usually just selecting your team is enough)
 
-1. In Xcode, click on the project name in the left sidebar (`quadleyapp`)
-2. Select the **quadleyapp** target
-3. Go to the **Signing & Capabilities** tab
-4. Tick **Automatically manage signing**
-5. Set your **Team** to your Apple Developer account
-6. Confirm the Bundle Identifier is `com.quadley.app`
+### Step 7 — Set the destination
+In the Xcode toolbar at the top, click the device selector (next to the play button) and choose:
+```
+Any iOS Device (arm64)
+```
+Do not select a simulator — App Store builds require a real device target.
 
-### Step 6 — Build & Archive for App Store
+### Step 8 — Archive
+In the top menu bar:
+```
+Product → Archive
+```
+The archive process takes 5–15 minutes. Xcode will show a progress bar at the top.
 
-1. In the top menu, go to **Product → Destination → Any iOS Device (arm64)**
-2. Go to **Product → Archive**
-3. Wait for the archive to complete (5–15 minutes)
-4. The **Organizer** window will open automatically
-5. Click **Distribute App**
-6. Choose **App Store Connect** → **Upload**
-7. Follow the prompts to upload to App Store Connect
+### Step 9 — Upload to App Store Connect
+When archiving finishes, the **Organizer** window opens automatically:
+1. Select the archive you just created (it will be at the top of the list)
+2. Click **Distribute App**
+3. Select **App Store Connect** → click **Next**
+4. Select **Upload** → click **Next**
+5. Leave all options as default → click **Next**
+6. Click **Upload**
+
+The build will appear in App Store Connect under your app within 5–10 minutes.
 
 ---
 
-## Part 2: Building the Grace College iOS App
+## Build 2: Grace College iOS App
 
-Repeat the same steps but using the `grace_college` tenant. After finishing the Quadley build, run a clean prebuild to overwrite the `ios/` folder.
+After completing the Quadley build, run a fresh prebuild for Grace College. This overwrites the `ios/` folder with Grace College's configuration.
 
-### Step 1 — Generate Native iOS Project (Prebuild)
+### Step 1 — Go back to the mobile directory (if you left it)
+```bash
+cd /path/to/Quadley-080326-Node.js/mobile
+```
 
-From the `mobile/` directory:
-
+### Step 2 — Generate the native iOS project for Grace College
 ```bash
 TENANT=grace_college npx expo prebuild --platform ios --clean
 ```
+You will see:
+```
+📱 Building app for tenant: grace_college (Grace College)
+✔ Created native iOS project
+```
 
-### Step 2 — Install iOS (CocoaPods) Dependencies
-
+### Step 3 — Install iOS native dependencies
 ```bash
 cd ios
 pod install
 cd ..
 ```
 
-### Step 3 — Open in Xcode
-
+### Step 4 — Confirm the workspace file
 ```bash
-open ios/gracecollege.xcworkspace
+ls ios/*.xcworkspace
+```
+You should see: `ios/GraceCollege.xcworkspace`
+
+### Step 5 — Open in Xcode
+```bash
+open ios/GraceCollege.xcworkspace
 ```
 
-> The workspace filename is based on the app slug. If it differs, run `ls ios/*.xcworkspace` to find the exact name.
-
-### Step 4 — Configure Signing in Xcode
-
-1. Click on the project name in the left sidebar
-2. Select the target
-3. Go to **Signing & Capabilities**
-4. Tick **Automatically manage signing**
+### Step 6 — Configure signing in Xcode
+1. Click the project root **GraceCollege** in the left sidebar
+2. Under **Targets**, select **GraceCollege**
+3. Click **Signing & Capabilities**
+4. Check **Automatically manage signing**
 5. Set your **Team** to your Apple Developer account
-6. Confirm the Bundle Identifier is `com.gracecollege.app`
+6. Verify the **Bundle Identifier** shows `com.gracecollege.app`
 
-### Step 5 — Build & Archive for App Store
-
-Same as Quadley Step 6 above:
-
-1. **Product → Destination → Any iOS Device (arm64)**
+### Step 7 — Set destination and Archive
+Same as Quadley:
+1. Set destination to **Any iOS Device (arm64)**
 2. **Product → Archive**
-3. In Organizer → **Distribute App → App Store Connect → Upload**
+3. Wait for completion (5–15 minutes)
+
+### Step 8 — Upload to App Store Connect
+In Organizer:
+1. Select the Grace College archive
+2. **Distribute App → App Store Connect → Upload**
+3. Leave defaults → **Upload**
 
 ---
 
-## Part 3: Updating Railway to Use the New GitHub Repository
+## App Store Connect IDs
 
-Railway is a cloud deployment platform. To point it at the new repository:
-
-### Step 1 — Log into Railway
-
-Go to https://railway.app and sign in.
-
-### Step 2 — Open Your Project
-
-Click on your Quadley project from the dashboard.
-
-### Step 3 — Open the Service Settings
-
-Click on the service you want to update (e.g., **Backend API** or **Frontend**).
-
-### Step 4 — Change the GitHub Source
-
-1. Go to the **Settings** tab of the service
-2. Scroll to the **Source** section
-3. Click **Configure** (or the GitHub repo link shown)
-4. Click **Disconnect** to remove the old repository
-5. Click **Connect Repo**
-6. Search for and select: `thefinks-dotcom/Quadley-080326-Node.js`
-7. Set the **Branch** to `main` (or whichever branch Railway should deploy from)
-8. Click **Save**
-
-### Step 5 — Trigger a Redeploy
-
-1. Go to the **Deployments** tab
-2. Click **Deploy** (or push a commit to the new repo to trigger it automatically)
-
-### Step 6 — Repeat for Each Service
-
-If you have multiple Railway services (e.g., a separate backend and frontend service), repeat Steps 3–5 for each one.
+| App | Bundle ID | App Store Connect ID |
+|---|---|---|
+| Quadley | `com.quadley.app` | `6746585498` |
+| Grace College | `com.gracecollege.app` | `6759232709` |
 
 ---
 
 ## Build Number Reference
 
-| Setting | Value |
-|---|---|
-| App Version | 2.2.0 |
-| iOS Build Number | 27 |
-| Android Version Code | 61 |
+| Setting | Value | File to edit |
+|---|---|---|
+| App Version | `2.2.0` | `mobile/app.config.js` → `version` |
+| iOS Build Number | `27` | `mobile/app.config.js` → `buildNumber` |
 
-To increment the build number before archiving (required for each new TestFlight/App Store upload), open `mobile/app.config.js` and increase the `buildNumber` value.
+Each new upload to TestFlight or App Store requires a higher build number than the previous upload. Before archiving a new version, open `mobile/app.config.js` and increment `buildNumber`:
+```js
+buildNumber: "28",  // was 27, increment by 1 each time
+```
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
+| Problem | Fix |
 |---|---|
-| `pod install` fails | Run `sudo gem install cocoapods` then retry |
-| Signing error in Xcode | Ensure your Apple Developer account is added in Xcode → Settings → Accounts |
-| Wrong bundle ID | Re-run `expo prebuild --clean` with the correct `TENANT=` prefix |
-| Archive option greyed out | Make sure destination is set to **Any iOS Device**, not a simulator |
-| Workspace file not found | Run `ls ios/*.xcworkspace` to find the exact filename |
+| `pod install` fails with Ruby errors | Run `sudo gem install cocoapods` then retry |
+| `pod install` fails with `M1/M2 Mac` architecture error | Run `arch -x86_64 pod install` |
+| Signing error: "No profiles for bundle ID" | Ensure your Apple Developer account is added in Xcode → Settings → Accounts |
+| Archive greyed out in Product menu | Confirm destination is **Any iOS Device (arm64)**, not a simulator |
+| Workspace not found after prebuild | Run `ls ios/*.xcworkspace` to find the exact filename |
+| Wrong app name or icon after prebuild | Confirm you used the correct `TENANT=` value and re-ran `--clean` |
+| `expo: command not found` | Run `npm install -g expo-cli` then retry |
+| Upload fails with "Missing compliance" | Already handled — `ITSAppUsesNonExemptEncryption: false` is set in `app.config.js` |
+| `yarn install` hangs | Try `npm install` instead |
