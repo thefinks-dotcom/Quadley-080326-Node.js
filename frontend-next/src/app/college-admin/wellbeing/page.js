@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
@@ -424,4 +424,10 @@ const WellbeingAdmin = () => {
   );
 };
 
-export default WellbeingAdmin;
+export default function WellbeingAdminPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <WellbeingAdmin />
+    </Suspense>
+  );
+}
