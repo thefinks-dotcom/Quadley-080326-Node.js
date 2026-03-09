@@ -71,7 +71,7 @@ function HomeStack() {
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
       <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'Events' }} />
       <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ title: 'Event Details' }} />
-      <Stack.Screen name="Announcements" component={AnnouncementsScreen} options={{ title: 'News' }} />
+      <Stack.Screen name="Announcements" component={AnnouncementsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Jobs" component={JobsScreen} options={{ title: 'College Jobs' }} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
       <Stack.Screen name="Dining" component={DiningScreen} options={{ title: 'Dining' }} />
