@@ -738,6 +738,66 @@ export default function RAFloorManagementScreen({ navigation }) {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+      {/* Emergency People List Modal */}
+      <Modal
+        visible={rollcallPeopleModal.visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setRollcallPeopleModal(p => ({ ...p, visible: false }))}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <TouchableOpacity onPress={() => setRollcallPeopleModal(p => ({ ...p, visible: false }))}>
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name={rollcallPeopleModal.icon} size={18} color={rollcallPeopleModal.color} />
+              <Text style={{ fontSize: 17, fontWeight: '700', color: rollcallPeopleModal.color }}>{rollcallPeopleModal.title}</Text>
+            </View>
+            <View style={{ width: 24 }} />
+          </View>
+          {rollcallPeopleModal.people.length === 0 ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+              <Ionicons name="people-outline" size={48} color={colors.textTertiary} />
+              <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12, textAlign: 'center' }}>
+                No students in this category yet
+              </Text>
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+              <Text style={{ fontSize: 13, color: colors.textTertiary, fontWeight: '600', marginBottom: spacing.md }}>
+                {rollcallPeopleModal.people.length} student{rollcallPeopleModal.people.length !== 1 ? 's' : ''}
+              </Text>
+              {rollcallPeopleModal.people.map((s, idx) => {
+                const name = s.user_name || s.name || 'Student';
+                const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                return (
+                  <View key={s.user_id || idx} style={{
+                    flexDirection: 'row', alignItems: 'center',
+                    backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md,
+                    padding: spacing.md, marginBottom: spacing.sm,
+                  }}>
+                    <View style={{
+                      width: 40, height: 40, borderRadius: 20,
+                      backgroundColor: rollcallPeopleModal.color + '20',
+                      justifyContent: 'center', alignItems: 'center', marginRight: spacing.md,
+                    }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: rollcallPeopleModal.color }}>{initials}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>{name}</Text>
+                      {s.room && <Text style={{ fontSize: 12, color: colors.textTertiary, marginTop: 1 }}>Room {s.room}</Text>}
+                    </View>
+                    <View style={{ backgroundColor: rollcallPeopleModal.color + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: rollcallPeopleModal.color }}>{rollcallPeopleModal.title}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

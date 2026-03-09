@@ -79,7 +79,7 @@ export default function FloorScreen({ navigation }) {
     const message = `${event.description || 'No description'}\n\nDate: ${event.date ? new Date(event.date).toLocaleDateString() : 'TBD'}\nLocation: ${event.location || 'TBD'}`;
     if (isRA) {
       Alert.alert(event.title, message, [
-        { text: 'Edit Event', onPress: () => navigation.navigate('RAFloorEvents', { editEvent: event }) },
+        { text: 'Manage Events', onPress: () => navigation.navigate('RAFloorManagement') },
         { text: 'Close', style: 'cancel' },
       ]);
     } else {
@@ -331,7 +331,7 @@ export default function FloorScreen({ navigation }) {
       {/* RA Manage Button */}
       {isRA && activeTab === 'events' && (
         <TouchableOpacity
-          onPress={() => navigation.navigate('RAFloorEvents')}
+          onPress={() => navigation.navigate('RAFloorManagement')}
           activeOpacity={0.8}
           data-testid="manage-events-btn"
           style={{
@@ -384,7 +384,7 @@ export default function FloorScreen({ navigation }) {
             </Text>
             {isRA && activeTab === 'events' && (
               <TouchableOpacity
-                onPress={() => navigation.navigate('RAFloorEvents', { openCreate: true })}
+                onPress={() => navigation.navigate('RAFloorManagement')}
                 style={{
                   marginTop: spacing.lg,
                   backgroundColor: primaryColor + '12',
@@ -404,7 +404,7 @@ export default function FloorScreen({ navigation }) {
       {/* FAB for RAs */}
       {isRA && activeTab === 'events' && (
         <TouchableOpacity
-          onPress={() => navigation.navigate('RAFloorEvents', { openCreate: true })}
+          onPress={() => navigation.navigate('RAFloorManagement')}
           activeOpacity={0.8}
           testID="add-event-fab"
           style={{
