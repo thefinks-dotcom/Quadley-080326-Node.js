@@ -125,7 +125,7 @@ export default {
     owner: "genfink",
     name: tenantConfig.name,
     slug: tenantConfig.slug,
-    version: "2.3.0",
+    version: "3.0.0",
     orientation: "portrait",
     icon: tenantConfig.icon,
     userInterfaceStyle: "light",
@@ -138,7 +138,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: tenantConfig.ios.bundleIdentifier,
-      buildNumber: "28",
+      buildNumber: "4",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
