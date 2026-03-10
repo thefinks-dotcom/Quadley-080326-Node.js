@@ -24,9 +24,23 @@ import { useTenant } from '../../contexts/TenantContext';
 
 export default function AdminCsvTemplatesScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
-  const { branding } = useTenant();
+  const { branding, isModuleEnabled } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
   const secondaryColor = branding?.secondaryColor || colors.background;
+
+  // Map each template key to the module it requires.
+  // 'users' is always enabled regardless of modules.
+  const templateModuleMap = {
+    users: null,         // always available
+    dining_menu: 'dining',
+    events: 'events',
+  };
+
+  const isTemplateEnabled = (key) => {
+    const requiredModule = templateModuleMap[key];
+    if (requiredModule === null) return true;   // users template — always on
+    return isModuleEnabled(requiredModule);
+  };
 
   const [downloading, setDownloading] = useState(null);
   const [uploading, setUploading] = useState(null);
@@ -454,7 +468,9 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
         </View>
 
         {/* Template Cards */}
-        {templates && Object.entries(templates).map(([key, template]) => (
+        {templates && Object.entries(templates).map(([key, template]) => {
+          const enabled = isTemplateEnabled(key);
+          return (
           <View
             key={key}
             style={{
@@ -464,9 +480,10 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
               marginBottom: 16,
               shadowColor: colors.textPrimary,
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
+              shadowOpacity: enabled ? 0.1 : 0.04,
               shadowRadius: 4,
-              elevation: 3,
+              elevation: enabled ? 3 : 1,
+              opacity: enabled ? 1 : 0.45,
             }}
           >
             {/* Template Header */}
@@ -491,6 +508,11 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
                   {template.filename}
                 </Text>
               </View>
+              {!enabled && (
+                <View style={{ backgroundColor: colors.surfaceSecondary, paddingHorizontal: 8, paddingVertical: 4, borderRadius: borderRadius.sm }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textTertiary }}>Not enabled</Text>
+                </View>
+              )}
             </View>
 
             {/* Description */}
@@ -568,7 +590,7 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
               <TouchableOpacity
                 onPress={() => downloadTemplate(key, template)}
-                disabled={downloading === key}
+                disabled={!enabled || downloading === key}
                 style={{
                   flex: 1,
                   flexDirection: 'row',
@@ -594,7 +616,7 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => copyToClipboard(key, template)}
-                disabled={copying === key}
+                disabled={!enabled || copying === key}
                 style={{
                   flex: 1,
                   flexDirection: 'row',
@@ -624,7 +646,7 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TouchableOpacity
                 onPress={() => handleUpload(key, template)}
-                disabled={uploading === key}
+                disabled={!enabled || uploading === key}
                 style={{
                   flex: 1,
                   flexDirection: 'row',
@@ -650,7 +672,8 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-        ))}
+          );
+        })}
 
         {/* CSV Format Preview */}
         <View
