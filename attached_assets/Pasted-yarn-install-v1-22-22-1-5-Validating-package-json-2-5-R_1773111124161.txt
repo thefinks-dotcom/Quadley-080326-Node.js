@@ -1,0 +1,107 @@
+yarn install v1.22.22
+[1/5] Validating package.json...
+[2/5] Resolving packages...
+(node:9) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+success Already up-to-date.
+Done in 0.19s.
+yarn run v1.22.22
+$ next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+   ▲ Next.js 15.5.12
+   - Environments: .env.local
+   Creating an optimized production build ...
+Failed to compile.
+./src/app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/globals.css
+Error: Cannot find module 'autoprefixer'
+
+Require stack:
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js
+- /app/node_modules/next/dist/build/webpack/config/index.js
+- /app/node_modules/next/dist/build/webpack-config.js
+- /app/node_modules/next/dist/build/webpack-build/impl.js
+- /app/node_modules/next/dist/compiled/jest-worker/processChild.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1420:15)
+    at /app/node_modules/next/dist/server/require-hook.js:57:36
+    at require.resolve (node:internal/modules/helpers:163:19)
+    at loadPlugin (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+    at /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
+    at Array.map (<anonymous>)
+    at getPostCssPlugins (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
+    at async /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
+    at async /app/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js:52:40
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:157:20)
+Import trace for requested module:
+./src/app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/globals.css
+./src/app/globals.css
+./src/app/globals.css
+Error: Cannot find module 'autoprefixer'
+
+Require stack:
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js
+- /app/node_modules/next/dist/build/webpack/config/index.js
+- /app/node_modules/next/dist/build/webpack-config.js
+- /app/node_modules/next/dist/build/webpack-build/impl.js
+- /app/node_modules/next/dist/compiled/jest-worker/processChild.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1420:15)
+    at /app/node_modules/next/dist/server/require-hook.js:57:36
+    at require.resolve (node:internal/modules/helpers:163:19)
+    at loadPlugin (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+    at /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
+    at Array.map (<anonymous>)
+    at getPostCssPlugins (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
+    at async /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
+    at async /app/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js:52:40
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:157:20)
+    at tryRunOrWebpackError (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:316119)
+    at __webpack_require_module__ (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:131532)
+    at __nested_webpack_require_161494__ (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:130967)
+    at /app/node_modules/next/dist/compiled/webpack/bundle5.js:29:131824
+    at symbolIterator (/app/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+    at done (/app/node_modules/next/dist/compiled/neo-async/async.js:1:14824)
+    at Hook.eval [as callAsync] (eval at create (/app/node_modules/next/dist/compiled/webpack/bundle5.js:14:9224), <anonymous>:15:1)
+    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (/app/node_modules/next/dist/compiled/webpack/bundle5.js:14:6378)
+    at /app/node_modules/next/dist/compiled/webpack/bundle5.js:29:130687
+    at symbolIterator (/app/node_modules/next/dist/compiled/neo-async/async.js:1:14402)
+-- inner error --
+Error: Cannot find module 'autoprefixer'
+
+Require stack:
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
+- /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js
+- /app/node_modules/next/dist/build/webpack/config/index.js
+- /app/node_modules/next/dist/build/webpack-config.js
+- /app/node_modules/next/dist/build/webpack-build/impl.js
+- /app/node_modules/next/dist/compiled/jest-worker/processChild.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1420:15)
+    at /app/node_modules/next/dist/server/require-hook.js:57:36
+    at require.resolve (node:internal/modules/helpers:163:19)
+    at loadPlugin (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+    at /app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
+    at Array.map (<anonymous>)
+    at getPostCssPlugins (/app/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
+    at async /app/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
+    at async /app/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js:52:40
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:157:20)
+    at Object.<anonymous> (/app/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!/app/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!/app/src/app/globals.css:1:7)
+    at /app/node_modules/next/dist/compiled/webpack/bundle5.js:29:962717
+    at Hook.eval [as call] (eval at create (/app/node_modules/next/dist/compiled/webpack/bundle5.js:14:9002), <anonymous>:7:1)
+    at Hook.CALL_DELEGATE [as _call] (/app/node_modules/next/dist/compiled/webpack/bundle5.js:14:6272)
+    at /app/node_modules/next/dist/compiled/webpack/bundle5.js:29:131565
+    at tryRunOrWebpackError (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:316073)
+    at __webpack_require_module__ (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:131532)
+    at __nested_webpack_require_161494__ (/app/node_modules/next/dist/compiled/webpack/bundle5.js:29:130967)
+    at /app/node_modules/next/dist/compiled/webpack/bundle5.js:29:131824
+    at symbolIterator (/app/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+Generated code for /app/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!/app/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!/app/src/app/globals.css
+Import trace for requested module:
+./src/app/globals.css
+> Build failed because of webpack errors
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+Build Failed: build daemon returned an error < failed to solve: process "/bin/bash -ol pipefail -c yarn install --frozen-lockfile && yarn build" did not complete successfully: exit code: 1 >
