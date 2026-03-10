@@ -26,7 +26,9 @@ export const ALL_MODULES = [
   'birthdays',
   'safe_disclosure',
   'parcels',
-  'bookings'
+  'bookings',
+  'relationship_disclosures',
+  'gbv_training',
 ];
 
 // Module display names and icons
@@ -45,7 +47,9 @@ export const MODULE_CONFIG = {
   birthdays: { name: 'Birthdays', icon: 'birthday-cake' },
   safe_disclosure: { name: 'Safe Disclosure', icon: 'shield-alt' },
   parcels: { name: 'Parcels', icon: 'box' },
-  bookings: { name: 'Bookings', icon: 'calendar-check' }
+  bookings: { name: 'Bookings', icon: 'calendar-check' },
+  relationship_disclosures: { name: 'Relationship Disclosures', icon: 'heart' },
+  gbv_training: { name: 'GBV Training', icon: 'shield-checkmark' },
 };
 
 const TenantContext = createContext(null);

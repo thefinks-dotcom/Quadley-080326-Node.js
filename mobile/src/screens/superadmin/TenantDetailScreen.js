@@ -33,6 +33,8 @@ const ALL_MODULES = [
   { id: 'safe_disclosure', name: 'Safe Disclosure', icon: 'shield', description: 'Anonymous reports' },
   { id: 'parcels', name: 'Parcels', icon: 'cube', description: 'Package tracking' },
   { id: 'bookings', name: 'Bookings', icon: 'bookmark', description: 'Room bookings' },
+  { id: 'relationship_disclosures', name: 'Relationship Disclosures', icon: 'heart', description: 'RA governance tracking' },
+  { id: 'gbv_training', name: 'GBV Training', icon: 'shield-checkmark', description: 'Staff training compliance' },
 ];
 
 const SUBSCRIPTION_TIERS = [
