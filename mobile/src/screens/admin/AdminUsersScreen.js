@@ -501,26 +501,41 @@ export default function AdminUsersScreen({ navigation }) {
     );
   };
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={primaryColor} />
-      </View>
-    );
-  }
-
   const activeCount = users?.filter(u => u.active !== false && !u.pending_setup).length || 0;
   const pendingCount = users?.filter(u => u.pending_setup).length || 0;
   const inactiveCount = users?.filter(u => u.active === false && !u.pending_setup).length || 0;
+
+  const handleAdd = () => {
+    Alert.alert(
+      'Add Users',
+      'How would you like to add users?',
+      [
+        { text: 'Single Student', onPress: () => setAddUserModalVisible(true) },
+        { text: 'Upload CSV', onPress: handlePickCSVFile },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const handleCancelAddUser = () => {
+    setAddUserModalVisible(false);
+    setNewStudent({ email: '', first_name: '', last_name: '', role: 'student', floor: '', room: '' });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
       <AdminScreenHeader
         title="Users"
-        subtitle={`${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''} • ${activeCount} active${pendingCount > 0 ? ` • ${pendingCount} pending` : ''}`}
+        subtitle={isLoading ? 'Loading...' : `${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''} • ${activeCount} active${pendingCount > 0 ? ` • ${pendingCount} pending` : ''}`}
         onBack={() => navigation.goBack()}
-        onAdd={() => setAddUserModalVisible(true)}
+        onAdd={handleAdd}
       />
+      {isLoading && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: secondaryColor }}>
+          <ActivityIndicator size="large" color={primaryColor} />
+        </View>
+      )}
+      {!isLoading && <>
 
       {/* Search + Export */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -629,11 +644,11 @@ export default function AdminUsersScreen({ navigation }) {
         visible={addUserModalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setAddUserModalVisible(false)}
+        onRequestClose={handleCancelAddUser}
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={() => setAddUserModalVisible(false)} data-testid="cancel-add-student">
+            <TouchableOpacity onPress={handleCancelAddUser} data-testid="cancel-add-student">
               <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Cancel</Text>
             </TouchableOpacity>
             <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary }}>Add User</Text>
@@ -643,7 +658,7 @@ export default function AdminUsersScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
           </View>
-          <ScrollView style={{ flex: 1, padding: spacing.lg }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             {/* Info Banner */}
             <View style={{ backgroundColor: primaryColor + '15', padding: 12, borderRadius: borderRadius.md, marginBottom: 20, borderWidth: 1, borderColor: primaryColor }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -996,6 +1011,7 @@ export default function AdminUsersScreen({ navigation }) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+      </>}
     </SafeAreaView>
   );
 }
