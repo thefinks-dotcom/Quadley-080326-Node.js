@@ -100,7 +100,7 @@ module.exports = {
     owner: "genfink",
     name: tenantConfig.name,
     slug: tenantConfig.slug,
-    version: "3.0.0",
+    version: "3.1.0",
     orientation: "portrait",
     icon: tenantConfig.icon,
     userInterfaceStyle: "light",
