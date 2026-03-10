@@ -1060,6 +1060,11 @@ class UpdateUserRoleRequest(BaseModel):
     role: str
 
 
+class UpdateUserEmailRequest(BaseModel):
+    """Request model for admin email correction"""
+    email: EmailStr
+
+
 @router.patch("/users/{user_id}")
 async def update_user_role(
     user_id: str,
@@ -1124,6 +1129,56 @@ async def update_user_role(
         "message": f"User role updated to {update_data.role}",
         "user_id": user_id,
         "new_role": update_data.role
+    }
+
+
+@router.patch("/users/{user_id}/email")
+async def update_user_email(
+    user_id: str,
+    update_data: UpdateUserEmailRequest,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """
+    Correct a user's email address. Only admins can do this.
+    Validates the new email is not already taken within the tenant.
+    """
+    tenant_db, current_user = tenant_data
+
+    if current_user.role not in ['admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    target_user = await tenant_db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_email = update_data.email.lower().strip()
+    old_email = target_user.get("email", "")
+
+    if new_email == old_email.lower():
+        raise HTTPException(status_code=400, detail="New email is the same as the current email")
+
+    # Check the new email isn't already in use within this tenant
+    existing = await tenant_db.users.find_one({"email": new_email, "id": {"$ne": user_id}})
+    if existing:
+        raise HTTPException(status_code=409, detail="This email address is already in use")
+
+    await tenant_db.users.update_one(
+        {"id": user_id},
+        {"$set": {"email": new_email}}
+    )
+
+    # Also update any pending invitation records so they match
+    tenant_code = current_user.tenant_code
+    await tenant_db.invitations.update_many(
+        {"email": old_email.lower(), "tenant_code": tenant_code},
+        {"$set": {"email": new_email}}
+    )
+
+    return {
+        "message": "Email address updated successfully",
+        "user_id": user_id,
+        "old_email": old_email,
+        "new_email": new_email
     }
 
 

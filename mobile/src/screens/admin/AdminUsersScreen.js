@@ -38,6 +38,9 @@ export default function AdminUsersScreen({ navigation }) {
   const [bulkImportResults, setBulkImportResults] = useState(null);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [emailEditModalVisible, setEmailEditModalVisible] = useState(false);
+  const [emailEditUser, setEmailEditUser] = useState(null);
+  const [emailEditValue, setEmailEditValue] = useState('');
   const [newStudent, setNewStudent] = useState({
     email: '',
     first_name: '',
@@ -154,6 +157,36 @@ export default function AdminUsersScreen({ navigation }) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to resend invitation');
     },
   });
+
+  const updateUserEmail = useMutation({
+    mutationFn: async ({ userId, email }) => {
+      const response = await api.patch(`/admin/users/${userId}/email`, { email });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      Alert.alert('Success', `Email updated to ${variables.email}`);
+      setEmailEditModalVisible(false);
+      setEmailEditUser(null);
+      setEmailEditValue('');
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+    },
+    onError: (error) => {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to update email');
+    },
+  });
+
+  const handleEmailEditSave = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailEditValue.trim()) {
+      Alert.alert('Error', 'Please enter an email address');
+      return;
+    }
+    if (!emailRegex.test(emailEditValue.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    updateUserEmail.mutate({ userId: emailEditUser.id, email: emailEditValue.trim().toLowerCase() });
+  };
 
   const handlePickCSVFile = async () => {
     try {
@@ -399,6 +432,15 @@ export default function AdminUsersScreen({ navigation }) {
       });
     }
     
+    buttons.push({
+      text: 'Change Email',
+      onPress: () => {
+        setEmailEditUser(user);
+        setEmailEditValue(user.email);
+        setEmailEditModalVisible(true);
+      },
+    });
+
     buttons.push({ 
       text: 'Change Role', 
       onPress: () => handleRoleChange(user) 
@@ -879,6 +921,61 @@ export default function AdminUsersScreen({ navigation }) {
               >
                 <Text style={{ textAlign: 'center', color: colors.textInverse, fontWeight: '600' }}>
                   {toggleUserStatus.isPending ? 'Processing...' : (selectedUser?.active !== false ? 'Deactivate' : 'Activate')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Email Edit Modal */}
+      <Modal
+        visible={emailEditModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); }}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: spacing.xxl, width: '100%', maxWidth: 340 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: primaryColor + '15', justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 }}>
+              <Ionicons name="mail-outline" size={26} color={primaryColor} />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, textAlign: 'center', marginBottom: 4 }}>
+              Change Email
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 }}>
+              {emailEditUser?.first_name} {emailEditUser?.last_name}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>Current email</Text>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 16, padding: 10, backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md }}>
+              {emailEditUser?.email}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>New email address</Text>
+            <TextInput
+              style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 12, fontSize: 15, color: colors.textPrimary, marginBottom: 24, borderWidth: 1, borderColor: primaryColor + '40' }}
+              placeholder="new@example.com"
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+              value={emailEditValue}
+              onChangeText={setEmailEditValue}
+            />
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); }}
+                style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.surfaceSecondary }}
+              >
+                <Text style={{ textAlign: 'center', color: colors.textSecondary, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleEmailEditSave}
+                disabled={updateUserEmail.isPending}
+                style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: primaryColor }}
+              >
+                <Text style={{ textAlign: 'center', color: colors.textInverse, fontWeight: '600' }}>
+                  {updateUserEmail.isPending ? 'Saving...' : 'Save'}
                 </Text>
               </TouchableOpacity>
             </View>
