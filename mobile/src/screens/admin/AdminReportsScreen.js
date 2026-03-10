@@ -18,6 +18,7 @@ import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { generateReportCSV, exportAsCSV, getExportFilename } from '../../utils/exportUtils';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 export default function AdminReportsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -107,17 +108,19 @@ export default function AdminReportsScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Reports & Insights"
+        subtitle="Overview of your college community"
+        onBack={() => navigation.goBack()}
+      />
+
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
-        {/* Header */}
-        <View style={{ padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>Reports & Insights</Text>
-            <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 4 }}>Overview of your college community</Text>
-          </View>
+        {/* Export Button */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 16, alignItems: 'flex-end' }}>
           <TouchableOpacity
             onPress={handleExport}
             disabled={exporting || isLoading}

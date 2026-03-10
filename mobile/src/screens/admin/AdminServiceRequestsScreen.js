@@ -23,8 +23,9 @@ import { ENDPOINTS } from '../../config/api';
 import { format } from 'date-fns';
 import { formatDate, formatDateTime, DATE_FORMATS } from '../../utils/dateUtils';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
-export default function AdminServiceRequestsScreen() {
+export default function AdminServiceRequestsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -249,6 +250,12 @@ ${request.description || 'No description'}`,
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Service Requests"
+        subtitle={`${requests?.length || 0} request${(requests?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+      />
+
       <FlatList
         data={requests}
         keyExtractor={(item, index) => item.id || `item-${index}`}

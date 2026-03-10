@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 const ACTIVITY_TYPES = [
   { id: 'sports', name: 'Sports', icon: 'football', color: null },
@@ -223,40 +224,13 @@ export default function AdminActivitiesScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['top']}>
-      {/* Header */}
-      <View style={{ 
-        backgroundColor: colors.primary, 
-        paddingHorizontal: 16, 
-        paddingTop: 8, 
-        paddingBottom: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <Ionicons name="arrow-back" size={24} color={colors.surface} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: 'bold' }}>Activities</Text>
-          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
-            {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={openAddModal}
-          style={{
-            backgroundColor: primaryColor,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderRadius: borderRadius.sm,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <Ionicons name="add" size={18} color={colors.surface} />
-          <Text style={{ color: colors.textInverse, fontWeight: '600', marginLeft: 4 }}>Add</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Activities"
+        subtitle={`${activities.length} ${activities.length === 1 ? 'activity' : 'activities'}`}
+        onBack={() => navigation.goBack()}
+        onAdd={openAddModal}
+      />
 
       <ScrollView
         style={{ flex: 1 }}

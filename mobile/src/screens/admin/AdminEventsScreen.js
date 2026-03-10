@@ -23,10 +23,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { format, addDays, setHours, setMinutes } from 'date-fns';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 import { formatDate, formatDateTime, formatDateLong, formatForApi, isSameDay, DATE_FORMATS } from '../../utils/dateUtils';
 import { useTenant } from '../../contexts/TenantContext';
 
-export default function AdminEventsScreen() {
+export default function AdminEventsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -325,6 +326,13 @@ export default function AdminEventsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Events"
+        subtitle={`${events.length} event${events.length !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={() => setModalVisible(true)}
+      />
+
       <FlatList
         data={events}
         keyExtractor={(item, index) => item.id || `item-${index}`}
@@ -342,29 +350,6 @@ export default function AdminEventsScreen() {
         }
         contentContainerStyle={{ paddingVertical: 16 }}
       />
-
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          backgroundColor: primaryColor,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: colors.textPrimary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-      >
-        <Ionicons name="add" size={28} color={colors.surface} />
-      </TouchableOpacity>
 
       {/* Create/Edit Modal */}
       <Modal
