@@ -16,7 +16,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -66,6 +66,7 @@ export default function ChatScreen({ route, navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
+  const insets = useSafeAreaInsets();
 
   const { id, name, type, userId, isNew } = route.params || {};
   const { user } = useAuth();
@@ -554,7 +555,7 @@ export default function ChatScreen({ route, navigation }) {
           <View style={{
             flexDirection: 'row', alignItems: 'center',
             backgroundColor: '#FEF2F2', borderTopWidth: 1, borderTopColor: '#FECACA',
-            padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+            padding: 16, paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16,
           }}>
             <Ionicons name="shield-outline" size={20} color="#EF4444" style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
@@ -565,7 +566,7 @@ export default function ChatScreen({ route, navigation }) {
         ) : (
           <View style={{
             flexDirection: 'row', alignItems: 'flex-end',
-            padding: 12, paddingBottom: Platform.OS === 'ios' ? 90 : 12,
+            padding: 12, paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 12,
             backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border,
           }}>
             <TouchableOpacity

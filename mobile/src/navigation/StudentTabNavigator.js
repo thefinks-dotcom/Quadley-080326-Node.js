@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Student Screens
@@ -155,7 +156,10 @@ export default function StudentTabNavigator() {
   const secondaryColor = branding?.secondaryColor || colors.border;
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }) => {
+        const focusedRoute = getFocusedRouteNameFromRoute(route) ?? '';
+        const hideTabBar = ['Chat'].includes(focusedRoute);
+        return {
         headerShown: false,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
@@ -165,7 +169,7 @@ export default function StudentTabNavigator() {
         },
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
-        tabBarStyle: {
+        tabBarStyle: hideTabBar ? { display: 'none' } : {
           backgroundColor: colors.surface,
           borderTopWidth: 2,
           borderTopColor: secondaryColor + '40',
@@ -184,7 +188,8 @@ export default function StudentTabNavigator() {
           else if (route.name === 'Profile') icon = focused ? 'person' : 'person-outline';
           return <Ionicons name={icon} size={22} color={color} />;
         },
-      })}
+      };
+      }}
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Messages" component={MessagesStack} />
