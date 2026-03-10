@@ -61,10 +61,7 @@ const EventsAdmin = () => {
 
   const fetchEvents = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/events`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/events`);
       setEvents(response.data);
     } catch (error) {
       console.error('Failed to fetch events', error);
@@ -78,13 +75,10 @@ const EventsAdmin = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/events`, {
         ...newEvent,
         date: new Date(newEvent.date).toISOString(),
         max_attendees: newEvent.max_attendees ? parseInt(newEvent.max_attendees) : null
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Event created!');
       setShowNewDialog(false);
