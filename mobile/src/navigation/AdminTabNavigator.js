@@ -121,7 +121,7 @@ function DashboardStack() {
       <Stack.Screen name="Recognition" component={RecognitionScreen} options={{ title: 'Shoutouts' }} />
       <Stack.Screen name="Wellbeing" component={WellbeingScreen} options={{ title: 'Wellbeing' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
-      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ title: 'Study' }} />
+      <Stack.Screen name="Academics" component={AcademicsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CoCurricular" component={CoCurricularScreen} options={{ title: 'Activities' }} />
       <Stack.Screen name="Floor" component={FloorScreen} options={{ title: 'My Floor' }} />
       <Stack.Screen name="Birthdays" component={BirthdaysScreen} options={{ title: 'Birthdays' }} />
