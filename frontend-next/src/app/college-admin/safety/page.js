@@ -86,10 +86,7 @@ const SafetySupportAdmin = () => {
   const fetchDisclosures = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/safe-disclosures`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/safe-disclosures`);
       setDisclosures(response.data);
       setLastUpdated(new Date());
       if (isRefresh) toast.success('Data refreshed');
@@ -104,10 +101,7 @@ const SafetySupportAdmin = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/safe-disclosures/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/safe-disclosures/stats`);
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch stats', error);
@@ -118,11 +112,9 @@ const SafetySupportAdmin = () => {
     if (!selectedDisclosure) return;
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/safe-disclosures/${selectedDisclosure.id}/risk-assessment`,
-        riskForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        riskForm
       );
       toast.success('Risk assessment completed');
       setShowActionDialog(false);
@@ -140,11 +132,9 @@ const SafetySupportAdmin = () => {
     if (!selectedDisclosure) return;
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/safe-disclosures/${selectedDisclosure.id}/support-plan`,
-        supportForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        supportForm
       );
       toast.success('Support plan created');
       setShowActionDialog(false);
@@ -160,11 +150,9 @@ const SafetySupportAdmin = () => {
 
   const handleEscalateToFormalReport = async (disclosureId) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/safe-disclosures/${disclosureId}/formal-report`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       toast.success('Escalated to formal investigation');
       fetchDisclosures();
@@ -179,11 +167,9 @@ const SafetySupportAdmin = () => {
     if (!notes) return;
     
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/safe-disclosures/${disclosureId}/resolve`,
-        { resolution_notes: notes },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { resolution_notes: notes }
       );
       toast.success('Case resolved');
       setShowDetailDialog(false);
