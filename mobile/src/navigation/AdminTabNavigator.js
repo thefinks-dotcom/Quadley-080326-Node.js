@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Admin Screens
@@ -180,7 +181,10 @@ export default function AdminTabNavigator() {
   const secondaryColor = branding?.secondaryColor || colors.border;
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }) => {
+        const focusedRoute = getFocusedRouteNameFromRoute(route) ?? '';
+        const hideTabBar = ['Chat'].includes(focusedRoute);
+        return {
         headerShown: false,
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
@@ -190,7 +194,7 @@ export default function AdminTabNavigator() {
           fontWeight: '600',
           marginTop: -2,
         },
-        tabBarStyle: {
+        tabBarStyle: hideTabBar ? { display: 'none' } : {
           backgroundColor: colors.surface,
           borderTopWidth: 2,
           borderTopColor: secondaryColor + '40',
@@ -209,7 +213,8 @@ export default function AdminTabNavigator() {
           }
           return <Ionicons name={iconName} size={22} color={color} />;
         },
-      })}
+      };
+      }}
     >
       <Tab.Screen name="Dashboard" component={DashboardStack} />
       <Tab.Screen name="Messages" component={MessagesStack} />

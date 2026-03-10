@@ -32,6 +32,7 @@ export default function AdminServiceRequestsScreen({ navigation }) {
   const secondaryColor = branding?.secondaryColor || colors.background;
 
   const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState('pending');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailTo, setEmailTo] = useState('');
@@ -249,16 +250,81 @@ ${request.description || 'No description'}`,
     );
   }
 
+  const pendingCount = requests?.filter(r => r.status === 'pending').length || 0;
+  const inProgressCount = requests?.filter(r => r.status === 'in_progress').length || 0;
+
+  const filteredRequests = statusFilter === 'all'
+    ? requests
+    : requests?.filter(r => r.status === statusFilter);
+
+  const FILTER_TABS = [
+    { key: 'pending', label: 'Pending', count: pendingCount },
+    { key: 'in_progress', label: 'In Progress', count: inProgressCount },
+    { key: 'all', label: 'All', count: requests?.length || 0 },
+  ];
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
       <AdminScreenHeader
         title="Service Requests"
-        subtitle={`${requests?.length || 0} request${(requests?.length || 0) !== 1 ? 's' : ''}`}
+        subtitle={`${pendingCount} pending · ${requests?.length || 0} total`}
         onBack={() => navigation.goBack()}
       />
 
+      {/* Filter Tabs */}
+      <View style={{
+        flexDirection: 'row',
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+        backgroundColor: colors.surfaceSecondary,
+        borderRadius: borderRadius.md,
+        padding: 3,
+      }}>
+        {FILTER_TABS.map(tab => (
+          <TouchableOpacity
+            key={tab.key}
+            onPress={() => setStatusFilter(tab.key)}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: 8,
+              borderRadius: borderRadius.sm,
+              backgroundColor: statusFilter === tab.key ? colors.surface : 'transparent',
+            }}
+          >
+            <Text style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: statusFilter === tab.key ? colors.textPrimary : colors.textTertiary,
+            }}>
+              {tab.label}
+            </Text>
+            {tab.count > 0 && (
+              <View style={{
+                backgroundColor: statusFilter === tab.key ? primaryColor + '20' : 'transparent',
+                paddingHorizontal: 5,
+                paddingVertical: 1,
+                borderRadius: 8,
+                marginLeft: 4,
+              }}>
+                <Text style={{
+                  fontSize: 11,
+                  fontWeight: '700',
+                  color: statusFilter === tab.key ? primaryColor : colors.textTertiary,
+                }}>
+                  {tab.count}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <FlatList
-        data={requests}
+        data={filteredRequests}
         keyExtractor={(item, index) => item.id || `item-${index}`}
         renderItem={renderRequest}
         refreshControl={
@@ -268,7 +334,7 @@ ${request.description || 'No description'}`,
           <View style={{ padding: spacing.xxl, alignItems: 'center' }}>
             <Ionicons name="construct-outline" size={48} color={colors.textTertiary} />
             <Text style={{ fontSize: 16, color: colors.textSecondary, marginTop: 12 }}>
-              No service requests
+              {statusFilter === 'pending' ? 'No pending requests' : statusFilter === 'in_progress' ? 'No requests in progress' : 'No service requests'}
             </Text>
           </View>
         }
