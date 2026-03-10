@@ -52,7 +52,7 @@ const TenantContext = createContext(null);
 
 export const TenantProvider = ({ children }) => {
   const [tenant, setTenant] = useState(null);
-  const [enabledModules, setEnabledModules] = useState(ALL_MODULES);
+  const [enabledModules, setEnabledModules] = useState(BUILD_TENANT === 'quadley' ? ALL_MODULES : []);
   const [loading, setLoading] = useState(true);
   const [branding, setBranding] = useState({
     primaryColor: BUILD_PRIMARY,
@@ -176,7 +176,7 @@ export const TenantProvider = ({ children }) => {
   const clearTenant = async () => {
     try {
       setTenant(null);
-      setEnabledModules(ALL_MODULES);
+      setEnabledModules(BUILD_TENANT === 'quadley' ? ALL_MODULES : []);
       setBranding({
         primaryColor: BUILD_PRIMARY,
         secondaryColor: BUILD_SECONDARY,
