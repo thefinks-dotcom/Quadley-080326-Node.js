@@ -1,0 +1,58 @@
+Managing Messaging 
+
+Content nudge (before send)
+Tier 1 — threats, self-harm, direct violence: message is blocked entirely. User can only edit or delete. No bypass.
+Tier 2 — harassment, slurs, targeted insults: "Think before you send" modal appears with the specific warning. User can edit, send anyway, or cancel.
+One-click reporting
+A flag icon sits beside every received message. Tap it → bottom sheet with 5 categories (Harassment, Threats, Inappropriate Content, Bullying, Other) + optional detail field.
+On submit: message content is snapshotted into the report record (evidence preserved even if the sender later tries to delete), the message is flagged as under review so deletion is blocked, and an email goes immediately to every admin and RA in the tenant — no admin needs to be online.
+Automated escalation (OSA compliance)
+If a user accumulates 3+ open reports, they are automatically suspended from messaging and a second escalation email is sent. This happens at the moment of the third report — zero admin involvement required.
+When an admin does action a report, remove_message replaces the content with a moderator notice but keeps the full report record intact (meeting the 24-hour removal obligation while preserving the evidence chain).
+Kill switch
+Admins and RAs can toggle any user's messaging access off and on immediately via the new endpoint.
+Suspended users see their input bar replaced with a clear "Messaging suspended — contact your RA" banner. They cannot send anything.
+
+
+How the nudge work?
+
+No AI service needed — it's running entirely on the client side using JavaScript regular expressions, so there's no API cost, no latency, and no dependency on a third-party service being available.
+Here's exactly how it works:
+The filter runs in the browser before the message is ever sent. When a user hits send, the text is checked against two lists of patterns:
+Tier 1 — Blocked entirely (no bypass allowed):
+Phrases like "kill yourself", "kys", self-harm language, direct threats ("I will hurt/kill you"), references to mass violence
+Tier 2 — "Think before you send" nudge (can be overridden):
+Targeted insults ("you're worthless/pathetic/useless"), "go die", "hate you", common slurs and derogatory terms, social exclusion phrases ("no one likes you")
+If either tier is triggered, the message never reaches the server. The modal appears first. For Tier 1, the only options are "Edit" or "Delete" — there is no way to send it. For Tier 2, the user can still choose "Send anyway" if they believe it's a false positive, but that conscious pause is what the research shows deters harmful content.
+
+Should you connect an AI service? It's worth thinking about the trade-offs:
+
+
+Rule-based (current)
+AI service (e.g. OpenAI Moderation API)
+Cost
+Free
+Per-request API cost
+Latency
+Instant (in-browser)
+100–500ms per message
+Accuracy
+Good for known patterns, misses novel phrasing
+Better at context, sarcasm, coded language
+Privacy
+Message never leaves device for this check
+Message sent to third party
+Reliability
+Always works, no outages
+Depends on external service
+
+For a campus platform, the rule-based approach is actually a reasonable first layer. An AI moderation API (like OpenAI's free /moderations endpoint) could be added as a backend second layer on the send endpoint — only triggering if the frontend filter passes — giving you both speed and depth without slowing down normal messages. Want me to add that as an optional enhancement?
+
+How it works end-to-end:
+Per-tenant opt-in — off by default. A college admin hits PUT /admin/ai-moderation to toggle it on for their campus. GET /admin/ai-moderation returns both the current toggle state and whether OPENAI_API_KEY is configured, so the UI can show a useful warning if the key is missing.
+Server-side check on every send — after the suspension check but before the message is stored, send_message calls OpenAI's /v1/moderations endpoint (their free endpoint — no per-request cost). If the tenant doesn't have it enabled or OPENAI_API_KEY isn't set, the function returns immediately without making any HTTP call.
+Non-blocking design — if OpenAI's API is slow, times out (4-second limit), or throws any error, the check is silently skipped and the message goes through. A warning is logged but users are never blocked by an infrastructure failure.
+Frontend handling — if the check returns flagged, the backend sends a structured 422 with the category names (e.g. harassment, violence). The frontend shows the existing Tier 2 nudge modal with the AI-detected categories listed, so the user understands specifically what was flagged.
+No infinite loop on "Send anyway" — when the user explicitly overrides the nudge, force_send: true is passed in the request body, and the backend skips the AI check entirely for that send.
+To activate for a campus, the college admin needs OPENAI_API_KEY set in the environment (you can add it as a secret on Railway), then toggle via the API. No code changes needed per-campus.
+

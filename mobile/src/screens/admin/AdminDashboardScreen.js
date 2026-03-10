@@ -57,6 +57,7 @@ export default function AdminDashboardScreen({ navigation }) {
     ...superAdminItems,
     { title: 'View as Student', icon: 'eye', screen: 'StudentView', description: 'See student experience' },
     { title: 'Messages', icon: 'chatbubbles', screen: 'AdminMessages', description: 'All conversations' },
+    { title: 'Message Reports', icon: 'flag', screen: 'AdminMessageReports', description: 'Flagged content & moderation' },
     { title: 'News', icon: 'megaphone', screen: 'AdminAnnouncements', count: stats?.total_announcements },
     { title: 'Safety Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Confidential incident reports' },
     { title: 'Academics', icon: 'school', screen: 'Academics', description: 'Study groups & resources' },

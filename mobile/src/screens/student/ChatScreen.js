@@ -28,10 +28,10 @@ import { format } from 'date-fns';
 import { useTenant } from '../../contexts/TenantContext';
 
 const REPORT_CATEGORIES = [
-  { value: 'harassment', label: 'Harassment or bullying' },
+  { value: 'harassment', label: 'Harassment' },
   { value: 'threats', label: 'Threats or violence' },
   { value: 'inappropriate', label: 'Inappropriate content' },
-  { value: 'spam', label: 'Spam or unwanted contact' },
+  { value: 'bullying', label: 'Bullying' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -167,8 +167,8 @@ export default function ChatScreen({ route, navigation }) {
   };
 
   const sendMutation = useMutation({
-    mutationFn: async ({ content, fileUrl }) => {
-      const payload = { content: content || '', file_url: fileUrl };
+    mutationFn: async ({ content, fileUrl, forceSend }) => {
+      const payload = { content: content || '', file_url: fileUrl, force_send: forceSend || false };
       if (type === 'direct') {
         payload.receiver_id = userId || id;
       } else {
@@ -429,21 +429,21 @@ export default function ChatScreen({ route, navigation }) {
             </View>
           </View>
         )}
-        <TouchableOpacity
-          onLongPress={() => handleLongPress(item)}
-          delayLongPress={500}
-          activeOpacity={0.8}
-          style={{ flexDirection: isOwnMessage ? 'row-reverse' : 'row', marginBottom: 8, paddingHorizontal: 16 }}
-        >
-          <View style={{
-            maxWidth: '75%',
-            backgroundColor: isOwnMessage ? primaryColor : colors.surface,
-            borderRadius: 18,
-            borderTopRightRadius: isOwnMessage ? 4 : 18,
-            borderTopLeftRadius: isOwnMessage ? 18 : 4,
-            padding: 12,
-            ...shadows.sm,
-          }}>
+        <View style={{ flexDirection: isOwnMessage ? 'row-reverse' : 'row', marginBottom: 8, paddingHorizontal: 16, alignItems: 'flex-end' }}>
+          <TouchableOpacity
+            onLongPress={() => handleLongPress(item)}
+            delayLongPress={500}
+            activeOpacity={0.8}
+            style={{
+              maxWidth: '75%',
+              backgroundColor: isOwnMessage ? primaryColor : colors.surface,
+              borderRadius: 18,
+              borderTopRightRadius: isOwnMessage ? 4 : 18,
+              borderTopLeftRadius: isOwnMessage ? 18 : 4,
+              padding: 12,
+              ...shadows.sm,
+            }}
+          >
             {showSenderName && (
               <Text style={{ fontSize: 12, fontWeight: '600', color: primaryColor, marginBottom: 4 }}>
                 {item.sender_name}
@@ -458,7 +458,7 @@ export default function ChatScreen({ route, navigation }) {
                     resizeMode="cover"
                   />
                 ) : (
-                  <TouchableOpacity style={{
+                  <View style={{
                     flexDirection: 'row', alignItems: 'center',
                     backgroundColor: isOwnMessage ? 'rgba(255,255,255,0.2)' : colors.surfaceSecondary,
                     padding: 10, borderRadius: borderRadius.sm,
@@ -467,7 +467,7 @@ export default function ChatScreen({ route, navigation }) {
                     <Text style={{ marginLeft: 8, color: isOwnMessage ? colors.textInverse : primaryColor, fontWeight: '500' }}>
                       Attachment
                     </Text>
-                  </TouchableOpacity>
+                  </View>
                 )}
               </View>
             )}
@@ -484,8 +484,22 @@ export default function ChatScreen({ route, navigation }) {
             }}>
               {messageTime}
             </Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+          {!isOwnMessage && (
+            <TouchableOpacity
+              onPress={() => {
+                setReportTarget(item);
+                setReportCategory('');
+                setReportDetails('');
+                setShowReportModal(true);
+              }}
+              style={{ paddingHorizontal: 6, paddingBottom: 4 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="flag-outline" size={14} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </>
     );
   };
@@ -629,20 +643,48 @@ export default function ChatScreen({ route, navigation }) {
             <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 20, lineHeight: 20 }}>
               {nudgeWarning}
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity
-                onPress={() => setShowNudge(false)}
-                style={{ flex: 1, paddingVertical: 13, borderRadius: 14, backgroundColor: colors.surfaceSecondary, alignItems: 'center' }}
-              >
-                <Text style={{ fontWeight: '600', fontSize: 14, color: colors.textPrimary }}>Edit message</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => { setShowNudge(false); setMessage(''); setPendingContent(''); }}
-                style={{ flex: 1, paddingVertical: 13, borderRadius: 14, backgroundColor: '#FEE2E2', alignItems: 'center' }}
-              >
-                <Text style={{ fontWeight: '600', fontSize: 14, color: '#B91C1C' }}>Delete</Text>
-              </TouchableOpacity>
-            </View>
+            {nudgeLevel === 2 ? (
+              <View style={{ gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowNudge(false);
+                    sendMutation.mutate({ content: pendingContent, fileUrl: selectedImage, forceSend: true });
+                    setMessage('');
+                    setPendingContent('');
+                  }}
+                  style={{ paddingVertical: 13, borderRadius: 14, backgroundColor: '#FEF3C7', alignItems: 'center' }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: '#B45309' }}>Send anyway</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowNudge(false)}
+                  style={{ paddingVertical: 13, borderRadius: 14, backgroundColor: colors.surfaceSecondary, alignItems: 'center' }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: colors.textPrimary }}>Edit message</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setShowNudge(false); setMessage(''); setPendingContent(''); }}
+                  style={{ paddingVertical: 13, borderRadius: 14, backgroundColor: '#FEE2E2', alignItems: 'center' }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: '#B91C1C' }}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setShowNudge(false)}
+                  style={{ flex: 1, paddingVertical: 13, borderRadius: 14, backgroundColor: colors.surfaceSecondary, alignItems: 'center' }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: colors.textPrimary }}>Edit message</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setShowNudge(false); setMessage(''); setPendingContent(''); }}
+                  style={{ flex: 1, paddingVertical: 13, borderRadius: 14, backgroundColor: '#FEE2E2', alignItems: 'center' }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: '#B91C1C' }}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
