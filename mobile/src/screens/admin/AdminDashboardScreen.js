@@ -59,8 +59,6 @@ export default function AdminDashboardScreen({ navigation }) {
     { title: 'Messages', icon: 'chatbubbles', screen: 'AdminMessages', description: 'All conversations' },
     { title: 'News', icon: 'megaphone', screen: 'AdminAnnouncements', count: stats?.total_announcements },
     { title: 'Safety Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Confidential incident reports' },
-    { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
-    { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
     { title: 'Academics', icon: 'school', screen: 'Academics', description: 'Study groups & resources' },
     { title: 'User Management', icon: 'people', screen: 'AdminUsers', count: stats?.total_users },
     { title: 'CSV Templates', icon: 'document-text', screen: 'AdminCsvTemplates', description: 'Download & upload templates' },
@@ -71,6 +69,12 @@ export default function AdminDashboardScreen({ navigation }) {
     isModuleEnabled('jobs') && { title: 'Job Postings', icon: 'briefcase', screen: 'AdminJobs', count: stats?.active_jobs },
     isModuleEnabled('recognition') && { title: 'Recognition', icon: 'star', screen: 'AdminRecognition', count: stats?.total_shoutouts },
     isModuleEnabled('cocurricular') && { title: 'Activities', icon: 'football', screen: 'AdminActivities', description: 'Clubs, sports & activities' },
+  ].filter(Boolean);
+
+  // RA Incident Reports section — only shown when at least one RA module is enabled for this tenant
+  const raIncidentItems = [
+    isModuleEnabled('relationship_disclosures') && { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
+    isModuleEnabled('gbv_training') && { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
   ].filter(Boolean);
 
   // Reports section items — general analytics always shown; disclosure report only if safe_disclosure is enabled
@@ -256,6 +260,48 @@ export default function AdminDashboardScreen({ navigation }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* RA Incident Reports Section — only shown when relationship_disclosures or gbv_training is enabled */}
+        {raIncidentItems.length > 0 && (
+          <View style={{ padding: spacing.xl, paddingBottom: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+              <View style={{ width: 3, height: 14, borderRadius: 2, backgroundColor: primaryColor, marginRight: spacing.sm }} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textTertiary, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                RA Incident Reports
+              </Text>
+            </View>
+            {raIncidentItems.map((item, index) => (
+              <TouchableOpacity
+                key={`ra-${item.screen}-${index}`}
+                onPress={() => navigation.navigate(item.screen)}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: borderRadius.lg,
+                  padding: spacing.lg,
+                  marginBottom: spacing.md,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: colors.textPrimary,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.06,
+                  shadowRadius: 8,
+                  elevation: 3,
+                }}
+              >
+                <View style={{ width: 44, height: 44, backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.lg }}>
+                  <Ionicons name={item.icon} size={22} color={iconColor} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>{item.title}</Text>
+                  {item.description && (
+                    <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>{item.description}</Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Reports Section - Collapsible */}
         <View style={{ padding: spacing.xl, paddingTop: spacing.sm }}>
