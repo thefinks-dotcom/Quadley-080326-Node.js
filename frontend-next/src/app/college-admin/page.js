@@ -274,7 +274,7 @@ const CollegeAdminDashboard = () => {
       const [adminRes, usersRes, eventsRes, maintenanceRes, safetyRes, wellbeingRes, announcementsRes, shoutoutsRes, groupsRes, jobsRes, jobAppsRes, messagesRes, parcelsRes] = await Promise.all([
         axios.get(`${API}/api/dashboard/admin`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null })),
         axios.get(`${API}/api/users/list`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/events`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/events`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/maintenance`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/api/safe-disclosures/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { urgent_count: 0, pending_risk_assessment: 0 } })),
         axios.get(`${API}/api/wellbeing-admin/requests/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { urgent_count: 0, total_count: 0 } })),
@@ -313,7 +313,7 @@ const CollegeAdminDashboard = () => {
         pendingServiceRequests: pendingMaintenance,
         urgentWellbeing: Math.max(safetyUrgent, safetyPendingRA, wellbeingUrgent),
         wellbeingRequests: wellbeingTotal,
-        upcomingEvents: Array.isArray(eventsRes.data) ? eventsRes.data.filter(e => new Date(e.date) > new Date()).length : 0,
+        upcomingEvents: Array.isArray(eventsRes.data) ? eventsRes.data.length : 0,
         totalAnnouncements: Array.isArray(announcementsRes.data) ? announcementsRes.data.length : 0,
         totalMessages: Array.isArray(messagesRes.data) ? messagesRes.data.length : 0,
         pendingRecognitions: Array.isArray(shoutoutsRes.data) ? shoutoutsRes.data.filter(s => s.status !== 'scheduled').length : 0,
@@ -324,7 +324,7 @@ const CollegeAdminDashboard = () => {
       setParcels(Array.isArray(parcelsRes.data) ? parcelsRes.data : []);
       setParcelUsers(Array.isArray(usersRes.data) ? usersRes.data.filter(u => u.role === 'student' || u.role === 'ra') : []);
       const now = new Date();
-      const upcoming = Array.isArray(eventsRes.data) ? eventsRes.data.filter(e => new Date(e.date) > now).sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
+      const upcoming = Array.isArray(eventsRes.data) ? [...eventsRes.data].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
       setUpcomingEventsList(upcoming);
     } catch (error) {
       console.error('Failed to fetch data', error);
