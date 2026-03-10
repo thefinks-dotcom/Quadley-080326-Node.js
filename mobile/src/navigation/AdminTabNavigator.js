@@ -87,22 +87,22 @@ function DashboardStack() {
       
       {/* Admin-specific Screens */}
       <Stack.Screen name="StudentView" component={StudentViewScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: 'User Management' }} />
-      <Stack.Screen name="AdminEvents" component={AdminEventsScreen} options={{ title: 'Events Management' }} />
-      <Stack.Screen name="AdminAnnouncements" component={AdminAnnouncementsScreen} options={{ title: 'News' }} />
-      <Stack.Screen name="AdminJobs" component={AdminJobsScreen} options={{ title: 'Job Management' }} />
-      <Stack.Screen name="AdminServiceRequests" component={AdminServiceRequestsScreen} options={{ title: 'Service Requests' }} />
-      <Stack.Screen name="AdminRecognition" component={AdminRecognitionScreen} options={{ title: 'Shoutouts' }} />
-      <Stack.Screen name="AdminReports" component={AdminReportsScreen} options={{ title: 'Reports & Insights' }} />
+      <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminEvents" component={AdminEventsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminAnnouncements" component={AdminAnnouncementsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminJobs" component={AdminJobsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminServiceRequests" component={AdminServiceRequestsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminRecognition" component={AdminRecognitionScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminReports" component={AdminReportsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AnnualDisclosureReport" component={AnnualDisclosureReportScreen} options={{ headerShown: false }} />
       <Stack.Screen name="StudentReports" component={StudentReportsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TenantManagement" component={TenantManagementScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TenantDetail" component={TenantDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TenantBranding" component={TenantBrandingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AnalyticsReports" component={AnalyticsReportsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AdminDiningMenu" component={AdminDiningMenuScreen} options={{ title: 'Manage Dining Menu' }} />
-      <Stack.Screen name="AdminCsvTemplates" component={AdminCsvTemplatesScreen} options={{ title: 'CSV Templates' }} />
-      <Stack.Screen name="AdminSetupStats" component={AdminSetupStatsScreen} options={{ title: 'Account Setup Stats' }} />
+      <Stack.Screen name="AdminDiningMenu" component={AdminDiningMenuScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminCsvTemplates" component={AdminCsvTemplatesScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminSetupStats" component={AdminSetupStatsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminActivities" component={AdminActivitiesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminMessages" component={AdminMessagesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSafeDisclosures" component={AdminSafeDisclosuresScreen} options={{ headerShown: false }} />
@@ -168,7 +168,7 @@ function ProfileStack() {
     >
       <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-      <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ title: 'Admin Settings' }} />
+      <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: 'Notification Settings' }} />
     </Stack.Navigator>
   );
