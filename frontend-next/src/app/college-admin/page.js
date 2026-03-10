@@ -281,8 +281,8 @@ const CollegeAdminDashboard = () => {
         axios.get(`${API}/api/announcements`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/api/shoutouts`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/api/cocurricular/groups/all`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/jobs`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/jobs/admin/all-applications`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/jobs`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/jobs/admin/all-applications`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/messages`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/api/parcels`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
       ]);
