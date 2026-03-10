@@ -279,6 +279,7 @@ class MessageCreate(BaseModel):
     group_id: Optional[str] = None
     content: str
     file_url: Optional[str] = None
+    force_send: bool = False
 
 class MessageGroup(BaseModel):
     model_config = ConfigDict(extra="ignore")

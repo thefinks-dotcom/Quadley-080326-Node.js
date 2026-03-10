@@ -30,6 +30,7 @@ import AdminActivitiesScreen from '../screens/admin/AdminActivitiesScreen';
 import AdminSafeDisclosuresScreen from '../screens/admin/AdminSafeDisclosuresScreen';
 import RelationshipDisclosuresScreen from '../screens/admin/RelationshipDisclosuresScreen';
 import GBVTrainingScreen from '../screens/admin/GBVTrainingScreen';
+import AdminMessageReportsScreen from '../screens/admin/AdminMessageReportsScreen';
 
 import { colors } from '../theme';
 import { useAppTheme } from '../contexts/ThemeContext';
@@ -106,6 +107,7 @@ function DashboardStack() {
       <Stack.Screen name="AdminSetupStats" component={AdminSetupStatsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminActivities" component={AdminActivitiesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminMessages" component={AdminMessagesScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminMessageReports" component={AdminMessageReportsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSafeDisclosures" component={AdminSafeDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RelationshipDisclosures" component={RelationshipDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="GBVTraining" component={GBVTrainingScreen} options={{ headerShown: false }} />

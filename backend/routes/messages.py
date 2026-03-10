@@ -157,8 +157,8 @@ async def send_message(
     # Sanitize message content
     clean_content = sanitize_html(msg_data.content, max_length=5000)
 
-    # AI CONTENT MODERATION (optional, per-tenant)
-    ai_flag = await _check_ai_moderation(clean_content, current_user.tenant_code)
+    # AI CONTENT MODERATION (optional, per-tenant) — skipped when user explicitly overrides nudge
+    ai_flag = None if msg_data.force_send else await _check_ai_moderation(clean_content, current_user.tenant_code)
     if ai_flag:
         flagged_cats = [
             k.replace("/", " / ").replace("_", " ")
