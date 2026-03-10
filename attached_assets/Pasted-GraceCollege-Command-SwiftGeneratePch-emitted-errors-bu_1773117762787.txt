@@ -1,0 +1,75 @@
+GraceCollege
+Command SwiftGeneratePch emitted errors but did not return a nonzero exit code to indicate failure
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXApplication/EXApplication.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXConstants/EXConstants.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXNotifications/EXNotifications.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/Expo/Expo.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoAsset/ExpoAsset.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoClipboard/ExpoClipboard.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoDevice/ExpoDevice.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoDocumentPicker/ExpoDocumentPicker.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoFileSystem/ExpoFileSystem.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoFont/ExpoFont.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoImagePicker/ExpoImagePicker.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoKeepAwake/ExpoKeepAwake.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoLinearGradient/ExpoLinearGradient.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoModulesCore/ExpoModulesCore.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSecureStore/ExpoSecureStore.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSharing/ExpoSharing.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSplashScreen/ExpoSplashScreen.modulemap' not found
+
+Command PrecompileSwiftBridgingHeader emitted errors but did not return a nonzero exit code to indicate failure
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXApplication/EXApplication.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXConstants/EXConstants.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/EXNotifications/EXNotifications.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/Expo/Expo.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoAsset/ExpoAsset.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoClipboard/ExpoClipboard.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoDevice/ExpoDevice.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoDocumentPicker/ExpoDocumentPicker.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoFileSystem/ExpoFileSystem.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoFont/ExpoFont.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoImagePicker/ExpoImagePicker.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoKeepAwake/ExpoKeepAwake.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoLinearGradient/ExpoLinearGradient.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoModulesCore/ExpoModulesCore.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSecureStore/ExpoSecureStore.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSharing/ExpoSharing.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift Module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/GraceCollege-ewljgvxgkcnxpqgwjacdwhnjcdhq/Build/Intermediates.noindex/ArchiveIntermediates/GraceCollege/BuildProductsPath/Release-iphoneos/ExpoSplashScreen/ExpoSplashScreen.modulemap' not found
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/GraceCollege/AppDelegate.swift:1:8 No such module 'Expo'
