@@ -75,7 +75,7 @@ export default function AcademicsScreen({ navigation }) {
       Alert.alert('Success', 'Study group created!');
       setModalVisible(false);
       setNewGroup({ subject: '', topic: '', location: '', max_members: '6', description: '' });
-      queryClient.invalidateQueries(['studyGroups']);
+      queryClient.invalidateQueries({ queryKey: ['studyGroups'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create study group');
@@ -89,7 +89,7 @@ export default function AcademicsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Joined study group!');
-      queryClient.invalidateQueries(['studyGroups']);
+      queryClient.invalidateQueries({ queryKey: ['studyGroups'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to join group');

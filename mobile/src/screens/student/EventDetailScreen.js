@@ -50,9 +50,9 @@ export default function EventDetailScreen({ route, navigation }) {
       return response.data;
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['events']);
-      queryClient.invalidateQueries(['eventRsvp', event.id]);
-      queryClient.invalidateQueries(['calendar']);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['eventRsvp', event.id] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
       const statusMsg = variables === 'attending' ? 'You are attending this event!' : 'You have declined this event.';
       Alert.alert('RSVP Updated', statusMsg);
     },

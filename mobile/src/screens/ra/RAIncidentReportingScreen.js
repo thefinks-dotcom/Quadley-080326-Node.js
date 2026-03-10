@@ -84,7 +84,7 @@ export default function RAIncidentReportingScreen({ navigation }) {
         action_taken: '',
         follow_up_required: false,
       });
-      queryClient.invalidateQueries(['raIncidents']);
+      queryClient.invalidateQueries({ queryKey: ['raIncidents'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');

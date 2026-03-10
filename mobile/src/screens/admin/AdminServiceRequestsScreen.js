@@ -53,7 +53,7 @@ export default function AdminServiceRequestsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Request status updated!');
-      queryClient.invalidateQueries(['adminServiceRequests']);
+      queryClient.invalidateQueries({ queryKey: ['adminServiceRequests'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update status');

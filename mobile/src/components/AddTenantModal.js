@@ -152,8 +152,8 @@ export default function AddTenantModal({ visible, onClose, onSuccess }) {
         [{ text: 'OK', onPress: () => onSuccess?.() }]
       );
       resetForm();
-      queryClient.invalidateQueries(['tenants']);
-      queryClient.invalidateQueries(['cross-tenant-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['cross-tenant-analytics'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create college');

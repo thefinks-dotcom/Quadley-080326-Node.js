@@ -58,7 +58,7 @@ export default function MaintenanceScreen() {
       Alert.alert('Success', 'Maintenance request submitted!');
       setModalVisible(false);
       setNewRequest({ title: '', description: '', category: 'general', priority: 'normal', room_number: '' });
-      queryClient.invalidateQueries(['maintenanceRequests']);
+      queryClient.invalidateQueries({ queryKey: ['maintenanceRequests'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to submit request');

@@ -100,7 +100,7 @@ export default function AdminSafeDisclosuresScreen({ navigation }) {
       Alert.alert('Success', 'Disclosure forwarded successfully');
       setForwardModalVisible(false);
       resetForwardForm();
-      queryClient.invalidateQueries(['safeDisclosures']);
+      queryClient.invalidateQueries({ queryKey: ['safeDisclosures'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to forward disclosure');
@@ -114,8 +114,8 @@ export default function AdminSafeDisclosuresScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['safeDisclosures']);
-      queryClient.invalidateQueries(['disclosureStats']);
+      queryClient.invalidateQueries({ queryKey: ['safeDisclosures'] });
+      queryClient.invalidateQueries({ queryKey: ['disclosureStats'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update status');
@@ -132,8 +132,8 @@ export default function AdminSafeDisclosuresScreen({ navigation }) {
       Alert.alert('Success', 'Risk assessment completed');
       setRiskModalVisible(false);
       resetRiskForm();
-      queryClient.invalidateQueries(['safeDisclosures']);
-      queryClient.invalidateQueries(['disclosureStats']);
+      queryClient.invalidateQueries({ queryKey: ['safeDisclosures'] });
+      queryClient.invalidateQueries({ queryKey: ['disclosureStats'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to complete risk assessment');
@@ -151,8 +151,8 @@ export default function AdminSafeDisclosuresScreen({ navigation }) {
       setResolveModalVisible(false);
       setResolutionNotes('');
       setDetailModalVisible(false);
-      queryClient.invalidateQueries(['safeDisclosures']);
-      queryClient.invalidateQueries(['disclosureStats']);
+      queryClient.invalidateQueries({ queryKey: ['safeDisclosures'] });
+      queryClient.invalidateQueries({ queryKey: ['disclosureStats'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to resolve disclosure');

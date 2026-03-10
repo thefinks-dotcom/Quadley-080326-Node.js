@@ -73,7 +73,7 @@ export default function AdminActivitiesScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminActivities']);
+      queryClient.invalidateQueries({ queryKey: ['adminActivities'] });
       Alert.alert('Success', 'Activity created');
       closeModal();
     },
@@ -89,7 +89,7 @@ export default function AdminActivitiesScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminActivities']);
+      queryClient.invalidateQueries({ queryKey: ['adminActivities'] });
       Alert.alert('Success', 'Activity updated');
       closeModal();
     },
@@ -105,7 +105,7 @@ export default function AdminActivitiesScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminActivities']);
+      queryClient.invalidateQueries({ queryKey: ['adminActivities'] });
       Alert.alert('Success', 'Activity deleted');
     },
     onError: (error) => {

@@ -107,7 +107,7 @@ export default function TenantManagementScreen({ navigation }) {
       );
       setAddModalVisible(false);
       resetNewTenant();
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create tenant');
@@ -124,7 +124,7 @@ export default function TenantManagementScreen({ navigation }) {
       Alert.alert('Success', 'Tenant suspended');
       setActionModalType(null);
       setSelectedTenant(null);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to suspend tenant');
@@ -141,7 +141,7 @@ export default function TenantManagementScreen({ navigation }) {
       Alert.alert('Success', 'Tenant reactivated');
       setActionModalType(null);
       setSelectedTenant(null);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to reactivate tenant');

@@ -221,8 +221,8 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
 
       // Invalidate relevant queries
       if (templateKey === 'users') {
-        queryClient.invalidateQueries(['adminUsers']);
-        queryClient.invalidateQueries(['setupStats']);
+        queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+        queryClient.invalidateQueries({ queryKey: ['setupStats'] });
       } else if (templateKey === 'dining_menu') {
         // Invalidate ALL dining menu queries (with any date key)
         queryClient.invalidateQueries({ queryKey: ['adminDiningMenu'] });

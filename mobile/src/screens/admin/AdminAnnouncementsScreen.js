@@ -83,9 +83,9 @@ export default function AdminAnnouncementsScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminAnnouncements']);
-      queryClient.invalidateQueries(['announcements']);
-      queryClient.invalidateQueries(['announcementReadStats']);
+      queryClient.invalidateQueries({ queryKey: ['adminAnnouncements'] });
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ['announcementReadStats'] });
       setModalVisible(false);
       setNewAnnouncement({ title: '', content: '', priority: 'normal', emergency: false, expires_at: '' });
       Alert.alert('Success', 'News item posted');

@@ -173,7 +173,7 @@ export default function TenantDetailScreen({ route, navigation }) {
       setNewAdminEmail('');
       setAddAdminModalVisible(false);
       refetchAdmins();
-      queryClient.invalidateQueries(['tenant-users', initialTenant.code]);
+      queryClient.invalidateQueries({ queryKey: ['tenant-users', initialTenant.code] });
     } catch (error) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to add admin');
     } finally {
@@ -237,8 +237,8 @@ export default function TenantDetailScreen({ route, navigation }) {
     onSuccess: () => {
       Alert.alert('Success', 'Modules updated successfully');
       setModulesModalVisible(false);
-      queryClient.invalidateQueries(['tenant', tenant.code]);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.code] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
     },
     onError: (error) => {
       console.log('Update modules error:', error);
@@ -309,7 +309,7 @@ export default function TenantDetailScreen({ route, navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'College suspended');
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
       navigation.goBack();
     },
     onError: (error) => {
@@ -325,8 +325,8 @@ export default function TenantDetailScreen({ route, navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'College reactivated');
-      queryClient.invalidateQueries(['tenant', tenant.code]);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.code] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
       refetch();
     },
     onError: (error) => {
@@ -342,8 +342,8 @@ export default function TenantDetailScreen({ route, navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Deleted', 'College has been permanently deleted');
-      queryClient.invalidateQueries(['tenants']);
-      queryClient.invalidateQueries(['cross-tenant-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['cross-tenant-analytics'] });
       navigation.goBack();
     },
     onError: (error) => {
@@ -396,8 +396,8 @@ export default function TenantDetailScreen({ route, navigation }) {
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['tenant', tenant.code]);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.code] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
       Alert.alert('Success', `Subscription updated to ${data.subscription_tier}`);
       setBillingModalVisible(false);
     },
@@ -420,8 +420,8 @@ export default function TenantDetailScreen({ route, navigation }) {
       });
       Alert.alert('Success', 'Contact person updated');
       setContactModalVisible(false);
-      queryClient.invalidateQueries(['tenant', tenant.code]);
-      queryClient.invalidateQueries(['tenants']);
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.code] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
       refetch();
     } catch (error) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update contact person');

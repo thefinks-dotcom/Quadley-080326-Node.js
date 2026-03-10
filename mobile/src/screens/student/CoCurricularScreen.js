@@ -111,7 +111,7 @@ export default function CoCurricularScreen() {
     onSuccess: () => {
       Alert.alert('Success', 'You have signed up for this activity!');
       setDetailModalVisible(false);
-      queryClient.invalidateQueries(['cocurricularActivities']);
+      queryClient.invalidateQueries({ queryKey: ['cocurricularActivities'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to sign up');
