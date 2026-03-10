@@ -101,6 +101,7 @@ Request ID: ${request.id}
         if (supported) {
           Linking.openURL(mailtoUrl);
           setShowEmailModal(false);
+          handleStatusChange(selectedRequest);
         } else {
           Alert.alert('Error', 'Email is not supported on this device');
         }
