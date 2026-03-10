@@ -49,6 +49,8 @@ const CollegeUserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [editEmail, setEditEmail] = useState('');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
   const [newUser, setNewUser] = useState({
     first_name: '',
     last_name: '',
@@ -117,22 +119,32 @@ const CollegeUserManagement = () => {
 
   const handleEditUser = async (e) => {
     e.preventDefault();
-    if (!editEmail.trim()) return;
+    if (!editFirstName.trim() || !editLastName.trim()) {
+      toast.error('First and last name are required');
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editEmail.trim())) {
+    if (editEmail.trim() && !emailRegex.test(editEmail.trim())) {
       toast.error('Please enter a valid email address');
       return;
     }
+    const payload = {
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
+      ...(editEmail.trim() && { email: editEmail.trim().toLowerCase() }),
+    };
     setActionLoading(true);
     try {
-      await axios.patch(`/api/admin/users/${selectedUser.id}/email`, { email: editEmail.trim().toLowerCase() });
-      toast.success('Email updated successfully');
+      await axios.patch(`/api/admin/users/${selectedUser.id}/details`, payload);
+      toast.success('User details updated');
       setShowEditDialog(false);
       setSelectedUser(null);
       setEditEmail('');
+      setEditFirstName('');
+      setEditLastName('');
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update email');
+      toast.error(error.response?.data?.detail || 'Failed to update user details');
     } finally {
       setActionLoading(false);
     }
@@ -260,7 +272,7 @@ const CollegeUserManagement = () => {
                         <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(user)}>
                           {user.active !== false ? <XCircle className="h-4 w-4 text-primary" /> : <CheckCircle className="h-4 w-4 text-success" />}
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setEditEmail(user.email); setShowEditDialog(true); }}>
+                        <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setEditFirstName(user.first_name || ''); setEditLastName(user.last_name || ''); setEditEmail(user.email || ''); setShowEditDialog(true); }}>
                           <Edit className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
@@ -273,38 +285,58 @@ const CollegeUserManagement = () => {
         </Card>
 
         {/* Edit Email Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={(open) => { setShowEditDialog(open); if (!open) { setSelectedUser(null); setEditEmail(''); } }}>
+        <Dialog open={showEditDialog} onOpenChange={(open) => { setShowEditDialog(open); if (!open) { setSelectedUser(null); setEditEmail(''); setEditFirstName(''); setEditLastName(''); } }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Change Email Address</DialogTitle>
+              <DialogTitle>Edit User Details</DialogTitle>
               <DialogDescription>
-                Correct the email address for {selectedUser?.first_name} {selectedUser?.last_name}.
+                Update the name or email address for this user.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditUser} className="space-y-4">
-              <div>
-                <Label className="text-muted-foreground text-xs">Current email</Label>
-                <p className="text-sm text-foreground mt-1 px-3 py-2 bg-muted rounded-lg">{selectedUser?.email}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="edit-first-name">First name *</Label>
+                  <Input
+                    id="edit-first-name"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    placeholder="First name"
+                    required
+                    autoFocus
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-last-name">Last name *</Label>
+                  <Input
+                    id="edit-last-name"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    placeholder="Last name"
+                    required
+                    className="mt-1"
+                  />
+                </div>
               </div>
               <div>
-                <Label htmlFor="new-email">New email address *</Label>
+                <Label htmlFor="edit-email">Email address *</Label>
                 <Input
-                  id="new-email"
+                  id="edit-email"
                   type="email"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  placeholder="new@example.com"
+                  placeholder="email@example.com"
                   required
-                  autoFocus
                   className="mt-1"
                 />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => { setShowEditDialog(false); setSelectedUser(null); setEditEmail(''); }}>
+                <Button type="button" variant="outline" onClick={() => { setShowEditDialog(false); setSelectedUser(null); setEditEmail(''); setEditFirstName(''); setEditLastName(''); }}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={actionLoading || editEmail === selectedUser?.email}>
-                  {actionLoading ? 'Saving...' : 'Save Email'}
+                <Button type="submit" disabled={actionLoading || (!editFirstName.trim() || !editLastName.trim())}>
+                  {actionLoading ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>
             </form>
