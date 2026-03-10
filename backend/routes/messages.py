@@ -809,6 +809,103 @@ async def action_on_report(
     return {"message": f"Action '{action}' applied to report {report_id}"}
 
 
+@router.get("/admin/conversations")
+async def get_admin_all_conversations(tenant_data: tuple = Depends(get_tenant_db_for_user)):
+    """
+    Admin-level conversations view: returns ALL tenant groups plus the admin's own direct messages.
+    Groups are visible to admins for oversight regardless of membership.
+    Direct messages are scoped to the admin's own conversations.
+    """
+    tenant_db, current_user = tenant_data
+
+    if current_user.role not in ['admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    all_conversations = []
+
+    # 1. Admin's own direct message conversations
+    messages = await tenant_db.messages.find(
+        {
+            "$and": [
+                {"$or": [{"sender_id": current_user.id}, {"receiver_id": current_user.id}]},
+                {"$or": [{"deleted_by": {"$exists": False}}, {"deleted_by": {"$nin": [current_user.id]}}]}
+            ]
+        },
+        {"_id": 0}
+    ).sort("timestamp", -1).to_list(1000)
+
+    conversations_dict = {}
+    for msg in messages:
+        if isinstance(msg.get('timestamp'), str):
+            msg['timestamp'] = datetime.fromisoformat(msg['timestamp'])
+        conv_id = msg.get('conversation_id')
+        if not conv_id or 'receiver_id' not in msg or 'sender_id' not in msg:
+            continue
+        if conv_id not in conversations_dict:
+            other_user_id = msg['receiver_id'] if msg['sender_id'] == current_user.id else msg['sender_id']
+            other_user = await tenant_db.users.find_one({"id": other_user_id}, {"_id": 0, "password": 0})
+            if other_user:
+                unread_count = await tenant_db.messages.count_documents({
+                    "conversation_id": conv_id,
+                    "receiver_id": current_user.id,
+                    "read": False,
+                    "sender_id": {"$ne": current_user.id}
+                })
+                conversations_dict[conv_id] = {
+                    "conversation_id": conv_id,
+                    "type": "direct",
+                    "other_user": {
+                        "id": other_user['id'],
+                        "name": f"{other_user.get('first_name', '')} {other_user.get('last_name', '')}",
+                        "photo_url": other_user.get('photo_url'),
+                        "role": other_user.get('role')
+                    },
+                    "last_message": msg,
+                    "unread_count": unread_count,
+                    "timestamp": msg['timestamp']
+                }
+
+    all_conversations.extend(conversations_dict.values())
+
+    # 2. ALL active groups in the tenant (not just admin's own groups)
+    groups = await tenant_db.message_groups.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).to_list(1000)
+
+    for group in groups:
+        if isinstance(group.get('created_at'), str):
+            group['created_at'] = datetime.fromisoformat(group['created_at'])
+
+        last_msg = await tenant_db.messages.find_one(
+            {"group_id": group['id']},
+            {"_id": 0},
+            sort=[("timestamp", -1)]
+        )
+        if last_msg and isinstance(last_msg.get('timestamp'), str):
+            last_msg['timestamp'] = datetime.fromisoformat(last_msg['timestamp'])
+
+        unread_count = await tenant_db.messages.count_documents({
+            "group_id": group['id'],
+            "sender_id": {"$ne": current_user.id},
+            "read_by": {"$nin": [current_user.id]}
+        })
+
+        all_conversations.append({
+            "conversation_id": group['id'],
+            "type": "group",
+            "group_name": group['name'],
+            "members": group['members'],
+            "member_names": group.get('member_names', []),
+            "last_message": last_msg,
+            "unread_count": unread_count,
+            "timestamp": last_msg['timestamp'] if last_msg else group['created_at']
+        })
+
+    all_conversations.sort(key=lambda x: x['timestamp'], reverse=True)
+    return all_conversations
+
+
 @router.get("/admin/messages/overview")
 async def get_messages_overview(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get messages overview for college admin (admin only) - no message content for privacy"""
