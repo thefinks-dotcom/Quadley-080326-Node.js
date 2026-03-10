@@ -1,0 +1,121 @@
+Managing The Australian Universities Accord with Quadley 
+
+
+Quadley & the Australian Universities Accord
+How Quadley Meets the National Higher Education Code (Effective 1 January 2026)
+
+Overview
+The Australian Universities Accord Final Report established the National Higher Education Code to Prevent and Respond to Gender-Based Violence (the Code), which came into force on 1 January 2026. The Code applies to all registered higher education providers, including residential colleges affiliated with universities. It sets out five Standards covering prevention, reporting, training, case management, and external escalation.
+Quadley is a purpose-built campus community platform designed to give residential college administrators the tools to meet these obligations — without requiring custom software, legal expertise, or complex workflows.
+
+Standard 1 — Prevention and Risk Reduction
+What the Code requires:
+Pre-employment declarations confirming a candidate has no unresolved GBV finding or investigation before appointment to any staff or RA role
+Identification of the respondent in a GBV case and active management of any conflict or safety risk they pose
+Interim protective measures (alternative accommodation, contact restrictions, supervision arrangements, etc.) imposed promptly and tracked throughout the case
+How Quadley covers it:
+Pre-employment GBV Declarations
+Administrators can open any staff or RA record in the User Management page and record whether a pre-employment declaration has been provided. A green "✓ GBV Declared" badge appears on compliant records; an amber "⚠ No Declaration" badge appears on any staff or RA account where it has not been recorded. Notes fields allow reference numbers or date-of-receipt to be captured alongside the declaration status.
+Respondent Tracking
+Each GBV case in Quadley has a dedicated Respondent tab. Administrators can record the respondent by name (free text, since a respondent may not be a Quadley account holder) or link them to a registered user. This creates a permanent, auditable record of who the subject of the complaint is.
+Interim Measures
+The same Respondent tab hosts a live list of interim measures. Administrators can add measures from a defined set — Alternative Accommodation, Supervision Arrangement, Contact Restriction, Teaching Arrangement, and Other — each with a description, an imposition date, and a record of who imposed it. Measures can be removed as circumstances change. The case list shows a count badge on any case with active measures, so nothing is overlooked.
+
+Standard 2 — Accessible Reporting Pathways
+What the Code requires:
+Clear, accessible channels for students and staff to make disclosures
+Confidential handling with appropriate information about what happens next
+How Quadley covers it:
+Quadley's Safe Disclosure system provides a structured, confidential reporting pathway. Any user can submit a disclosure through the platform. The form captures the nature of the incident, the parties involved, and whether the person is seeking formal action or informal support. The disclosure is immediately visible to authorised administrators only — no other user can access it.
+The system is designed to reduce the barrier to reporting. The form is accessible from within the regular app experience, and the language is intentionally plain and non-legalistic. Users are not required to choose a formal complaint pathway upfront; they can simply disclose and let the college navigate next steps.
+
+Standard 3 — Training and Education
+What the Code requires:
+All staff and RAs must complete mandatory GBV training
+Training must be renewed annually
+Institutions must be able to demonstrate compliance
+How Quadley covers it:
+The GBV Training Compliance Tracker (accessible from the Admin dashboard) gives administrators a real-time view of training status across the entire team. The tracker:
+Lists every admin, RA, and college_admin account with their current training status: Current (green), Expiring Soon (amber — within 60 days), Overdue (red), or Never Trained (grey)
+Shows a compliance rate as a percentage, calculated from current versus total staff
+Allows administrators to record training completions against five defined training types: GBV Disclosure Training, Trauma-Informed Response, Bystander Intervention, Survivor Support Coordination, and Mandatory Reporting Obligations
+Sets an automatic expiry date 365 days from the date of completion, with no manual tracking required
+Flags overdue staff prominently at the top of the page so they cannot be missed
+A one-click "Record Training" flow lets administrators log completions in under 30 seconds — search for the staff member by name, pick the training type, confirm the date, and save. The system recalculates compliance immediately.
+
+Standard 4 — Case Management
+What the Code requires:
+Formal investigations must be completed within 45 business days (approximately 63 calendar days under Quadley's model)
+Cases must have clear status tracking and documented decision points
+Outcomes must be communicated to the complainant, and an appeal window (20 business days / approximately 28 calendar days) must be offered
+How Quadley covers it:
+Every GBV case in Quadley runs on an automated 45-day clock from the date the case is opened. The case list shows:
+Days remaining in green (plenty of time), amber (approaching), or red (deadline passed)
+A clear case status (Open, Under Investigation, Resolved, Closed, On Hold)
+Tabs for Case Details, Evidence, Actions, Respondent, and NSO Escalation within each case
+The Actions tab holds a timestamped log of every action taken — updates, decisions, communications — providing the auditable record the Code requires. Administrators can log outcome communications and record when the appeal window was opened and closed.
+Board Reporting is built in: a summary view shows aggregate case counts, average resolution time, and outstanding cases, ready to be shared with the college board or governing body.
+
+Standard 5 — External Escalation
+What the Code requires:
+Cases that meet the threshold must be escalated to the National Student Ombudsman (NSO)
+Escalation must be recorded with the date and a reference number
+The institution must be able to demonstrate that the escalation occurred
+How Quadley covers it:
+Each GBV case includes an NSO Escalation section in the Actions tab. When an administrator determines that escalation is required, they click "Escalate to National Student Ombudsman", optionally enter the NSO's reference number, and confirm. Quadley records:
+The escalation date
+The NSO reference number (if provided)
+The name of the administrator who initiated the escalation
+Escalated cases are marked with an NSO badge on the case list, making them immediately visible at a glance. The escalation is permanent and auditable — it cannot be removed once recorded.
+
+Relationship Disclosures — Governance Best Practice
+Beyond the five Standards, the Code's broader governance framework requires institutions to proactively manage conflicts of interest arising from personal relationships between staff, between staff and students, and between students in positions of responsibility (e.g., RAs).
+Quadley's Relationship Disclosures module provides:
+A structured log for recording any disclosed relationship — Romantic/Personal Intimate, Close Personal Friendship, Family, Financial Dependency, Prior Supervisory, or Other
+Identification of both parties, their roles, and the date of disclosure
+A status lifecycle: Active → Under Review → Management Plan Issued → Resolved/Closed
+A Management Plan field where administrators can document any arrangement put in place (e.g., supervision changes, reassignment, conflict-of-interest controls)
+A full activity log on each record, showing every update with who made it and when
+All records are fully tenant-isolated — Grace College's disclosures are never visible to another college on the platform.
+
+How Quadley Makes Reporting Simple
+The Code places significant administrative burden on college staff — most of whom are not compliance professionals. Quadley is designed around three principles that reduce that burden:
+1. Everything is in one place. GBV cases, training records, declarations, escalations, relationship disclosures, and reporting metrics are all in the same platform the college already uses for room bookings, maintenance requests, and student communication. There is no separate compliance system to log into.
+2. The system prompts, not the administrator. Overdue training, approaching case deadlines, missing declarations, and un-escalated cases all surface automatically. Administrators do not need to remember what to check — Quadley shows it to them.
+3. Records are built as work happens. Every action taken in Quadley — recording a training completion, updating a case status, logging an interim measure — creates a permanent, timestamped record automatically. When an audit or board report is needed, the evidence is already there. No retrospective documentation is required.
+
+Summary Compliance Map
+Code Standard
+Requirement
+Quadley Feature
+Standard 1
+Pre-employment declarations
+GBV Declaration badge + declaration dialog in User Management
+Standard 1
+Respondent identification
+Respondent tab on GBV cases
+Standard 1
+Interim protective measures
+Interim Measures list on Respondent tab
+Standard 2
+Accessible reporting pathway
+Safe Disclosure form (any authenticated user)
+Standard 3
+Annual mandatory training
+GBV Training Compliance Tracker with expiry and compliance rate
+Standard 4
+45-day case management
+Automated case clock, status tracking, Actions log
+Standard 4
+Board reporting
+Aggregate case metrics and summary view
+Standard 5
+NSO escalation recording
+NSO Escalation section with date and reference number
+Governance
+Relationship conflict-of-interest
+Relationship Disclosures module with management plans
+
+
+All features are fully multi-tenant — each college's data is strictly isolated. Grace College (GRAC7421) administrators access only Grace College records.
+
