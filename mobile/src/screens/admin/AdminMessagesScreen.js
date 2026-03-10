@@ -40,7 +40,7 @@ export default function AdminMessagesScreen({ navigation }) {
   const { data: conversations, isLoading: loadingConversations, refetch: refetchConversations, isRefetching } = useQuery({
     queryKey: ['adminConversations'],
     queryFn: async () => {
-      const response = await api.get('/admin/conversations');
+      const response = await api.get(ENDPOINTS.CONVERSATIONS);
       return response.data || [];
     },
     refetchInterval: 15000,
