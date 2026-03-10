@@ -117,7 +117,6 @@ export default function AnalyticsReportsScreen({ navigation }) {
     'Shoutouts Given': primaryColor,
     'Study Groups': primaryColor,
     'Job Applications': primaryColor,
-    'Safe Disclosures': colors.primary,
     'Room Bookings': colors.error,
   };
 

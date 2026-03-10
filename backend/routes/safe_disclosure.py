@@ -234,7 +234,7 @@ async def get_disclosure_stats(tenant_data: tuple = Depends(get_tenant_db_for_us
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Only admins can view disclosure stats")
     
-    all_disclosures = await tenant_db.safe_disclosures.find({"report_category": "sexual_harm_gbv"}, {"_id": 0}).to_list(1000)
+    all_disclosures = await tenant_db.safe_disclosures.find({}, {"_id": 0}).to_list(1000)
     
     # Count by status
     pending_risk_assessment = sum(1 for d in all_disclosures if d.get("status") == "pending_risk_assessment")

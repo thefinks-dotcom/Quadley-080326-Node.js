@@ -136,7 +136,6 @@ async def get_student_usage_analytics(
             ('bookings', 'Room Bookings'),
             ('parcels', 'Parcels Logged'),
             ('late_meal_requests', 'Late Meal Requests'),
-            ('disclosures', 'Safe Disclosures'),
         ]
         
         for collection, label in collections_to_count:
@@ -153,7 +152,6 @@ async def get_student_usage_analytics(
             'services': feature_usage.get('Service Requests', 0) + feature_usage.get('Room Bookings', 0) + feature_usage.get('Late Meal Requests', 0),
             'academic': feature_usage.get('Study Groups', 0) + feature_usage.get('Job Applications', 0),
             'community': feature_usage.get('Shoutouts Given', 0),
-            'safety': feature_usage.get('Safe Disclosures', 0),
         }
         
         # Calculate engagement rate
