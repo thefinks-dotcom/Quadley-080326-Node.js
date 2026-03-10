@@ -107,7 +107,6 @@ Alice,Brown,alice.brown@college.edu,admin,Floor 3,555-345-6789,ADM001,`;
     setUploadProgress(0);
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
 
@@ -115,10 +114,7 @@ Alice,Brown,alice.brown@college.edu,admin,Floor 3,555-345-6789,ADM001,`;
         `${API}/api/user-provisioning/csv-upload`,
         formData,
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (progressEvent) => {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(progress);
@@ -152,22 +148,27 @@ Alice,Brown,alice.brown@college.edu,admin,Floor 3,555-345-6789,ADM001,`;
 
   return (
     <div className="min-h-screen bg-muted">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          <button
             onClick={() => router.push(isCollegeAdmin ? '/college-admin/users' : '/admin')}
-            variant="ghost"
-            size="icon"
-            className="shrink-0 hover:bg-muted"
+            className="flex items-center gap-1 text-white/70 hover:text-white mb-3 text-sm"
           >
-            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Import Users</h1>
-            <p className="text-muted-foreground text-sm mt-1">Bulk import users from a CSV file</p>
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="flex items-center gap-3">
+            <FileSpreadsheet className="w-7 h-7 text-white" />
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Import Users</h1>
+              <p className="text-white/80 text-sm mt-0.5">Bulk import users from a CSV file</p>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Instructions Card */}
         <Card className="mb-6 bg-white border border-border shadow-sm rounded-xl">
