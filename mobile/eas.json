@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 5.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -26,7 +26,6 @@
       }
     },
     "production": {
-      "autoIncrement": true,
       "cache": {
         "disabled": true
       },
