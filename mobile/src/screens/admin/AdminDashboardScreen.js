@@ -58,15 +58,19 @@ export default function AdminDashboardScreen({ navigation }) {
     { title: 'News', icon: 'megaphone', screen: 'AdminAnnouncements', count: stats?.total_announcements },
     { title: 'Dining Menu', icon: 'restaurant', screen: 'AdminDiningMenu', description: 'Manage daily menus' },
     { title: 'Service Requests', icon: 'construct', screen: 'AdminServiceRequests', count: stats?.pending_requests },
-    { title: 'Safe Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Manage disclosures' },
-    { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
-    { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
     { title: 'Events', icon: 'calendar', screen: 'AdminEvents', count: stats?.total_events },
     { title: 'Job Postings', icon: 'briefcase', screen: 'AdminJobs', count: stats?.active_jobs },
     { title: 'Recognition', icon: 'star', screen: 'AdminRecognition', count: stats?.total_shoutouts },
     { title: 'Activities', icon: 'football', screen: 'AdminActivities', description: 'Clubs, sports & activities' },
     { title: 'User Management', icon: 'people', screen: 'AdminUsers', count: stats?.total_users },
     { title: 'CSV Templates', icon: 'document-text', screen: 'AdminCsvTemplates', description: 'Download & upload templates' },
+  ];
+
+  // RA Reports section items
+  const raReportsItems = [
+    { title: 'Safe Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Confidential incident reports' },
+    { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
+    { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
   ];
 
   // Reports section items — unified icon color
@@ -243,6 +247,61 @@ export default function AdminDashboardScreen({ navigation }) {
                   </Text>
                 )}
                 {item.description && item.count === undefined && (
+                  <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+                    {item.description}
+                  </Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* RA Reports Section */}
+        <View style={{ padding: spacing.xl, paddingBottom: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+            <View style={{ width: 3, height: 14, borderRadius: 2, backgroundColor: primaryColor, marginRight: spacing.sm }} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textTertiary, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+              RA Reports
+            </Text>
+          </View>
+          {raReportsItems.map((item, index) => (
+            <TouchableOpacity
+              key={`ra-${item.screen}-${index}`}
+              onPress={() => navigation.navigate(item.screen)}
+              data-testid={`ra-${item.screen}`}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: borderRadius.lg,
+                padding: spacing.lg,
+                marginBottom: spacing.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                shadowColor: colors.textPrimary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 8,
+                elevation: 3,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  backgroundColor: colors.surfaceSecondary,
+                  borderRadius: borderRadius.md,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: spacing.lg,
+                }}
+              >
+                <Ionicons name={item.icon} size={22} color={iconColor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                  {item.title}
+                </Text>
+                {item.description && (
                   <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
                     {item.description}
                   </Text>
