@@ -44,9 +44,18 @@ const MessagesModule = () => {
   const { user } = useContext(AuthContext);
   const router = useRouter();
   const [view, setView] = useState('list');
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('msg_convs');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [initialLoading, setInitialLoading] = useState(() => {
+    try { return !sessionStorage.getItem('msg_convs'); } catch { return true; }
+  });
   const [selectedConv, setSelectedConv] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState('');
@@ -69,6 +78,7 @@ const MessagesModule = () => {
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
   const textareaRef = useRef(null);
+  const lastMessagesRef = useRef([]);
 
   useEffect(() => {
     fetchConversations();
@@ -93,19 +103,31 @@ const MessagesModule = () => {
   const fetchConversations = async () => {
     try {
       const res = await axios.get(`${API}/conversations`);
-      setConversations(Array.isArray(res.data) ? res.data : []);
+      if (Array.isArray(res.data)) {
+        setConversations(res.data);
+        try { sessionStorage.setItem('msg_convs', JSON.stringify(res.data)); } catch {}
+      }
     } catch {}
+    finally { setInitialLoading(false); }
   };
 
   const fetchMessages = async () => {
-    if (!selectedConv) return;
+    if (!selectedConv || selectedConv._pending) return;
     try {
       const endpoint = selectedConv.type === 'group'
         ? `${API}/message-groups/${selectedConv.conversation_id}/messages`
         : `${API}/conversations/${selectedConv.conversation_id}/messages`;
       const res = await axios.get(endpoint);
-      setMessages(res.data);
+      if (Array.isArray(res.data)) {
+        const newIds = res.data.map(m => m.id).join(',');
+        const oldIds = lastMessagesRef.current.map(m => m.id).join(',');
+        if (newIds !== oldIds) {
+          lastMessagesRef.current = res.data;
+          setMessages(res.data);
+        }
+      }
     } catch {}
+    finally { setMessagesLoading(false); }
   };
 
   const markRead = async () => {
@@ -130,8 +152,10 @@ const MessagesModule = () => {
   };
 
   const openConv = (conv) => {
+    lastMessagesRef.current = [];
     setSelectedConv(conv);
     setMessages([]);
+    setMessagesLoading(true);
     setView('chat');
     setTimeout(() => textareaRef.current?.focus(), 300);
   };
@@ -186,6 +210,16 @@ const MessagesModule = () => {
         ? { group_id: selectedConv.conversation_id, content }
         : { receiver_id: selectedConv.other_user?.id, content };
       await axios.post(`${API}/messages`, data);
+
+      if (selectedConv._pending) {
+        const convRes = await axios.get(`${API}/conversations`);
+        if (Array.isArray(convRes.data)) {
+          setConversations(convRes.data);
+          try { sessionStorage.setItem('msg_convs', JSON.stringify(convRes.data)); } catch {}
+          const realConv = convRes.data.find(c => c.type === 'direct' && c.other_user?.id === selectedConv.other_user?.id);
+          if (realConv) setSelectedConv(realConv);
+        }
+      }
       fetchMessages();
       fetchConversations();
     } catch (err) {
@@ -230,26 +264,44 @@ const MessagesModule = () => {
   const startConversation = async () => {
     if (!selectedUsers.length) { toast.error('Select at least one person'); return; }
     try {
-      let newConvId = null;
       if (selectedUsers.length === 1) {
-        await axios.post(`${API}/messages`, { receiver_id: selectedUsers[0].id, content: 'Hi!' });
+        const target = selectedUsers[0];
+        const existing = conversations.find(c => c.type === 'direct' && c.other_user?.id === target.id);
+        setSelectedUsers([]);
+        setGroupName('');
+        setUserSearch('');
+        if (existing) {
+          openConv(existing);
+        } else {
+          const tempConv = {
+            conversation_id: `new-${target.id}`,
+            type: 'direct',
+            other_user: { id: target.id, name: `${target.first_name} ${target.last_name}`.trim(), role: target.role },
+            last_message: null,
+            unread_count: 0,
+            members: [target.id],
+            _pending: true,
+          };
+          openConv(tempConv);
+        }
       } else {
         if (!groupName.trim()) { toast.error('Enter a group name'); return; }
         const res = await axios.post(`${API}/message-groups`, {
           name: groupName, member_ids: selectedUsers.map(u => u.id),
         });
-        newConvId = res.data.id;
+        const newConvId = res.data.id;
+        const convRes = await axios.get(`${API}/conversations`);
+        if (Array.isArray(convRes.data)) {
+          setConversations(convRes.data);
+          try { sessionStorage.setItem('msg_convs', JSON.stringify(convRes.data)); } catch {}
+        }
+        const conv = convRes.data.find(c => c.type === 'group' && c.conversation_id === newConvId);
+        setSelectedUsers([]);
+        setGroupName('');
+        setUserSearch('');
+        if (conv) openConv(conv);
+        else setView('list');
       }
-      const convRes = await axios.get(`${API}/conversations`);
-      setConversations(convRes.data);
-      const conv = selectedUsers.length === 1
-        ? convRes.data.find(c => c.type === 'direct' && c.other_user?.id === selectedUsers[0].id)
-        : convRes.data.find(c => c.type === 'group' && c.conversation_id === newConvId);
-      setSelectedUsers([]);
-      setGroupName('');
-      setUserSearch('');
-      if (conv) openConv(conv);
-      else setView('list');
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start conversation');
     }
@@ -369,7 +421,12 @@ const MessagesModule = () => {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: '#F5F4FB', minHeight: 0 }}>
-          {messages.length === 0 ? (
+          {messagesLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: `${colorFrom}44`, borderTopColor: colorFrom }} />
+            </div>
+          ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center pb-8">
               <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-3"
                 style={{ background: `${colorFrom}22` }}>
@@ -775,7 +832,19 @@ const MessagesModule = () => {
 
       {/* Conversation list */}
       <div className="flex-1 px-4 pt-3 pb-24">
-        {filteredConvs.length === 0 ? (
+        {initialLoading ? (
+          <div className="flex flex-col gap-3 pt-2">
+            {[1,2,3].map(i => (
+              <div key={i} className="flex items-center gap-3 p-3.5 rounded-2xl animate-pulse">
+                <div className="w-12 h-12 rounded-2xl bg-muted flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-muted rounded-full w-1/3" />
+                  <div className="h-3 bg-muted rounded-full w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredConvs.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <MessageSquare className="h-8 w-8 text-primary/40" />
