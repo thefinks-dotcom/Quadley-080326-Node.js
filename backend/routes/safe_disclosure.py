@@ -206,15 +206,16 @@ async def create_safe_disclosure(
 async def get_safe_disclosures(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get safe disclosures (admin only see all, students/RAs see their own) - tenant isolated"""
     tenant_db, current_user = tenant_data
+    GBV_FILTER = {"report_category": "sexual_harm_gbv"}
     if current_user.role in ["admin", "super_admin", "superadmin", "college_admin"]:
         disclosures = await tenant_db.safe_disclosures.find(
-            {},
+            GBV_FILTER,
             {"_id": 0}
         ).sort("created_at", -1).to_list(1000)
     else:
-        # Students and RAs only see their own disclosures
+        # Students and RAs only see their own GBV disclosures
         disclosures = await tenant_db.safe_disclosures.find(
-            {"reporter_id": current_user.id},
+            {"reporter_id": current_user.id, **GBV_FILTER},
             {"_id": 0}
         ).sort("created_at", -1).to_list(1000)
     
@@ -233,7 +234,7 @@ async def get_disclosure_stats(tenant_data: tuple = Depends(get_tenant_db_for_us
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Only admins can view disclosure stats")
     
-    all_disclosures = await tenant_db.safe_disclosures.find({}, {"_id": 0}).to_list(1000)
+    all_disclosures = await tenant_db.safe_disclosures.find({"report_category": "sexual_harm_gbv"}, {"_id": 0}).to_list(1000)
     
     # Count by status
     pending_risk_assessment = sum(1 for d in all_disclosures if d.get("status") == "pending_risk_assessment")
