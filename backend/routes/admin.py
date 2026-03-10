@@ -1065,6 +1065,13 @@ class UpdateUserEmailRequest(BaseModel):
     email: EmailStr
 
 
+class UpdateUserDetailsRequest(BaseModel):
+    """Request model for admin editing user details"""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
 @router.patch("/users/{user_id}")
 async def update_user_role(
     user_id: str,
@@ -1180,6 +1187,62 @@ async def update_user_email(
         "old_email": old_email,
         "new_email": new_email
     }
+
+
+@router.patch("/users/{user_id}/details")
+async def update_user_details(
+    user_id: str,
+    update_data: UpdateUserDetailsRequest,
+    tenant_data: tuple = Depends(get_tenant_db_for_user)
+):
+    """
+    Edit a user's name and/or email address. Only admins can do this.
+    Only updates the fields that are provided and differ from the current value.
+    """
+    tenant_db, current_user = tenant_data
+
+    if current_user.role not in ['admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    target_user = await tenant_db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    updates = {}
+
+    if update_data.first_name is not None:
+        first_name = update_data.first_name.strip()
+        if not first_name:
+            raise HTTPException(status_code=400, detail="First name cannot be empty")
+        updates["first_name"] = first_name
+
+    if update_data.last_name is not None:
+        last_name = update_data.last_name.strip()
+        if not last_name:
+            raise HTTPException(status_code=400, detail="Last name cannot be empty")
+        updates["last_name"] = last_name
+
+    if update_data.email is not None:
+        new_email = str(update_data.email).lower().strip()
+        old_email = target_user.get("email", "").lower()
+        if new_email != old_email:
+            existing = await tenant_db.users.find_one({"email": new_email, "id": {"$ne": user_id}})
+            if existing:
+                raise HTTPException(status_code=409, detail="This email address is already in use")
+            updates["email"] = new_email
+            # Keep invitation records in sync
+            tenant_code = current_user.tenant_code
+            await tenant_db.invitations.update_many(
+                {"email": old_email, "tenant_code": tenant_code},
+                {"$set": {"email": new_email}}
+            )
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No changes to save")
+
+    await tenant_db.users.update_one({"id": user_id}, {"$set": updates})
+
+    return {"message": "User details updated", "user_id": user_id, "updated_fields": list(updates.keys())}
 
 
 @router.get("/stats")

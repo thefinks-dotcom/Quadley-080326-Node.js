@@ -41,6 +41,8 @@ export default function AdminUsersScreen({ navigation }) {
   const [emailEditModalVisible, setEmailEditModalVisible] = useState(false);
   const [emailEditUser, setEmailEditUser] = useState(null);
   const [emailEditValue, setEmailEditValue] = useState('');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
   const [newStudent, setNewStudent] = useState({
     email: '',
     first_name: '',
@@ -158,24 +160,30 @@ export default function AdminUsersScreen({ navigation }) {
     },
   });
 
-  const updateUserEmail = useMutation({
-    mutationFn: async ({ userId, email }) => {
-      const response = await api.patch(`/admin/users/${userId}/email`, { email });
+  const updateUserDetails = useMutation({
+    mutationFn: async ({ userId, first_name, last_name, email }) => {
+      const response = await api.patch(`/admin/users/${userId}/details`, { first_name, last_name, email });
       return response.data;
     },
-    onSuccess: (_, variables) => {
-      Alert.alert('Success', `Email updated to ${variables.email}`);
+    onSuccess: () => {
+      Alert.alert('Success', 'User details updated');
       setEmailEditModalVisible(false);
       setEmailEditUser(null);
       setEmailEditValue('');
+      setEditFirstName('');
+      setEditLastName('');
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to update email');
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to update user details');
     },
   });
 
   const handleEmailEditSave = () => {
+    if (!editFirstName.trim() || !editLastName.trim()) {
+      Alert.alert('Error', 'First and last name are required');
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailEditValue.trim()) {
       Alert.alert('Error', 'Please enter an email address');
@@ -185,7 +193,12 @@ export default function AdminUsersScreen({ navigation }) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    updateUserEmail.mutate({ userId: emailEditUser.id, email: emailEditValue.trim().toLowerCase() });
+    updateUserDetails.mutate({
+      userId: emailEditUser.id,
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
+      email: emailEditValue.trim().toLowerCase(),
+    });
   };
 
   const handlePickCSVFile = async () => {
@@ -433,10 +446,12 @@ export default function AdminUsersScreen({ navigation }) {
     }
     
     buttons.push({
-      text: 'Change Email',
+      text: 'Edit Details',
       onPress: () => {
         setEmailEditUser(user);
-        setEmailEditValue(user.email);
+        setEditFirstName(user.first_name || '');
+        setEditLastName(user.last_name || '');
+        setEmailEditValue(user.email || '');
         setEmailEditModalVisible(true);
       },
     });
@@ -928,54 +943,66 @@ export default function AdminUsersScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* Email Edit Modal */}
+      {/* Edit Details Modal */}
       <Modal
         visible={emailEditModalVisible}
         animationType="fade"
         transparent={true}
-        onRequestClose={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); }}
+        onRequestClose={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); setEditFirstName(''); setEditLastName(''); }}
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
           <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: spacing.xxl, width: '100%', maxWidth: 340 }}>
             <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: primaryColor + '15', justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 }}>
-              <Ionicons name="mail-outline" size={26} color={primaryColor} />
+              <Ionicons name="person-outline" size={26} color={primaryColor} />
             </View>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, textAlign: 'center', marginBottom: 4 }}>
-              Change Email
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, textAlign: 'center', marginBottom: 20 }}>
+              Edit Details
             </Text>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 }}>
-              {emailEditUser?.first_name} {emailEditUser?.last_name}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>Current email</Text>
-            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 16, padding: 10, backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md }}>
-              {emailEditUser?.email}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>New email address</Text>
+            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>First name</Text>
+            <TextInput
+              style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 12, fontSize: 15, color: colors.textPrimary, marginBottom: 14, borderWidth: 1, borderColor: primaryColor + '40' }}
+              placeholder="First name"
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="words"
+              autoCorrect={false}
+              value={editFirstName}
+              onChangeText={setEditFirstName}
+            />
+            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>Last name</Text>
+            <TextInput
+              style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 12, fontSize: 15, color: colors.textPrimary, marginBottom: 14, borderWidth: 1, borderColor: primaryColor + '40' }}
+              placeholder="Last name"
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="words"
+              autoCorrect={false}
+              value={editLastName}
+              onChangeText={setEditLastName}
+            />
+            <Text style={{ fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>Email address</Text>
             <TextInput
               style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, padding: 12, fontSize: 15, color: colors.textPrimary, marginBottom: 24, borderWidth: 1, borderColor: primaryColor + '40' }}
-              placeholder="new@example.com"
+              placeholder="email@example.com"
               placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              autoFocus
               value={emailEditValue}
               onChangeText={setEmailEditValue}
             />
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
-                onPress={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); }}
+                onPress={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); setEditFirstName(''); setEditLastName(''); }}
                 style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: colors.surfaceSecondary }}
               >
                 <Text style={{ textAlign: 'center', color: colors.textSecondary, fontWeight: '600' }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleEmailEditSave}
-                disabled={updateUserEmail.isPending}
+                disabled={updateUserDetails.isPending}
                 style={{ flex: 1, paddingVertical: 14, borderRadius: borderRadius.md, backgroundColor: primaryColor }}
               >
                 <Text style={{ textAlign: 'center', color: colors.textInverse, fontWeight: '600' }}>
-                  {updateUserEmail.isPending ? 'Saving...' : 'Save'}
+                  {updateUserDetails.isPending ? 'Saving...' : 'Save'}
                 </Text>
               </TouchableOpacity>
             </View>
