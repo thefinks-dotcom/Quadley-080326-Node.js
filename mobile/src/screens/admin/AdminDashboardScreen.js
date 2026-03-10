@@ -24,7 +24,7 @@ const buildSecondaryColor = Constants.expoConfig?.extra?.secondaryColor;
 export default function AdminDashboardScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { user, isSuperAdmin } = useAuth();
-  const { branding } = useTenant();
+  const { branding, isModuleEnabled } = useTenant();
   const [refreshing, setRefreshing] = React.useState(false);
 
   const primaryColor = branding?.primaryColor || buildPrimaryColor || colors.primary;
@@ -51,27 +51,27 @@ export default function AdminDashboardScreen({ navigation }) {
     { title: 'Tenant Management', icon: 'business', screen: 'TenantManagement', description: 'Manage colleges/institutions' },
   ] : [];
 
-  // Management section items — unified icon color
+  // Management section items — filtered by enabled modules
   const managementItems = [
     ...superAdminItems,
     { title: 'View as Student', icon: 'eye', screen: 'StudentView', description: 'See student experience' },
-    { title: 'News', icon: 'megaphone', screen: 'AdminAnnouncements', count: stats?.total_announcements },
-    { title: 'Dining Menu', icon: 'restaurant', screen: 'AdminDiningMenu', description: 'Manage daily menus' },
-    { title: 'Service Requests', icon: 'construct', screen: 'AdminServiceRequests', count: stats?.pending_requests },
-    { title: 'Events', icon: 'calendar', screen: 'AdminEvents', count: stats?.total_events },
-    { title: 'Job Postings', icon: 'briefcase', screen: 'AdminJobs', count: stats?.active_jobs },
-    { title: 'Recognition', icon: 'star', screen: 'AdminRecognition', count: stats?.total_shoutouts },
-    { title: 'Activities', icon: 'football', screen: 'AdminActivities', description: 'Clubs, sports & activities' },
+    isModuleEnabled('announcements') && { title: 'News', icon: 'megaphone', screen: 'AdminAnnouncements', count: stats?.total_announcements },
+    isModuleEnabled('dining') && { title: 'Dining Menu', icon: 'restaurant', screen: 'AdminDiningMenu', description: 'Manage daily menus' },
+    isModuleEnabled('maintenance') && { title: 'Service Requests', icon: 'construct', screen: 'AdminServiceRequests', count: stats?.pending_requests },
+    isModuleEnabled('events') && { title: 'Events', icon: 'calendar', screen: 'AdminEvents', count: stats?.total_events },
+    isModuleEnabled('jobs') && { title: 'Job Postings', icon: 'briefcase', screen: 'AdminJobs', count: stats?.active_jobs },
+    isModuleEnabled('recognition') && { title: 'Recognition', icon: 'star', screen: 'AdminRecognition', count: stats?.total_shoutouts },
+    isModuleEnabled('cocurricular') && { title: 'Activities', icon: 'football', screen: 'AdminActivities', description: 'Clubs, sports & activities' },
     { title: 'User Management', icon: 'people', screen: 'AdminUsers', count: stats?.total_users },
     { title: 'CSV Templates', icon: 'document-text', screen: 'AdminCsvTemplates', description: 'Download & upload templates' },
-  ];
+  ].filter(Boolean);
 
-  // RA Reports section items
+  // RA Reports section — filtered by enabled modules, hidden entirely if none enabled
   const raReportsItems = [
-    { title: 'Safe Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Confidential incident reports' },
-    { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
-    { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
-  ];
+    isModuleEnabled('safe_disclosure') && { title: 'Safe Disclosures', icon: 'shield', screen: 'AdminSafeDisclosures', description: 'Confidential incident reports' },
+    isModuleEnabled('relationship_disclosures') && { title: 'Relationship Disclosures', icon: 'heart', screen: 'RelationshipDisclosures', description: 'Governance tracking' },
+    isModuleEnabled('gbv_training') && { title: 'GBV Training', icon: 'shield-checkmark', screen: 'GBVTraining', description: 'Staff training compliance' },
+  ].filter(Boolean);
 
   // Reports section items — unified icon color
   const reportsItems = [
@@ -257,8 +257,8 @@ export default function AdminDashboardScreen({ navigation }) {
           ))}
         </View>
 
-        {/* RA Reports Section */}
-        <View style={{ padding: spacing.xl, paddingBottom: 0 }}>
+        {/* RA Reports Section — only shown when at least one RA module is enabled */}
+        {raReportsItems.length > 0 && <View style={{ padding: spacing.xl, paddingBottom: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
             <View style={{ width: 3, height: 14, borderRadius: 2, backgroundColor: primaryColor, marginRight: spacing.sm }} />
             <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textTertiary, letterSpacing: 0.5, textTransform: 'uppercase' }}>
@@ -310,7 +310,7 @@ export default function AdminDashboardScreen({ navigation }) {
               <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           ))}
-        </View>
+        </View>}
 
         {/* Reports Section - Collapsible */}
         <View style={{ padding: spacing.xl, paddingTop: spacing.sm }}>
