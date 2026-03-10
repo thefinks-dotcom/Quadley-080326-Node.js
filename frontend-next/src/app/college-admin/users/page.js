@@ -48,6 +48,7 @@ const CollegeUserManagement = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [editEmail, setEditEmail] = useState('');
   const [newUser, setNewUser] = useState({
     first_name: '',
     last_name: '',
@@ -109,6 +110,29 @@ const CollegeUserManagement = () => {
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create user');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    if (!editEmail.trim()) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editEmail.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await axios.patch(`/api/admin/users/${selectedUser.id}/email`, { email: editEmail.trim().toLowerCase() });
+      toast.success('Email updated successfully');
+      setShowEditDialog(false);
+      setSelectedUser(null);
+      setEditEmail('');
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update email');
     } finally {
       setActionLoading(false);
     }
@@ -236,7 +260,7 @@ const CollegeUserManagement = () => {
                         <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(user)}>
                           {user.active !== false ? <XCircle className="h-4 w-4 text-primary" /> : <CheckCircle className="h-4 w-4 text-success" />}
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setShowEditDialog(true); }}>
+                        <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setEditEmail(user.email); setShowEditDialog(true); }}>
                           <Edit className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
@@ -247,6 +271,45 @@ const CollegeUserManagement = () => {
             </table>
           </div>
         </Card>
+
+        {/* Edit Email Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={(open) => { setShowEditDialog(open); if (!open) { setSelectedUser(null); setEditEmail(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change Email Address</DialogTitle>
+              <DialogDescription>
+                Correct the email address for {selectedUser?.first_name} {selectedUser?.last_name}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground text-xs">Current email</Label>
+                <p className="text-sm text-foreground mt-1 px-3 py-2 bg-muted rounded-lg">{selectedUser?.email}</p>
+              </div>
+              <div>
+                <Label htmlFor="new-email">New email address *</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="new@example.com"
+                  required
+                  autoFocus
+                  className="mt-1"
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => { setShowEditDialog(false); setSelectedUser(null); setEditEmail(''); }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={actionLoading || editEmail === selectedUser?.email}>
+                  {actionLoading ? 'Saving...' : 'Save Email'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Add User Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
