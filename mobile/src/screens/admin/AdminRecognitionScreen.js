@@ -55,7 +55,7 @@ export default function AdminRecognitionScreen({ navigation }) {
       Alert.alert('Success', 'Recognition sent!');
       setCreateModalVisible(false);
       setNewShoutout({ recipient_email: '', message: '', category: 'appreciation' });
-      queryClient.invalidateQueries(['adminShoutouts']);
+      queryClient.invalidateQueries({ queryKey: ['adminShoutouts'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to send recognition');

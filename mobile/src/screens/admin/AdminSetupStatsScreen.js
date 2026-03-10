@@ -48,7 +48,7 @@ export default function AdminSetupStatsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Invitation email resent successfully');
-      queryClient.invalidateQueries(['setupStats']);
+      queryClient.invalidateQueries({ queryKey: ['setupStats'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to resend invitation');
@@ -85,7 +85,7 @@ export default function AdminSetupStatsScreen({ navigation }) {
                 Alert.alert('No Reminders Sent', `Found ${data.total_found} pending users but couldn\'t send reminders. ${data.skipped_expired} had expired invitations.`);
               }
               
-              queryClient.invalidateQueries(['setupStats']);
+              queryClient.invalidateQueries({ queryKey: ['setupStats'] });
             } catch (error) {
               Alert.alert('Error', error.response?.data?.detail || 'Failed to send reminders');
             } finally {

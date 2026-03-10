@@ -84,7 +84,7 @@ export default function AdminEventsScreen({ navigation }) {
     onSuccess: () => {
       Alert.alert('Success', 'Event created successfully!');
       closeModal();
-      queryClient.invalidateQueries(['adminEvents']);
+      queryClient.invalidateQueries({ queryKey: ['adminEvents'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create event');
@@ -115,7 +115,7 @@ export default function AdminEventsScreen({ navigation }) {
     onSuccess: () => {
       Alert.alert('Success', 'Event updated successfully!');
       closeModal();
-      queryClient.invalidateQueries(['adminEvents']);
+      queryClient.invalidateQueries({ queryKey: ['adminEvents'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update event');
@@ -128,7 +128,7 @@ export default function AdminEventsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Event deleted successfully!');
-      queryClient.invalidateQueries(['adminEvents']);
+      queryClient.invalidateQueries({ queryKey: ['adminEvents'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to delete event');

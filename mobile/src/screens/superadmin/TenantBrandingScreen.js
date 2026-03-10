@@ -267,8 +267,8 @@ export default function TenantBrandingScreen({ route, navigation }) {
     onSuccess: () => {
       Alert.alert('Published', 'Brand colors saved and published to all users.');
       setHasChanges(false);
-      queryClient.invalidateQueries(['tenant-branding', initialTenant.code]);
-      queryClient.invalidateQueries(['tenant', initialTenant.code]);
+      queryClient.invalidateQueries({ queryKey: ['tenant-branding', initialTenant.code] });
+      queryClient.invalidateQueries({ queryKey: ['tenant', initialTenant.code] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to save branding');
@@ -284,7 +284,7 @@ export default function TenantBrandingScreen({ route, navigation }) {
       Alert.alert('Reset', 'Branding reset to defaults');
       setBranding(responseData.branding || {});
       setHasChanges(false);
-      queryClient.invalidateQueries(['tenant-branding', initialTenant.code]);
+      queryClient.invalidateQueries({ queryKey: ['tenant-branding', initialTenant.code] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to reset');

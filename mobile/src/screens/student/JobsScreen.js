@@ -59,7 +59,7 @@ export default function JobsScreen({ navigation }) {
       setApplyModalVisible(false);
       setSelectedJob(null);
       setApplicationData({ why_interested: '', availability: '', experience: '', references: '' });
-      queryClient.invalidateQueries(['myJobApplications']);
+      queryClient.invalidateQueries({ queryKey: ['myJobApplications'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to submit application');

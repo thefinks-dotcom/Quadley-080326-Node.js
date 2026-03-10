@@ -69,7 +69,7 @@ export default function AdminUsersScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'User role updated!');
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update user');
@@ -85,7 +85,7 @@ export default function AdminUsersScreen({ navigation }) {
       Alert.alert('Success', `User ${variables.active ? 'activated' : 'deactivated'} successfully!`);
       setStatusModalVisible(false);
       setSelectedUser(null);
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update user status');
@@ -104,7 +104,7 @@ export default function AdminUsersScreen({ navigation }) {
       Alert.alert('Success', message);
       setAddUserModalVisible(false);
       setNewStudent({ email: '', first_name: '', last_name: '', role: 'student', floor: '', room: '' });
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to invite student');
@@ -134,7 +134,7 @@ export default function AdminUsersScreen({ navigation }) {
     onSuccess: (data) => {
       setUploadProgress(100);
       setBulkImportResults(data);
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       setUploadProgress(0);
@@ -365,7 +365,7 @@ export default function AdminUsersScreen({ navigation }) {
         onPress: () => {
           api.post(`/admin/users/${user.id}/activate`).then(res => {
             Alert.alert('Sent!', `Fresh invite sent to ${user.email}\n\nInvite code: ${res.data.invite_code}`);
-            queryClient.invalidateQueries(['adminUsers']);
+            queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
           }).catch(err => {
             Alert.alert('Error', err.response?.data?.detail || 'Failed to send invite');
           });
@@ -387,7 +387,7 @@ export default function AdminUsersScreen({ navigation }) {
                       'User Activated',
                       `Temporary password:\n\n${res.data.temporary_password}\n\nShare this with the user. They must change it on first login.`,
                     );
-                    queryClient.invalidateQueries(['adminUsers']);
+                    queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
                   }).catch(err => {
                     Alert.alert('Error', err.response?.data?.detail || 'Failed to activate');
                   });

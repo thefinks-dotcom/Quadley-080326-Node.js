@@ -69,7 +69,7 @@ export default function RecognitionScreen() {
       setShowPicker(false);
       setSelectedRecipient(null);
       setNewShoutout({ category: 'appreciation', message: '' });
-      queryClient.invalidateQueries(['shoutouts']);
+      queryClient.invalidateQueries({ queryKey: ['shoutouts'] });
     },
     onError: (e) => { Alert.alert('Error', e.response?.data?.detail || 'Failed to send'); },
   });

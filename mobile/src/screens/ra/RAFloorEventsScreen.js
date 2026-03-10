@@ -100,7 +100,7 @@ export default function RAFloorEventsScreen({ navigation, route }) {
       Alert.alert('Success', 'Floor event created!');
       setCreateModalVisible(false);
       setNewEvent({ title: '', description: '', location: '', date: new Date(), time: new Date() });
-      queryClient.invalidateQueries(['floorEvents']);
+      queryClient.invalidateQueries({ queryKey: ['floorEvents'] });
       refetch();
     },
     onError: (error) => {
@@ -125,7 +125,7 @@ export default function RAFloorEventsScreen({ navigation, route }) {
       setEditModalVisible(false);
       setDetailModalVisible(false);
       setSelectedEvent(null);
-      queryClient.invalidateQueries(['floorEvents']);
+      queryClient.invalidateQueries({ queryKey: ['floorEvents'] });
       refetch();
     },
     onError: (error) => {
@@ -141,7 +141,7 @@ export default function RAFloorEventsScreen({ navigation, route }) {
       Alert.alert('Success', 'Event deleted!');
       setDetailModalVisible(false);
       setSelectedEvent(null);
-      queryClient.invalidateQueries(['floorEvents']);
+      queryClient.invalidateQueries({ queryKey: ['floorEvents'] });
       refetch();
     },
     onError: (error) => {

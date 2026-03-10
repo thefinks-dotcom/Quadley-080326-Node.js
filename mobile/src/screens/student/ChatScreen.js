@@ -218,7 +218,7 @@ export default function ChatScreen({ route, navigation }) {
     },
     onSuccess: () => {
       refetch();
-      queryClient.invalidateQueries(['conversations']);
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to delete message');
@@ -233,7 +233,7 @@ export default function ChatScreen({ route, navigation }) {
         } else {
           await api.put(`${ENDPOINTS.MESSAGE_GROUPS}/${id}/read`);
         }
-        queryClient.invalidateQueries(['conversations']);
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       } catch {}
     };
     if (messages?.length > 0) markRead();

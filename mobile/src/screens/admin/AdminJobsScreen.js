@@ -75,7 +75,7 @@ export default function AdminJobsScreen({ navigation }) {
       Alert.alert('Success', 'Job posted successfully!');
       setModalVisible(false);
       setNewJob({ title: '', description: '', category: 'General', hours_per_week: '', pay_rate: '' });
-      queryClient.invalidateQueries(['adminJobs']);
+      queryClient.invalidateQueries({ queryKey: ['adminJobs'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create job');
@@ -91,7 +91,7 @@ export default function AdminJobsScreen({ navigation }) {
       Alert.alert('Success', 'Job updated successfully!');
       setEditModalVisible(false);
       setSelectedJob(null);
-      queryClient.invalidateQueries(['adminJobs']);
+      queryClient.invalidateQueries({ queryKey: ['adminJobs'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update job');
@@ -105,7 +105,7 @@ export default function AdminJobsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Job deleted successfully!');
-      queryClient.invalidateQueries(['adminJobs']);
+      queryClient.invalidateQueries({ queryKey: ['adminJobs'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to delete job');
@@ -119,8 +119,8 @@ export default function AdminJobsScreen({ navigation }) {
     },
     onSuccess: () => {
       Alert.alert('Success', 'Application status updated!');
-      queryClient.invalidateQueries(['adminJobApplications']);
-      queryClient.invalidateQueries(['adminJobs']);
+      queryClient.invalidateQueries({ queryKey: ['adminJobApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['adminJobs'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update status');

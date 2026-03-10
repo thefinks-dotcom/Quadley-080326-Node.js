@@ -48,7 +48,7 @@ export default function DiningScreen({ navigation }) {
       const r = await api.post(ENDPOINTS.LATE_MEALS, { meal_type: mealType, date: format(selectedDate, 'yyyy-MM-dd'), reason: 'Late meal request', dietary_requirements: dietaryRequirements || null });
       return r.data;
     },
-    onSuccess: () => { Alert.alert('Success', 'Late meal requested!'); setLateMealModalVisible(false); setDietaryRequirements(''); queryClient.invalidateQueries(['lateMeals']); },
+    onSuccess: () => { Alert.alert('Success', 'Late meal requested!'); setLateMealModalVisible(false); setDietaryRequirements(''); queryClient.invalidateQueries({ queryKey: ['lateMeals'] }); },
     onError: (e) => { Alert.alert('Error', e.response?.data?.detail || 'Failed to request late meal'); },
   });
   const updateLateMeal = useMutation({
@@ -56,12 +56,12 @@ export default function DiningScreen({ navigation }) {
       const r = await api.put(`${ENDPOINTS.LATE_MEALS}/${requestId}`, { meal_type: mealType, date: selectedRequest?.date || format(selectedDate, 'yyyy-MM-dd'), reason: 'Late meal request', dietary_requirements: dietaryReqs || null });
       return r.data;
     },
-    onSuccess: () => { Alert.alert('Success', 'Request updated!'); setEditRequestModal(false); setSelectedRequest(null); queryClient.invalidateQueries(['lateMeals']); },
+    onSuccess: () => { Alert.alert('Success', 'Request updated!'); setEditRequestModal(false); setSelectedRequest(null); queryClient.invalidateQueries({ queryKey: ['lateMeals'] }); },
     onError: (e) => { Alert.alert('Error', e.response?.data?.detail || 'Failed to update'); },
   });
   const cancelLateMeal = useMutation({
     mutationFn: async (id) => { await api.delete(`${ENDPOINTS.LATE_MEALS}/${id}`); },
-    onSuccess: () => { Alert.alert('Success', 'Request cancelled'); setViewAllRequestsModal(false); queryClient.invalidateQueries(['lateMeals']); },
+    onSuccess: () => { Alert.alert('Success', 'Request cancelled'); setViewAllRequestsModal(false); queryClient.invalidateQueries({ queryKey: ['lateMeals'] }); },
     onError: (e) => { Alert.alert('Error', e.response?.data?.detail || 'Failed to cancel'); },
   });
 

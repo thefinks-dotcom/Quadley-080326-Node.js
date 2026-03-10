@@ -67,8 +67,8 @@ export default function AdminDiningMenuScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminDiningMenu']);
-      queryClient.invalidateQueries(['diningMenu']);
+      queryClient.invalidateQueries({ queryKey: ['adminDiningMenu'] });
+      queryClient.invalidateQueries({ queryKey: ['diningMenu'] });
       setModalVisible(false);
       resetForm();
       Alert.alert('Success', 'Menu item added successfully');
@@ -84,8 +84,8 @@ export default function AdminDiningMenuScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminDiningMenu']);
-      queryClient.invalidateQueries(['diningMenu']);
+      queryClient.invalidateQueries({ queryKey: ['adminDiningMenu'] });
+      queryClient.invalidateQueries({ queryKey: ['diningMenu'] });
       setModalVisible(false);
       resetForm();
       Alert.alert('Success', 'Menu item updated successfully');
@@ -101,8 +101,8 @@ export default function AdminDiningMenuScreen({ navigation }) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['adminDiningMenu']);
-      queryClient.invalidateQueries(['diningMenu']);
+      queryClient.invalidateQueries({ queryKey: ['adminDiningMenu'] });
+      queryClient.invalidateQueries({ queryKey: ['diningMenu'] });
       Alert.alert('Success', 'Menu item deleted');
     },
     onError: (error) => {
@@ -116,8 +116,8 @@ export default function AdminDiningMenuScreen({ navigation }) {
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['adminDiningMenu']);
-      queryClient.invalidateQueries(['diningMenu']);
+      queryClient.invalidateQueries({ queryKey: ['adminDiningMenu'] });
+      queryClient.invalidateQueries({ queryKey: ['diningMenu'] });
       Alert.alert('Success', `Cleared ${data.items_deleted} items for ${dateStr}`);
     },
     onError: (error) => {

@@ -67,7 +67,7 @@ export default function BookingsScreen() {
       Alert.alert('Success', 'Booking confirmed!');
       setBookingModalVisible(false);
       setSelectedFacility(null);
-      queryClient.invalidateQueries(['myBookings']);
+      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
     },
     onError: (error) => {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to create booking');
