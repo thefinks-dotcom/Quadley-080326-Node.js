@@ -73,14 +73,14 @@ export default function AdminDashboardScreen({ navigation }) {
     isModuleEnabled('cocurricular') && { title: 'Activities', icon: 'football', screen: 'AdminActivities', description: 'Clubs, sports & activities' },
   ].filter(Boolean);
 
-  // Reports section items — unified icon color
+  // Reports section items — general analytics always shown; disclosure report only if safe_disclosure is enabled
   const reportsItems = [
     { title: 'Setup Statistics', icon: 'checkmark-done-circle', screen: 'AdminSetupStats', description: 'Account setup completion' },
     { title: 'Analytics', icon: 'stats-chart', screen: 'AnalyticsReports', description: 'Usage & Safety Reports' },
     { title: 'Student Reports', icon: 'search', screen: 'StudentReports', description: 'Search & Activity History' },
     { title: 'Insights', icon: 'bar-chart', screen: 'AdminReports', description: 'Data & Trends' },
-    { title: 'Annual Report', icon: 'shield-checkmark', screen: 'AnnualDisclosureReport', description: 'Disclosure Reports' },
-  ];
+    isModuleEnabled('safe_disclosure') && { title: 'Annual Report', icon: 'shield-checkmark', screen: 'AnnualDisclosureReport', description: 'Disclosure Reports' },
+  ].filter(Boolean);
 
   // Stat cards — use theme status colors only where meaningful
   const statCards = [
