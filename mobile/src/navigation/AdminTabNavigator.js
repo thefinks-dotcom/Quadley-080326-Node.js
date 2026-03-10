@@ -104,6 +104,7 @@ function DashboardStack() {
       <Stack.Screen name="AdminCsvTemplates" component={AdminCsvTemplatesScreen} options={{ title: 'CSV Templates' }} />
       <Stack.Screen name="AdminSetupStats" component={AdminSetupStatsScreen} options={{ title: 'Account Setup Stats' }} />
       <Stack.Screen name="AdminActivities" component={AdminActivitiesScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AdminMessages" component={AdminMessagesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminSafeDisclosures" component={AdminSafeDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RelationshipDisclosures" component={RelationshipDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="GBVTraining" component={GBVTrainingScreen} options={{ headerShown: false }} />
