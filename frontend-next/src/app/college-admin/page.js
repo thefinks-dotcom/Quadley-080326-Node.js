@@ -191,15 +191,13 @@ const CollegeAdminDashboard = () => {
     
     setSearching(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
       const q = query.toLowerCase();
       
       const [usersRes, eventsRes, announcementsRes, groupsRes] = await Promise.all([
-        axios.get(`${API}/api/users/list`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/events`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/announcements`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/cocurricular/groups/all`, { headers }).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/users/list`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/events`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/announcements`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/cocurricular/groups/all`).catch(() => ({ data: [] }))
       ]);
       
       setSearchResults({
@@ -268,23 +266,21 @@ const CollegeAdminDashboard = () => {
   const fetchAllData = async () => {
     setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
-      
       // Fetch admin dashboard data
       const [adminRes, usersRes, eventsRes, maintenanceRes, safetyRes, wellbeingRes, announcementsRes, shoutoutsRes, groupsRes, jobsRes, jobAppsRes, messagesRes, parcelsRes] = await Promise.all([
-        axios.get(`${API}/api/dashboard/admin`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null })),
-        axios.get(`${API}/api/users/list`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/dashboard/admin`).catch(() => ({ data: null })),
+        axios.get(`${API}/api/users/list`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/events`).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/maintenance`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/safe-disclosures/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { urgent_count: 0, pending_risk_assessment: 0 } })),
-        axios.get(`${API}/api/wellbeing-admin/requests/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { urgent_count: 0, total_count: 0 } })),
-        axios.get(`${API}/api/announcements`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/shoutouts`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/cocurricular/groups/all`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/maintenance`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/safe-disclosures/stats`).catch(() => ({ data: { urgent_count: 0, pending_risk_assessment: 0 } })),
+        axios.get(`${API}/api/wellbeing-admin/requests/stats`).catch(() => ({ data: { urgent_count: 0, total_count: 0 } })),
+        axios.get(`${API}/api/announcements`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/shoutouts`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/cocurricular/groups/all`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/jobs`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/jobs/admin/all-applications`).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/messages`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/parcels`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/messages`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/parcels`).catch(() => ({ data: [] }))
       ]);
       
       setAdminData(adminRes.data);
@@ -384,10 +380,7 @@ const CollegeAdminDashboard = () => {
     }
     setParcelSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API}/api/parcels`, newParcel, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/parcels`, newParcel);
       setParcels(prev => [res.data, ...prev]);
       toast.success('Parcel notification sent!');
       setShowAddParcel(false);
@@ -401,10 +394,7 @@ const CollegeAdminDashboard = () => {
 
   const handleMarkParcelCollected = async (parcelId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/parcels/${parcelId}/collect`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/parcels/${parcelId}/collect`, {});
       setParcels(prev => prev.map(p => p.id === parcelId ? { ...p, status: 'collected', collected_at: new Date().toISOString() } : p));
       toast.success('Parcel marked as collected');
     } catch (error) {
