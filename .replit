@@ -16,6 +16,7 @@ UPLOAD_DIR = "/home/runner/workspace/backend/uploads"
 CORS_ORIGINS = "https://064555d4-31a0-460a-86bc-263cb6f956ab-00-e2aiqsdejjpc.picard.replit.dev,http://localhost:5000"
 FRONTEND_URL = "https://064555d4-31a0-460a-86bc-263cb6f956ab-00-e2aiqsdejjpc.picard.replit.dev"
 SENDGRID_FROM_EMAIL = "support@quadley.com"
+DOWNLOAD_SECRET = "6903d75948d70c8a84580e763144e7783885061606f2672fa7a3cb1167a87ef1"
 
 [workflows]
 runButton = "Project"

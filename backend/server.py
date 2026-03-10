@@ -45,15 +45,14 @@ master_db = client["quadley_master"]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Settings with validation (OWASP A02)
-JWT_SECRET = os.environ.get('JWT_SECRET')
+JWT_SECRET: str = os.environ.get('JWT_SECRET') or ''
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 
 # Validate JWT secret at import time
-if JWT_SECRET:
-    if len(JWT_SECRET) < 32:
-        logging.warning("SECURITY WARNING: JWT_SECRET should be at least 32 characters")
-else:
-    logging.warning("SECURITY WARNING: JWT_SECRET is not set")
+if not JWT_SECRET:
+    raise RuntimeError("FATAL: JWT_SECRET environment variable is not set. Cannot start server.")
+if len(JWT_SECRET) < 32:
+    logging.warning("SECURITY WARNING: JWT_SECRET should be at least 32 characters")
 
 # Security
 security = HTTPBearer()
@@ -232,7 +231,7 @@ async def db_health_check(request: Request):
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -359,7 +358,7 @@ LOGIN_ATTEMPTS_CACHE = {}
 MAX_LOGIN_ATTEMPTS = 3
 LOCKOUT_DURATION = timedelta(minutes=15)
 
-async def get_login_attempts(email: str) -> dict:
+async def get_login_attempts(email: str) -> Optional[dict]:
     """Get login attempts from persistent storage"""
     # First check in-memory cache
     if email in LOGIN_ATTEMPTS_CACHE:
@@ -418,14 +417,14 @@ async def is_account_locked(email: str) -> tuple[bool, str]:
     """Check if account is locked out"""
     attempts_doc = await get_login_attempts(email)
     if not attempts_doc:
-        return False, None
+        return False, ""
     
     lockout_until = attempts_doc.get("lockout_until")
     if lockout_until:
         lockout_time = datetime.fromisoformat(lockout_until.replace('Z', '+00:00'))
         if lockout_time > datetime.now(timezone.utc):
             return True, lockout_until
-    return False, None
+    return False, ""
 
 # File upload settings (OWASP A05: Move to env vars)
 UPLOAD_BASE_DIR = os.environ.get("UPLOAD_DIR", "/app/backend/uploads")

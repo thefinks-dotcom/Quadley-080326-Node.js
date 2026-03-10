@@ -324,92 +324,92 @@ const CollegeJobsAdmin = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
+      {/* Coloured Banner */}
+      <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-5 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <button
+              onClick={() => router.push('/college-admin')}
+              className="flex items-center gap-1 text-white/70 hover:text-white mb-2 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </button>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Briefcase className="w-7 h-7 text-white" />
+              College Jobs
+            </h1>
+            <p className="text-white/80 mt-1">Manage job postings and applications</p>
+          </div>
           <button
-            onClick={() => router.push('/college-admin')}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground mb-2 text-sm"
+            onClick={() => { resetJobForm(); setShowJobModal(true); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-lg hover:bg-white/90 transition-colors font-medium"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            <Plus className="w-5 h-5" />
+            Post New Job
           </button>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Briefcase className="w-7 h-7 text-primary" />
-            College Jobs
-          </h1>
-          <p className="text-muted-foreground mt-1">Manage job postings and applications</p>
         </div>
-        <button
-          onClick={() => { resetJobForm(); setShowJobModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Post New Job
-        </button>
-      </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats Cards inside banner */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
           <button
             onClick={() => { setActiveTab('jobs'); setFilterStatus('active'); }}
-            className="bg-white rounded-xl p-4 border border-border hover:border-success hover:shadow-md transition-all text-left"
+            className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-success/10 rounded-lg">
-                <Briefcase className="w-5 h-5 text-success" />
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Briefcase className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.jobs.active}</p>
-                <p className="text-sm text-muted-foreground">Active Jobs</p>
+                <p className="text-2xl font-bold text-white">{stats?.jobs?.active ?? 0}</p>
+                <p className="text-sm text-white/80">Active Jobs</p>
               </div>
             </div>
           </button>
           <button
             onClick={() => { setActiveTab('applications'); setFilterStatus('pending'); }}
-            className="bg-white rounded-xl p-4 border border-border hover:border-warning hover:shadow-md transition-all text-left"
+            className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-warning/10 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-warning" />
+              <div className="p-2 bg-white/20 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.applications.pending}</p>
-                <p className="text-sm text-muted-foreground">Pending Apps</p>
+                <p className="text-2xl font-bold text-white">{stats?.applications?.pending ?? 0}</p>
+                <p className="text-sm text-white/80">Pending Apps</p>
               </div>
             </div>
           </button>
           <button
             onClick={() => { setActiveTab('applications'); setFilterStatus('interview'); }}
-            className="bg-white rounded-xl p-4 border border-border hover:border-border hover:shadow-md transition-all text-left"
+            className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-lg">
-                <Users className="w-5 h-5 text-primary" />
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Users className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.applications.interview}</p>
-                <p className="text-sm text-muted-foreground">Interviews</p>
+                <p className="text-2xl font-bold text-white">{stats?.applications?.interview ?? 0}</p>
+                <p className="text-sm text-white/80">Interviews</p>
               </div>
             </div>
           </button>
           <button
             onClick={() => { setActiveTab('jobs'); setFilterStatus('filled'); }}
-            className="bg-white rounded-xl p-4 border border-border hover:border-border hover:shadow-md transition-all text-left"
+            className="bg-white/20 hover:bg-white/30 rounded-xl p-4 text-left transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-lg">
-                <CheckCircle className="w-5 h-5 text-primary" />
+              <div className="p-2 bg-white/20 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.jobs.filled}</p>
-                <p className="text-sm text-muted-foreground">Positions Filled</p>
+                <p className="text-2xl font-bold text-white">{stats?.jobs?.filled ?? 0}</p>
+                <p className="text-sm text-white/80">Positions Filled</p>
               </div>
             </div>
           </button>
         </div>
-      )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-4 border-b border-border mb-6">

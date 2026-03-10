@@ -316,7 +316,7 @@ const CollegeAdminDashboard = () => {
         upcomingEvents: Array.isArray(eventsRes.data) ? eventsRes.data.filter(e => new Date(e.date) > new Date()).length : 0,
         totalAnnouncements: Array.isArray(announcementsRes.data) ? announcementsRes.data.length : 0,
         totalMessages: Array.isArray(messagesRes.data) ? messagesRes.data.length : 0,
-        pendingRecognitions: Array.isArray(shoutoutsRes.data) ? shoutoutsRes.data.length : 0,
+        pendingRecognitions: Array.isArray(shoutoutsRes.data) ? shoutoutsRes.data.filter(s => s.status !== 'scheduled').length : 0,
         totalGroups: Array.isArray(groupsRes.data) ? groupsRes.data.length : 0,
         activeJobs: activeJobs,
         pendingApplications: pendingApps
@@ -440,7 +440,7 @@ const CollegeAdminDashboard = () => {
     },
     {
       id: 'recognition',
-      name: 'Recognition',
+      name: 'Shoutouts',
       description: 'Manage shoutouts',
       icon: Award,
       color: 'from-warning to-secondary',
@@ -448,7 +448,7 @@ const CollegeAdminDashboard = () => {
       borderColor: 'border-border',
       path: '/college-admin/recognition',
       stat: stats.pendingRecognitions,
-      statLabel: 'total'
+      statLabel: 'posted'
     },
     {
       id: 'events',

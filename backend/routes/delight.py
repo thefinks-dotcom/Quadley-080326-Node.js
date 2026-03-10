@@ -38,7 +38,7 @@ async def get_recognition_participants(
 
     users = await tenant_db.users.find(
         query,
-        {"_id": 0, "id": 1, "first_name": 1, "last_name": 1, "role": 1, "floor": 1}
+        {"_id": 0, "id": 1, "first_name": 1, "last_name": 1, "email": 1, "role": 1, "floor": 1}
     ).sort("first_name", 1).to_list(200)
 
     participants = []
@@ -47,6 +47,7 @@ async def get_recognition_participants(
         participants.append({
             "id": u.get("id"),
             "name": name,
+            "email": u.get("email", ""),
             "role": u.get("role", "student"),
             "floor": u.get("floor"),
         })
