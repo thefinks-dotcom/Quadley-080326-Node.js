@@ -70,7 +70,8 @@ const CollegeAdminDashboard = () => {
     totalGroups: 0,
     activeJobs: 0,
     pendingApplications: 0,
-    wellbeingRequests: 0
+    wellbeingRequests: 0,
+    parcelsPending: 0
   });
   const [adminData, setAdminData] = useState(null);
   const [upcomingEventsList, setUpcomingEventsList] = useState([]);
@@ -315,7 +316,8 @@ const CollegeAdminDashboard = () => {
         pendingRecognitions: Array.isArray(shoutoutsRes.data) ? shoutoutsRes.data.filter(s => s.status !== 'scheduled').length : 0,
         totalGroups: Array.isArray(groupsRes.data) ? groupsRes.data.length : 0,
         activeJobs: activeJobs,
-        pendingApplications: pendingApps
+        pendingApplications: pendingApps,
+        parcelsPending: Array.isArray(parcelsRes.data) ? parcelsRes.data.filter(p => p.status === 'waiting').length : 0
       });
       setParcels(Array.isArray(parcelsRes.data) ? parcelsRes.data : []);
       setParcelUsers(Array.isArray(usersRes.data) ? usersRes.data.filter(u => u.role === 'student' || u.role === 'ra') : []);
@@ -511,6 +513,19 @@ const CollegeAdminDashboard = () => {
       path: '/college-admin/messages',
       stat: stats.totalMessages,
       statLabel: 'total'
+    },
+    {
+      id: 'parcels',
+      name: 'Parcels',
+      description: 'Log & track resident parcels',
+      icon: Package,
+      color: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-amber-50',
+      borderColor: stats.parcelsPending > 0 ? 'border-amber-400' : 'border-border',
+      path: '/college-admin/parcels',
+      stat: stats.parcelsPending,
+      statLabel: 'pending',
+      urgent: stats.parcelsPending > 0
     }
   ];
 
