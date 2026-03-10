@@ -13,6 +13,9 @@
 
 const fs = require('fs');
 const path = require('path');
+// iOS build number — auto-incremented by push_to_github.py on every push.
+// To manually set: change the string below and push.
+const iosBuildNumber = '3';
 
 const TENANT_CONFIGS = {
   quadley: {
@@ -113,6 +116,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: tenantConfig.ios.bundleIdentifier,
+      buildNumber: iosBuildNumber,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },

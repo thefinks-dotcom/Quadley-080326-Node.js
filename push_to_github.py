@@ -3,7 +3,7 @@
 Push current Replit code to GitHub — diff-only, much faster.
 Usage: python3 push_to_github.py "your commit message"
 """
-import subprocess, requests, base64, os, sys, time, hashlib, json
+import subprocess, requests, base64, os, sys, time, hashlib, json, re
 
 TOKEN = os.environ.get("GITHUB_PERSONAL_ACCESS_TOKEN", "")
 OWNER = "thefinks-dotcom"
@@ -102,6 +102,22 @@ files = [
     and not any(f.startswith(p) for p in SKIP_PREFIXES)
     and not any(f.endswith(e) for e in SKIP_EXTENSIONS)
 ]
+
+# --- Step 4b: Auto-increment iOS build number in app.config.js ---
+APP_CONFIG = "mobile/app.config.js"
+try:
+    with open(APP_CONFIG, "r") as fh:
+        cfg = fh.read()
+    m = re.search(r"(const iosBuildNumber = ')(\d+)(';)", cfg)
+    if m:
+        old_build = int(m.group(2))
+        new_build = old_build + 1
+        cfg = cfg[:m.start()] + f"{m.group(1)}{new_build}{m.group(3)}" + cfg[m.end():]
+        with open(APP_CONFIG, "w") as fh:
+            fh.write(cfg)
+        print(f"  iOS build number bumped: {old_build} → {new_build}")
+except Exception as e:
+    print(f"  Warning: could not bump iOS build number: {e}")
 
 # --- Step 5: Diff — find only files that changed ---
 print(f"Diffing {len(files)} local files against GitHub...")
