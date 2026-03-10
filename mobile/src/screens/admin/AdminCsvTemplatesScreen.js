@@ -21,6 +21,7 @@ import * as Clipboard from 'expo-clipboard';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 export default function AdminCsvTemplatesScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -444,28 +445,12 @@ export default function AdminCsvTemplatesScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surfaceSecondary }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="CSV Templates"
+        subtitle="Download, fill in, and upload to bulk import data"
+        onBack={() => navigation.goBack()}
+      />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.lg }}>
-        {/* Header Info */}
-        <View
-          style={{
-            backgroundColor: primaryColor + '15',
-            borderRadius: borderRadius.md,
-            padding: spacing.lg,
-            marginBottom: 20,
-            borderWidth: 1,
-            borderColor: primaryColor,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-            <Ionicons name="information-circle" size={24} color={primaryColor} />
-            <Text style={{ fontSize: 16, fontWeight: '600', color: primaryColor, marginLeft: 8 }}>
-              CSV Templates
-            </Text>
-          </View>
-          <Text style={{ fontSize: 14, color: primaryColor, lineHeight: 20 }}>
-            Download these templates, fill them out with your data, and upload them to quickly import multiple records at once.
-          </Text>
-        </View>
 
         {/* Template Cards */}
         {templates && Object.entries(templates).map(([key, template]) => {
