@@ -109,7 +109,8 @@ function DashboardStack() {
       <Stack.Screen name="AdminSafeDisclosures" component={AdminSafeDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RelationshipDisclosures" component={RelationshipDisclosuresScreen} options={{ headerShown: false }} />
       <Stack.Screen name="GBVTraining" component={GBVTrainingScreen} options={{ headerShown: false }} />
-      
+      <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.name || 'Chat', headerShown: false })} />
+
       {/* Student Modules (accessible by Admin) */}
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
       <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'Events' }} />

@@ -187,13 +187,18 @@ export default function AdminMessagesScreen({ navigation }) {
     );
   };
 
-  const totalConvs = (conversations?.length || 0);
+  const directCount = directConversations.length;
+  const groupCount = groupConversations.length;
+  const subtitleParts = [];
+  if (directCount > 0) subtitleParts.push(`${directCount} direct`);
+  if (groupCount > 0) subtitleParts.push(`${groupCount} group${groupCount !== 1 ? 's' : ''}`);
+  const convSubtitle = subtitleParts.length > 0 ? subtitleParts.join(' · ') : 'No conversations yet';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
       <AdminScreenHeader
         title="Messages"
-        subtitle={`${totalConvs} conversation${totalConvs !== 1 ? 's' : ''}`}
+        subtitle={convSubtitle}
         onBack={() => navigation.goBack()}
         onAdd={() => setNewMessageModalVisible(true)}
       />
