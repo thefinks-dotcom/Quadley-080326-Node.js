@@ -20,8 +20,9 @@ import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { formatDateTime } from '../../utils/dateUtils';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
-export default function AdminRecognitionScreen() {
+export default function AdminRecognitionScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -146,30 +147,12 @@ export default function AdminRecognitionScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
-      {/* Add Button */}
-      <TouchableOpacity
-        onPress={() => setCreateModalVisible(true)}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          backgroundColor: colors.error,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: colors.textPrimary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 8,
-          elevation: 4,
-          zIndex: 10,
-        }}
-        data-testid="add-recognition-btn"
-      >
-        <Ionicons name="add" size={28} color={colors.surface} />
-      </TouchableOpacity>
+      <AdminScreenHeader
+        title="Recognition"
+        subtitle={`${shoutouts?.length || 0} recognition${(shoutouts?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={() => setCreateModalVisible(true)}
+      />
 
       <FlatList
         data={shoutouts}

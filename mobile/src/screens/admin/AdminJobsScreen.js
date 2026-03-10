@@ -19,8 +19,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
-export default function AdminJobsScreen() {
+export default function AdminJobsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -282,6 +283,13 @@ export default function AdminJobsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Jobs"
+        subtitle={`${jobs?.length || 0} job${(jobs?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={() => setModalVisible(true)}
+      />
+
       {/* Search Bar for Applications */}
       {activeTab === 'applications' && (
         <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface }}>

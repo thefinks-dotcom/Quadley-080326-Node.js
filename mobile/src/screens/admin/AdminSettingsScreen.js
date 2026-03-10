@@ -12,12 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 import api from '../../services/api';
 import { colors, borderRadius, spacing } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
-import { useTenant } from '../../contexts/TenantContext';
 
-export default function AdminSettingsScreen() {
+export default function AdminSettingsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -104,6 +105,11 @@ export default function AdminSettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Settings"
+        onBack={() => navigation.goBack()}
+      />
+
       <ScrollView>
         {/* Module Settings */}
         <View style={{ padding: 20 }}>

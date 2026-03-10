@@ -25,6 +25,7 @@ import { ENDPOINTS } from '../../config/api';
 import { format, addDays, subDays } from 'date-fns';
 import { formatDate, formatForApi, formatDateLong, DATE_FORMATS } from '../../utils/dateUtils';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 const DIETARY_TAGS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free', 'Halal', 'Kosher'];
@@ -339,6 +340,13 @@ export default function AdminDiningMenuScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Dining Menu"
+        subtitle={`${menu?.length || 0} item${(menu?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={openAddModal}
+      />
+
       {/* Date Navigation */}
       <View
         style={{

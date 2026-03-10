@@ -21,8 +21,9 @@ import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { format } from 'date-fns';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
-export default function AdminAnnouncementsScreen() {
+export default function AdminAnnouncementsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -238,36 +239,12 @@ export default function AdminAnnouncementsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
-      {/* Header with Report Button */}
-      <View style={{ 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        paddingHorizontal: 16, 
-        paddingVertical: 12,
-        backgroundColor: colors.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border
-      }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-          {announcements?.length || 0} News Items
-        </Text>
-        <TouchableOpacity
-          onPress={() => setReportModalVisible(true)}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: primaryColor + '15',
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: borderRadius.sm,
-          }}
-          data-testid="view-report-btn"
-        >
-          <Ionicons name="bar-chart-outline" size={18} color={primaryColor} />
-          <Text style={{ color: primaryColor, fontWeight: '600', marginLeft: 6 }}>Report</Text>
-        </TouchableOpacity>
-      </View>
+      <AdminScreenHeader
+        title="Announcements"
+        subtitle={`${announcements?.length || 0} news item${(announcements?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={() => setModalVisible(true)}
+      />
 
       <FlatList
         data={announcements}
@@ -284,30 +261,6 @@ export default function AdminAnnouncementsScreen() {
         }
         contentContainerStyle={{ paddingVertical: 16 }}
       />
-
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          backgroundColor: primaryColor,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: colors.textPrimary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-        data-testid="create-announcement-btn"
-      >
-        <Ionicons name="add" size={28} color={colors.surface} />
-      </TouchableOpacity>
 
       {/* Create Modal */}
       <Modal

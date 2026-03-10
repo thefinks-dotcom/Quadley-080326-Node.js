@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 export default function AdminMessagesScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -100,11 +101,12 @@ export default function AdminMessagesScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }}>
-      {/* Header */}
-      <View style={{ backgroundColor: colors.surface, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>Messages</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Messages"
+        subtitle={`${conversations?.length || 0} conversation${(conversations?.length || 0) !== 1 ? 's' : ''}`}
+        onBack={() => navigation.goBack()}
+      />
 
       {/* Search */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface }}>

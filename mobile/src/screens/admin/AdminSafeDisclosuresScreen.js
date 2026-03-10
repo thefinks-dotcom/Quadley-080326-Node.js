@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
 const STATUS_OPTIONS = [
   { id: 'pending_risk_assessment', label: 'Pending', color: null },
@@ -249,39 +250,16 @@ export default function AdminSafeDisclosuresScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['top']}>
-      {/* Header */}
-      <View style={{ 
-        backgroundColor: colors.primary, 
-        paddingHorizontal: 16, 
-        paddingTop: 8, 
-        paddingBottom: 16,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-            <Ionicons name="arrow-back" size={24} color={colors.surface} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: 'bold' }}>Safe Disclosures</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>
-              {disclosures.length} total • {stats?.urgent_count || 0} urgent
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AnnualDisclosureReport')}
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: borderRadius.sm,
-            }}
-          >
-            <Ionicons name="stats-chart" size={20} color={colors.surface} />
-          </TouchableOpacity>
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <AdminScreenHeader
+        title="Safe Disclosures"
+        subtitle={`${disclosures.length} total • ${stats?.urgent_count || 0} urgent`}
+        onBack={() => navigation.goBack()}
+      />
 
-        {/* Stats Row - Clickable to filter */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {/* Stats Row - Clickable to filter */}
+      <View style={{ backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {stats && (
             <>
               <TouchableOpacity 

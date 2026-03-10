@@ -23,8 +23,9 @@ import * as DocumentPicker from 'expo-document-picker';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { useTenant } from '../../contexts/TenantContext';
+import AdminScreenHeader from '../../components/AdminScreenHeader';
 
-export default function AdminUsersScreen() {
+export default function AdminUsersScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -514,14 +515,16 @@ export default function AdminUsersScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
-      {/* Header with Export */}
+      <AdminScreenHeader
+        title="Users"
+        subtitle={`${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''} • ${activeCount} active${pendingCount > 0 ? ` • ${pendingCount} pending` : ''}`}
+        onBack={() => navigation.goBack()}
+        onAdd={() => setAddUserModalVisible(true)}
+      />
+
+      {/* Search + Export */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
-          <View>
-            <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-              {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} • {activeCount} active{pendingCount > 0 ? ` • ${pendingCount} pending` : ''}{inactiveCount > 0 ? ` • ${inactiveCount} inactive` : ''}
-            </Text>
-          </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: spacing.sm }}>
           <TouchableOpacity 
             onPress={exportUsersCSV}
             data-testid="export-users-btn"
@@ -620,42 +623,6 @@ export default function AdminUsersScreen() {
           </View>
         }
       />
-
-      {/* FAB - Add Student */}
-      <TouchableOpacity
-        onPress={() => setAddUserModalVisible(true)}
-        onLongPress={() => {
-          Alert.alert(
-            'Add Students',
-            'Choose an option',
-            [
-              { text: 'Add Single Student', onPress: () => setAddUserModalVisible(true) },
-              { text: 'Bulk Import (CSV)', onPress: handlePickCSVFile },
-              { text: 'Download CSV Template', onPress: downloadTemplate },
-              { text: 'Cancel', style: 'cancel' },
-            ]
-          );
-        }}
-        data-testid="add-student-fab"
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          backgroundColor: primaryColor,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          shadowColor: colors.textPrimary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-      >
-        <Ionicons name="person-add" size={24} color={colors.surface} />
-      </TouchableOpacity>
 
       {/* Add Student Modal */}
       <Modal
