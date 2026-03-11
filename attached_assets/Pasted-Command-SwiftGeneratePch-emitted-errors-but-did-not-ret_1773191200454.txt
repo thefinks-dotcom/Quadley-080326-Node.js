@@ -1,0 +1,40 @@
+Command SwiftGeneratePch emitted errors but did not return a nonzero exit code to indicate failure
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/EXApplication/EXApplication.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/EXConstants/EXConstants.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/EXNotifications/EXNotifications.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/Expo/Expo.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoAsset/ExpoAsset.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoClipboard/ExpoClipboard.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoDevice/ExpoDevice.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoDocumentPicker/ExpoDocumentPicker.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoFileSystem/ExpoFileSystem.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoFont/ExpoFont.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoImagePicker/ExpoImagePicker.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoKeepAwake/ExpoKeepAwake.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoLinearGradient/ExpoLinearGradient.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoModulesCore/ExpoModulesCore.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoSecureStore/ExpoSecureStore.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoSharing/ExpoSharing.modulemap' not found
+
+module map file '/Users/genfink/Library/Developer/Xcode/DerivedData/Quadley-bisaofkbdakfswciulzcobkpvznc/Build/Intermediates.noindex/ArchiveIntermediates/Quadley/BuildProductsPath/Release-iphoneos/ExpoSplashScreen/ExpoSplashScreen.modulemap' not found
+
+Command PrecompileSwiftBridgingHeader emitted errors but did not return a nonzero exit code to indicate failure
+
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/Quadley/AppDelegate.swift
+/Users/genfink/Quadley-080326-Node.js/mobile/ios/Quadley/AppDelegate.swift:1:8 No such module 'Expo'

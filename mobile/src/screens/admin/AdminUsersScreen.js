@@ -11,6 +11,8 @@ import {
   Modal,
   ScrollView,
   Share,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { colors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
@@ -950,7 +952,8 @@ export default function AdminUsersScreen({ navigation }) {
         transparent={true}
         onRequestClose={() => { setEmailEditModalVisible(false); setEmailEditUser(null); setEmailEditValue(''); setEditFirstName(''); setEditLastName(''); }}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end', alignItems: 'center', padding: 20, paddingBottom: 32 }}>
           <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: spacing.xxl, width: '100%', maxWidth: 340 }}>
             <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: primaryColor + '15', justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 16 }}>
               <Ionicons name="person-outline" size={26} color={primaryColor} />
@@ -1008,6 +1011,7 @@ export default function AdminUsersScreen({ navigation }) {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Bulk Import Results Modal */}
