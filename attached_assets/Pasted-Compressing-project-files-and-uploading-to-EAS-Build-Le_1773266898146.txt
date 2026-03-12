@@ -1,0 +1,36 @@
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+✔ Compressed project files 1s (23.8 MB)
+✔ Uploaded to EAS 3s
+Cannot get Expo config from an Expo project - Cannot read properties of undefined (reading 'on'):  TypeError: Cannot read properties of undefined (reading 'on')
+    at spawnWithIpcAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/utils/SpawnIPC.js:21:19)
+    at getExpoConfigAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/ExpoConfig.js:27:68)
+    at async getHashSourcesAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/sourcer/Sourcer.js:18:51)
+    at async Object.createFingerprintAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/Fingerprint.js:22:21)
+    at async withTemporaryEnvAsync (/opt/homebrew/lib/node_modules/eas-cli/build/fingerprint/cli.js:78:16)
+    at async createFingerprintWithoutLoggingAsync (/opt/homebrew/lib/node_modules/eas-cli/build/fingerprint/cli.js:72:12)
+    at async createFingerprintAsync (/opt/homebrew/lib/node_modules/eas-cli/build/fingerprint/cli.js:37:29)
+    at async computeAndMaybeUploadFingerprintWithoutExpoUpdatesAsync (/opt/homebrew/lib/node_modules/eas-cli/build/build/build.js:488:25)
+    at async computeAndMaybeUploadRuntimeAndFingerprintMetadataAsync (/opt/homebrew/lib/node_modules/eas-cli/build/build/build.js:440:29)
+    at async prepareBuildRequestForPlatformAsync (/opt/homebrew/lib/node_modules/eas-cli/build/build/build.js:88:43)
+⠋ Computing project fingerprintnode:internal/child_process:440
+    throw new ErrnoException(err, 'spawn');
+          ^
+
+Error: spawn ELOOP
+    at ChildProcess.spawn (node:internal/child_process:440:11)
+    at Object.spawn (node:child_process:796:9)
+    at spawn (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/cross-spawn/index.js:12:24)
+    at /Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/spawn-async/build/spawnAsync.js:13:43
+    at new Promise (<anonymous>)
+    at spawnAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/spawn-async/build/spawnAsync.js:10:19)
+    at spawnWithIpcAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/utils/SpawnIPC.js:13:47)
+    at getExpoConfigAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/ExpoConfig.js:27:68)
+    at async getHashSourcesAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/sourcer/Sourcer.js:18:51)
+    at async Object.createFingerprintAsync (/Users/genfink/Quadley-080326-Node.js/mobile/node_modules/@expo/fingerprint/build/Fingerprint.js:22:21) {
+  errno: -62,
+  code: 'ELOOP',
+  syscall: 'spawn'
+}
+
+Node.js v25.8.0
+genfink@Gens-MacBook-Air mobile % 

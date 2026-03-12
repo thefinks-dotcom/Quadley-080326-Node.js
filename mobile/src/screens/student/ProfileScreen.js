@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { colors as defaultColors, borderRadius, spacing, shadows, typography } from '../../theme';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import api from '../../services/api';
 
 export default function ProfileScreen({ navigation }) {
   const { branding } = useTenant();
@@ -20,6 +24,8 @@ export default function ProfileScreen({ navigation }) {
   const secondaryColor = branding?.secondaryColor || colors.background;
 
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
+
+  const [deleteStep, setDeleteStep] = useState(0);
 
   const handleLogout = () => {
     Alert.alert(
@@ -31,6 +37,25 @@ export default function ProfileScreen({ navigation }) {
       ]
     );
   };
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete('/auth/users/me');
+      return res.data;
+    },
+    onSuccess: () => {
+      setDeleteStep(0);
+      Alert.alert(
+        'Account Deleted',
+        'Your account and all associated personal data have been permanently deleted.',
+        [{ text: 'OK', onPress: logout }]
+      );
+    },
+    onError: (err) => {
+      setDeleteStep(0);
+      Alert.alert('Error', err.response?.data?.detail || 'Failed to delete account. Please try again.');
+    },
+  });
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
@@ -175,7 +200,14 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <View style={{ backgroundColor: colors.surface, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border }}>
             <MenuRow icon="settings-outline" label="Settings" onPress={() => navigation.navigate('Settings')} />
-            <MenuRow icon="help-circle-outline" label="Help & Support" onPress={() => Alert.alert('Help & Support', 'Contact support@quadley.app for assistance.')} isLast />
+            <MenuRow icon="help-circle-outline" label="Help & Support" onPress={() => Alert.alert('Help & Support', 'Contact support@quadley.app for assistance.')} />
+            <MenuRow
+              icon="trash-outline"
+              label="Delete Account"
+              color={colors.error}
+              onPress={() => setDeleteStep(1)}
+              isLast
+            />
           </View>
         </View>
 
@@ -218,6 +250,113 @@ export default function ProfileScreen({ navigation }) {
           <Text style={{ color: colors.textTertiary, fontSize: 12 }}>Quadley v1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Delete Account Modal — Step 1: Warning */}
+      <Modal visible={deleteStep === 1} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDeleteStep(0)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
+            <TouchableOpacity onPress={() => setDeleteStep(0)}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.textPrimary }}>Delete Account</Text>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.xl }}>
+            <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#FEE2E2', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+                <Ionicons name="trash-outline" size={36} color="#B91C1C" />
+              </View>
+              <Text style={{ fontSize: 22, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: 12 }}>
+                Permanently delete your account?
+              </Text>
+              <Text style={{ fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
+                This action cannot be undone. The following will be permanently deleted:
+              </Text>
+            </View>
+
+            {[
+              { icon: 'person-outline', text: 'Your name, email, and profile information' },
+              { icon: 'chatbubbles-outline', text: 'All messages you have sent' },
+              { icon: 'notifications-outline', text: 'Your notification preferences and tokens' },
+              { icon: 'shield-outline', text: 'Your account access and login credentials' },
+            ].map((item, i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', borderRadius: 10, padding: 14, marginBottom: 10 }}>
+                <Ionicons name={item.icon} size={20} color="#B91C1C" style={{ marginRight: 12 }} />
+                <Text style={{ flex: 1, fontSize: 14, color: '#7F1D1D', lineHeight: 20 }}>{item.text}</Text>
+              </View>
+            ))}
+
+            <View style={{ backgroundColor: '#FEF3C7', borderRadius: 10, padding: 14, marginTop: 8, marginBottom: 32 }}>
+              <Text style={{ fontSize: 13, color: '#78350F', lineHeight: 20 }}>
+                Note: Some data may be retained where required by law. Deletion is permanent and your account cannot be recovered.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => setDeleteStep(2)}
+              style={{ backgroundColor: '#B91C1C', borderRadius: borderRadius.md, paddingVertical: 16, alignItems: 'center', marginBottom: 12 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>I understand — continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setDeleteStep(0)}
+              style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, paddingVertical: 16, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.textSecondary, fontWeight: '600', fontSize: 16 }}>Keep my account</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Delete Account Modal — Step 2: Final confirm */}
+      <Modal visible={deleteStep === 2} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDeleteStep(0)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
+            <TouchableOpacity onPress={() => setDeleteStep(1)}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Back</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.textPrimary }}>Final Confirmation</Text>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <View style={{ flex: 1, padding: spacing.xl, justifyContent: 'center' }}>
+            <View style={{ alignItems: 'center', marginBottom: 32 }}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                <Ionicons name="warning-outline" size={32} color="#B91C1C" />
+              </View>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: 8 }}>
+                Last chance
+              </Text>
+              <Text style={{ fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
+                Tapping the button below will immediately and permanently delete your account for{' '}
+                <Text style={{ fontWeight: '600', color: colors.textPrimary }}>{user?.first_name} {user?.last_name}</Text>.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => deleteAccountMutation.mutate()}
+              disabled={deleteAccountMutation.isPending}
+              style={{ backgroundColor: '#B91C1C', borderRadius: borderRadius.md, paddingVertical: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 14 }}
+            >
+              {deleteAccountMutation.isPending
+                ? <ActivityIndicator color="#fff" />
+                : <Ionicons name="trash" size={20} color="#fff" />}
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete my account permanently'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setDeleteStep(0)}
+              disabled={deleteAccountMutation.isPending}
+              style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, paddingVertical: 16, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.textSecondary, fontWeight: '600', fontSize: 16 }}>Cancel — keep my account</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
