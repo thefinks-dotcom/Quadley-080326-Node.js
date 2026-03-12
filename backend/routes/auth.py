@@ -551,6 +551,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/refresh")
+@limiter.limit("20/hour")
 async def refresh_token(request: Request, current_user: User = Depends(get_current_user)):
     """Refresh access token - blacklists old token and issues a new one (OWASP A07 compliance)"""
     ip_address = request.client.host if request.client else "unknown"
@@ -616,6 +617,7 @@ class ClientSecurityBatch(BaseModel):
     events: List[ClientSecurityEvent]
 
 @router.post("/security-events")
+@limiter.limit("30/minute")
 async def report_security_events(
     batch: ClientSecurityBatch,
     request: Request,
