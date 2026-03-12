@@ -58,9 +58,7 @@ const AnnouncementsAdmin = () => {
 
   const fetchAnnouncements = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/announcements?include_scheduled=true`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setAnnouncements(response.data);
     } catch (error) {
@@ -73,7 +71,6 @@ const AnnouncementsAdmin = () => {
   const handlePost = async () => {
     setPosting(true);
     try {
-      const token = localStorage.getItem('token');
       
       // If a scheduled date is confirmed, schedule it; otherwise post immediately
       const isScheduled = scheduleConfirmed && !!newAnnouncement.scheduled_date;
@@ -89,7 +86,6 @@ const AnnouncementsAdmin = () => {
       };
       
       await axios.post(`${API}/api/announcements`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (isScheduled) {

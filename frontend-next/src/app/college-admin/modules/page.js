@@ -69,9 +69,7 @@ const ModuleSettings = () => {
 
   const fetchTenantInfo = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(`${API}/api/tenants`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data && res.data.length > 0) {
         const t = res.data[0];
@@ -91,11 +89,9 @@ const ModuleSettings = () => {
     }
     setContactSaving(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/tenants/${tenantCode}/contact-person`,
-        { contact_person_name: contactName, contact_person_email: contactEmail },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { contact_person_name: contactName, contact_person_email: contactEmail }
       );
       toast.success('Contact person updated!');
       setEditingContact(false);

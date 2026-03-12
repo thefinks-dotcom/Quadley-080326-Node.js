@@ -33,9 +33,7 @@ const RAFloorEventsModule = () => {
 
   const fetchEvents = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(`${API}/floor-events`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setEvents(res.data || []);
     } catch (error) {
@@ -72,7 +70,6 @@ const RAFloorEventsModule = () => {
     }
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         title: form.title,
         description: form.description,
@@ -81,12 +78,10 @@ const RAFloorEventsModule = () => {
       };
       if (editingEvent) {
         await axios.put(`${API}/floor-events/${editingEvent.id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         toast.success('Event updated');
       } else {
         await axios.post(`${API}/floor-events`, payload, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         toast.success('Floor event created');
       }
@@ -102,9 +97,7 @@ const RAFloorEventsModule = () => {
   const handleDelete = async (eventId) => {
     if (!window.confirm('Delete this floor event?')) return;
     try {
-      const token = localStorage.getItem('token');
       await axios.delete(`${API}/floor-events/${eventId}`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Event deleted');
       fetchEvents();
