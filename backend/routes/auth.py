@@ -1828,18 +1828,30 @@ async def get_public_tenant_branding(tenant_code: str):
 
 # ─── Account Deletion (Apple App Store compliance) ────────────────────────────
 
+class DeleteAccountRequest(BaseModel):
+    password: str
+
+
 @router.delete("/users/me")
+@limiter.limit("3/hour")
 async def delete_my_account(
     request: Request,
+    body: DeleteAccountRequest,
     current_user: User = Depends(get_current_user),
 ):
     """
     Self-service account deletion per Apple App Store Review Guideline 5.1.1(v).
-    Anonymises all personal data associated with this account and marks it inactive.
+    Requires password re-authentication before anonymising all personal data.
+    Rate-limited to 3 attempts per hour.
     """
     tenant_code = current_user.tenant_code
     tenant_db = get_tenant_db(tenant_code)
     user_id = current_user.id
+
+    # Re-authenticate: verify the supplied password matches the stored hash
+    user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "password": 1})
+    if not user_doc or not verify_password(body.password, user_doc.get("password", "")):
+        raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
     deleted_at = datetime.now(timezone.utc).isoformat()
     anon_email = f"deleted_{user_id}@deleted.invalid"
 
