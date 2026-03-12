@@ -1824,3 +1824,67 @@ async def get_public_tenant_branding(tenant_code: str):
     }
 
 
+
+
+# ─── Account Deletion (Apple App Store compliance) ────────────────────────────
+
+@router.delete("/users/me")
+async def delete_my_account(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Self-service account deletion per Apple App Store Review Guideline 5.1.1(v).
+    Anonymises all personal data associated with this account and marks it inactive.
+    """
+    tenant_code = current_user.tenant_code
+    tenant_db = get_tenant_db(tenant_code)
+    user_id = current_user.id
+    deleted_at = datetime.now(timezone.utc).isoformat()
+    anon_email = f"deleted_{user_id}@deleted.invalid"
+
+    # Anonymise user record — keep the document for referential integrity but
+    # strip all personally-identifiable fields.
+    await tenant_db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "email": anon_email,
+            "first_name": "Deleted",
+            "last_name": "User",
+            "is_active": False,
+            "account_deleted": True,
+            "account_deleted_at": deleted_at,
+            "phone": None,
+            "bio": None,
+            "profile_image": None,
+            "student_id": None,
+        }}
+    )
+
+    # Remove personal message content (keep structure for conversation continuity)
+    await tenant_db.messages.update_many(
+        {"sender_id": user_id},
+        {"$set": {"content": "[Message deleted]", "removed": True, "file_url": None}}
+    )
+
+    # Delete push notification tokens
+    await tenant_db.push_tokens.delete_many({"user_id": user_id})
+
+    # Log deletion for compliance audit trail
+    await tenant_db.audit_log.insert_one({
+        "event": "account_self_deleted",
+        "user_id": user_id,
+        "tenant_code": tenant_code,
+        "deleted_at": deleted_at,
+        "ip": request.client.host if request.client else None,
+    })
+
+    logger.info(f"Account self-deleted: user_id={user_id} tenant={tenant_code} at={deleted_at}")
+
+    # Expire the auth cookie
+    response = JSONResponse(content={
+        "message": "Your account has been permanently deleted.",
+        "deleted_at": deleted_at,
+    })
+    response.delete_cookie("access_token")
+    return response
