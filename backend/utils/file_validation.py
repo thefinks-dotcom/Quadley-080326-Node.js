@@ -2,6 +2,13 @@
 from typing import Tuple
 from pathlib import Path
 import hashlib
+import io
+
+try:
+    from PIL import Image
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
 
 # Allowed file types
 ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
@@ -67,7 +74,33 @@ async def validate_image_upload(file, filename: str) -> Tuple[bool, str, bytes]:
     except Exception:
         pass
     
+    # Strip EXIF metadata (location, device info, etc.) to protect user privacy
+    content = _strip_exif(content, detected_mime)
+
     return True, "", content
+
+
+def _strip_exif(content: bytes, mime_type: str) -> bytes:
+    """
+    Remove EXIF metadata from image content using Pillow.
+    Only strips from formats that commonly carry EXIF (JPEG, PNG, WebP).
+    Returns original bytes if stripping fails or Pillow is unavailable.
+    """
+    if not PILLOW_AVAILABLE or mime_type not in ('image/jpeg', 'image/png', 'image/webp'):
+        return content
+
+    try:
+        img = Image.open(io.BytesIO(content))
+        data = list(img.getdata())
+        clean_img = Image.new(img.mode, img.size)
+        clean_img.putdata(data)
+
+        buf = io.BytesIO()
+        fmt_map = {'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WEBP'}
+        clean_img.save(buf, format=fmt_map[mime_type])
+        return buf.getvalue()
+    except Exception:
+        return content
 
 def generate_safe_filename(original_filename: str, prefix: str, content: bytes) -> str:
     """Generate a safe filename using hash"""

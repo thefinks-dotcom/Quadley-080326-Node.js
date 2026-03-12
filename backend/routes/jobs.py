@@ -24,6 +24,13 @@ JOB_ADMIN_ROLES = ['admin', 'super_admin', 'college_admin']
 ALLOWED_RESUME_EXTENSIONS = {'.pdf', '.doc', '.docx'}
 MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5MB
 
+# Magic bytes for allowed resume file types
+ALLOWED_MAGIC_BYTES = [
+    b'%PDF',          # PDF
+    b'PK\x03\x04',   # DOCX (ZIP)
+    b'\xd0\xcf\x11\xe0',  # DOC (Compound Binary)
+]
+
 
 # ====== JOB CRUD ENDPOINTS ======
 
@@ -408,6 +415,9 @@ async def upload_resume(
     content = await file.read()
     if len(content) > MAX_RESUME_SIZE:
         raise HTTPException(status_code=400, detail="File too large. Maximum size: 5MB")
+
+    if not any(content.startswith(magic) for magic in ALLOWED_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="File content does not match expected type. Only PDF and Word documents are permitted.")
     
     # Generate safe filename
     file_hash = hashlib.sha256(content).hexdigest()[:12]

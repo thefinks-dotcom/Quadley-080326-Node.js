@@ -18,7 +18,7 @@
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/native-stack": "^7.3.10",
     "@tanstack/react-query": "^5.28.4",
-    "axios": "^1.7.9",
+    "axios": "^1.8.4",
     "date-fns": "^3.6.0",
     "expo": "~54.0.33",
     "expo-clipboard": "~8.0.8",
@@ -48,5 +48,8 @@
     "react-refresh": "^0.14.2",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "resolutions": {
+    "tar": ">=7.5.11"
+  }
 }

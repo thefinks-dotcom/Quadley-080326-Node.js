@@ -44,9 +44,7 @@ const ReportsInsights = () => {
   const fetchReportsData = async () => {
     setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/dashboard/reports`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setData(response.data);
     } catch (error) {
@@ -61,9 +59,7 @@ const ReportsInsights = () => {
   const exportToCSV = async (module, label) => {
     setExporting(module);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/dashboard/export/${module}`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       const items = response.data.data;

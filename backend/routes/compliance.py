@@ -11,7 +11,6 @@ from typing import Optional
 from datetime import datetime, timezone
 import logging
 import uuid
-import json
 import os
 
 from models import User

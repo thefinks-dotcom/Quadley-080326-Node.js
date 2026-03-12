@@ -258,14 +258,10 @@ const CollegeJobsAdmin = () => {
     try {
       // resumeUrl already includes /api/uploads/... so use it directly
       const fullUrl = resumeUrl;
-      console.log('Downloading from:', fullUrl);
-      
       const response = await axios.get(fullUrl, {
         responseType: 'blob',
         withCredentials: true
       });
-      
-      console.log('Response received, blob size:', response.data.size);
       
       // Check if we got valid data
       if (!response.data || response.data.size === 0) {

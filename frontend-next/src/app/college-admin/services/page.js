@@ -78,9 +78,7 @@ const ServiceRequests = () => {
   const fetchRequests = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/maintenance`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setRequests(response.data);
       setFilteredRequests(response.data);
@@ -97,9 +95,7 @@ const ServiceRequests = () => {
 
   const fetchFacilitators = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/maintenance/facilitators/list`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setFacilitators(response.data);
     } catch (error) {
@@ -119,15 +115,13 @@ const ServiceRequests = () => {
     setAssigning(true);
     
     try {
-      const token = localStorage.getItem('token');
       await axios.post(
         `${API}/api/maintenance/${selectedRequest.id}/assign`,
         {
           facilitator_name: facilitator.name,
           facilitator_email: facilitator.email,
           notes: assignmentNotes
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       
       toast.success(`Request assigned to ${facilitator.name}`);
@@ -149,11 +143,9 @@ const ServiceRequests = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       await axios.post(
         `${API}/api/maintenance/facilitators`,
-        newFacilitator,
-        { headers: { Authorization: `Bearer ${token}` } }
+        newFacilitator
       );
       
       toast.success('Facilitator added');
@@ -167,10 +159,8 @@ const ServiceRequests = () => {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.patch(`${API}/api/maintenance/${requestId}`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { status: newStatus }
       );
       toast.success('Status updated');
       fetchRequests();

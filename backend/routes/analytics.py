@@ -21,36 +21,12 @@ from typing import Optional
 import logging
 
 from utils.auth import get_tenant_db_for_user
+from utils.rate_limit import check_rate_limit
 from models import User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
-
-# Simple in-memory rate limiter for sensitive endpoints
-_rate_limit_cache = {}
-RATE_LIMIT_WINDOW = 60  # seconds
-RATE_LIMIT_MAX = 10  # max requests per window
-
-def check_rate_limit(user_id: str, endpoint: str) -> bool:
-    """Check if user has exceeded rate limit for sensitive endpoints"""
-    key = f"{user_id}:{endpoint}"
-    now = datetime.now(timezone.utc)
-    
-    if key in _rate_limit_cache:
-        requests, window_start = _rate_limit_cache[key]
-        if (now - window_start).total_seconds() > RATE_LIMIT_WINDOW:
-            # Reset window
-            _rate_limit_cache[key] = (1, now)
-            return True
-        elif requests >= RATE_LIMIT_MAX:
-            return False
-        else:
-            _rate_limit_cache[key] = (requests + 1, window_start)
-            return True
-    else:
-        _rate_limit_cache[key] = (1, now)
-        return True
 
 # Helper to check admin role
 def require_admin(current_user: User):
@@ -201,12 +177,8 @@ async def get_gender_violence_report(
     # Audit log for sensitive report access
     logger.info(f"GBV Report accessed by user_id={current_user.id}, role={current_user.role}")
     
-    # Rate limit sensitive GBV reports
-    if not check_rate_limit(current_user.id, "gbv_report"):
-        raise HTTPException(
-            status_code=429, 
-            detail="Rate limit exceeded. Please wait before requesting this report again."
-        )
+    # Rate limit sensitive GBV reports (raises HTTP 429 if exceeded)
+    check_rate_limit(current_user.id, action="gbv_report", max_requests=10, window_minutes=1)
     
     now = datetime.now(timezone.utc)
     

@@ -117,9 +117,7 @@ const TenantManagement = () => {
 
   const fetchTenants = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/tenants`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setTenants(response.data);
     } catch (error) {
@@ -153,11 +151,8 @@ const TenantManagement = () => {
     setActionLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/tenants/${selectedTenant.tenant_id}/approve`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/tenants/${selectedTenant.tenant_id}/approve`
       );
       toast.success(`${selectedTenant.name} has been approved!`);
       setShowApproveDialog(false);
@@ -175,10 +170,8 @@ const TenantManagement = () => {
     setActionLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
       await axios.delete(
-        `${API}/api/tenants/${selectedTenant.tenant_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/tenants/${selectedTenant.tenant_id}`
       );
       toast.success(`${selectedTenant.name} has been suspended`);
       setShowSuspendDialog(false);
@@ -196,11 +189,9 @@ const TenantManagement = () => {
     setAddLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
       await axios.post(
         `${API}/api/tenants`,
-        newTenant,
-        { headers: { Authorization: `Bearer ${token}` } }
+        newTenant
       );
       toast.success(`Tenant "${newTenant.tenant_name}" created successfully!`);
       setShowAddDialog(false);
@@ -234,14 +225,12 @@ const TenantManagement = () => {
     setContactLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/tenants/${selectedTenant.code}/contact-person`,
         {
           contact_person_name: contactForm.name,
           contact_person_email: contactForm.email,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       toast.success('Contact person updated successfully!');
       setShowContactDialog(false);
@@ -259,11 +248,9 @@ const TenantManagement = () => {
     if (!selectedTenant) return;
     setModulesLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/tenants/${selectedTenant.code}/modules`,
-        { enabled_modules: editModules },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { enabled_modules: editModules }
       );
       toast.success('Modules updated!');
       setShowModulesDialog(false);

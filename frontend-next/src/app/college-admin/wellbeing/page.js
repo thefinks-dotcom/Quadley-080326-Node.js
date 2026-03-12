@@ -66,9 +66,7 @@ const WellbeingAdmin = () => {
   const fetchRequests = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/wellbeing-admin/requests`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setRequests(response.data);
       setLastUpdated(new Date());
@@ -84,9 +82,7 @@ const WellbeingAdmin = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/wellbeing-admin/requests/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data);
     } catch (error) {
@@ -98,11 +94,9 @@ const WellbeingAdmin = () => {
     if (!selectedRequest || !scheduledTime) return;
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/wellbeing-admin/requests/${selectedRequest.id}/schedule`,
-        { scheduled_time: scheduledTime },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { scheduled_time: scheduledTime }
       );
       toast.success('Appointment scheduled');
       setShowScheduleDialog(false);
@@ -121,11 +115,9 @@ const WellbeingAdmin = () => {
     if (!notes) return;
     
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/wellbeing-admin/requests/${requestId}/resolve`,
-        { resolution_notes: notes },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { resolution_notes: notes }
       );
       toast.success('Request resolved');
       setShowDetailDialog(false);
@@ -138,11 +130,9 @@ const WellbeingAdmin = () => {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/wellbeing-admin/requests/${requestId}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { status: newStatus }
       );
       toast.success('Status updated');
       fetchRequests();

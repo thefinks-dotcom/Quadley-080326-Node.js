@@ -82,9 +82,7 @@ const CollegeUserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/users/list`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
       setFilteredUsers(response.data);
@@ -99,12 +97,10 @@ const CollegeUserManagement = () => {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/auth/register`, {
         ...newUser,
         password: 'TempPassword123!' // Temporary password
       }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('User created successfully! They will receive a welcome email.');
       setShowAddDialog(false);
@@ -152,11 +148,9 @@ const CollegeUserManagement = () => {
 
   const handleToggleStatus = async (user) => {
     try {
-      const token = localStorage.getItem('token');
       const newStatus = user.active === false;
       await axios.patch(`${API}/api/auth/users/${user.id}/status`, 
-        { active: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { active: newStatus }
       );
       toast.success(`User ${newStatus ? 'activated' : 'deactivated'}`);
       fetchUsers();

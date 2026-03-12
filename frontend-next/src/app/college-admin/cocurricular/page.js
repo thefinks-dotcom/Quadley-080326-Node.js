@@ -61,9 +61,7 @@ const CoCurricularAdmin = () => {
   const fetchGroups = async () => {
     setRefreshing(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/cocurricular/groups/all`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setGroups(response.data);
       setLastUpdated(new Date());
@@ -78,9 +76,7 @@ const CoCurricularAdmin = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/users/list`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setAllUsers(response.data);
     } catch (error) {
@@ -96,14 +92,12 @@ const CoCurricularAdmin = () => {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const newAdmin = allUsers.find(u => u.id === newAdminId);
       
       await axios.patch(`${API}/api/cocurricular/groups/${selectedGroup.id}/admin`, {
         new_owner_id: newAdminId,
         new_owner_name: `${newAdmin.first_name} ${newAdmin.last_name}`
       }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast.success('Admin changed successfully');
