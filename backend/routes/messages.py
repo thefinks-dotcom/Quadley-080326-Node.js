@@ -758,8 +758,11 @@ async def get_message_reports(
     if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
         raise HTTPException(status_code=403, detail="Admin access required")
 
+    VALID_STATUSES = {"open", "resolved", "dismissed", "escalated"}
     query = {}
     if status:
+        if status not in VALID_STATUSES:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}")
         query["status"] = status
     reports = await tenant_db.message_reports.find(
         query, {"_id": 0}

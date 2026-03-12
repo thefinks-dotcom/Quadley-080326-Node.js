@@ -20,9 +20,7 @@ const RAFloorManagementModule = () => {
 
   const fetchResidents = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(`${API}/floor/users`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setResidents(res.data || []);
     } catch (error) {

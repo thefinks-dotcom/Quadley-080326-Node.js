@@ -120,9 +120,7 @@ const SuperAdminDashboard = () => {
 
   const fetchTenants = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/tenants`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setTenants(response.data);
     } catch (error) {
@@ -135,11 +133,9 @@ const SuperAdminDashboard = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const token = localStorage.getItem('token');
       
       // Use the new cross-tenant analytics endpoint
       const response = await axios.get(`${API}/api/analytics/cross-tenant/overview`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       setCrossTenantAnalytics(response.data);
@@ -157,9 +153,7 @@ const SuperAdminDashboard = () => {
       console.error('Failed to fetch analytics:', error);
       // Fallback to old method if new endpoint fails
       try {
-        const token = localStorage.getItem('token');
         const tenantsRes = await axios.get(`${API}/api/tenants`, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         
         setAnalytics({
@@ -176,9 +170,7 @@ const SuperAdminDashboard = () => {
 
   const fetchActivityMetrics = async (days = 30) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/analytics/cross-tenant/activity?days=${days}`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setActivityMetrics(response.data);
     } catch (error) {
@@ -188,9 +180,7 @@ const SuperAdminDashboard = () => {
 
   const fetchModuleUsage = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/analytics/cross-tenant/module-usage`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setModuleUsage(response.data);
     } catch (error) {
@@ -225,7 +215,6 @@ const SuperAdminDashboard = () => {
     
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       
       // Create tenant first (without logo)
       const tenantPayload = {
@@ -236,7 +225,6 @@ const SuperAdminDashboard = () => {
       };
       
       const response = await axios.post(`${API}/api/tenants`, tenantPayload, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       const createdTenant = response.data;
@@ -249,7 +237,6 @@ const SuperAdminDashboard = () => {
         try {
           await axios.post(`${API}/api/tenants/${createdTenant.code}/logo`, formData, {
             headers: { 
-              Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data'
             }
           });
@@ -273,9 +260,7 @@ const SuperAdminDashboard = () => {
   const handleSuspendTenant = async (tenantCode) => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.delete(`${API}/api/tenants/${tenantCode}`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Tenant suspended');
       fetchTenants();
@@ -289,9 +274,7 @@ const SuperAdminDashboard = () => {
   const handleReactivateTenant = async (tenantCode) => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/tenants/${tenantCode}/reactivate`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Tenant reactivated');
       fetchTenants();
@@ -311,9 +294,7 @@ const SuperAdminDashboard = () => {
       : [...currentModules, module];
     
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/tenants/${selectedTenant.code}/modules`, { enabled_modules: newModules }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       // Update local state
@@ -330,13 +311,10 @@ const SuperAdminDashboard = () => {
 
   const fetchTenantUsers = async (tenantCode) => {
     try {
-      const token = localStorage.getItem('token');
       const [usersRes, statsRes] = await Promise.all([
         axios.get(`${API}/api/tenants/${tenantCode}/users`, {
-          headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/api/tenants/${tenantCode}/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       setTenantUsers(usersRes.data);
@@ -349,9 +327,7 @@ const SuperAdminDashboard = () => {
   const handleResetMFA = async (user) => {
     if (!window.confirm(`Reset MFA for ${user.first_name} ${user.last_name} (${user.email})? They will need to set up MFA again on next login.`)) return;
     try {
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/tenants/${selectedTenant.code}/users/${user.id}/reset-mfa`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(`MFA reset for ${user.first_name} ${user.last_name}`);
       fetchTenantUsers(selectedTenant.code);
@@ -368,9 +344,7 @@ const SuperAdminDashboard = () => {
     
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/tenants/${selectedTenant.code}/invitations`, newInvitation, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Invitation sent successfully');
       setShowInviteDialog(false);

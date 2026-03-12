@@ -1,5 +1,5 @@
 """GBV Training Compliance Tracker - AU National Higher Education Code Standard 3"""
-from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone, timedelta

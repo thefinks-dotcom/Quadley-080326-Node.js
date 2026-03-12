@@ -94,9 +94,7 @@ const SSOConfiguration = () => {
     const fetchUserTenant = async () => {
       if (!urlTenantCode) {
         try {
-          const token = localStorage.getItem('token');
           const response = await axios.get(`${API}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
           });
           if (response.data.tenant_code) {
             setTenantCode(response.data.tenant_code);
@@ -121,9 +119,7 @@ const SSOConfiguration = () => {
   const fetchSSOConfig = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/sso/tenant/${tenantCode}/config`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       setTenantName(response.data.tenant_name || tenantCode);
@@ -197,7 +193,6 @@ const SSOConfiguration = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       
       // Only send non-empty values
       const updates = {};
@@ -208,7 +203,6 @@ const SSOConfiguration = () => {
       });
 
       await axios.put(`${API}/api/sso/tenant/${tenantCode}/config`, updates, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast.success('SSO configuration saved');
@@ -228,9 +222,7 @@ const SSOConfiguration = () => {
 
     try {
       setTesting(true);
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/sso/tenant/${tenantCode}/test`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('SSO configuration is valid');
     } catch (error) {

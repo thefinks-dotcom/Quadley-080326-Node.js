@@ -69,18 +69,19 @@ const ModuleSettings = () => {
 
   const fetchTenantInfo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/tenants`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/tenants`);
       if (res.data && res.data.length > 0) {
         const t = res.data[0];
         setContactName(t.contact_person_name || '');
         setContactEmail(t.contact_person_email || '');
         setTenantCode(t.code || '');
+        if (t.enabled_modules && Array.isArray(t.enabled_modules)) {
+          setModules(prev => prev.map(m =>
+            m.required ? m : { ...m, enabled: t.enabled_modules.includes(m.id) }
+          ));
+        }
       }
-    } catch (err) {
-      console.error('Failed to fetch tenant info', err);
+    } catch {
     }
   };
 
@@ -91,11 +92,9 @@ const ModuleSettings = () => {
     }
     setContactSaving(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/tenants/${tenantCode}/contact-person`,
-        { contact_person_name: contactName, contact_person_email: contactEmail },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { contact_person_name: contactName, contact_person_email: contactEmail }
       );
       toast.success('Contact person updated!');
       setEditingContact(false);
@@ -117,12 +116,13 @@ const ModuleSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // TODO: Save to backend
-      await new Promise(r => setTimeout(r, 500));
+      const enabledModules = modules.filter(m => m.enabled).map(m => m.id);
+      await axios.put(`${API}/api/tenants/${tenantCode}/modules`, { enabled_modules: enabledModules });
       toast.success('Module settings saved!');
       setHasChanges(false);
     } catch (error) {
-      toast.error('Failed to save settings');
+      const detail = error.response?.data?.detail;
+      toast.error(typeof detail === 'string' ? detail : 'Failed to save settings');
     } finally {
       setSaving(false);
     }

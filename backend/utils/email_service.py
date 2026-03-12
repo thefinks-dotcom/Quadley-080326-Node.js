@@ -21,7 +21,7 @@ sg_client = None
 if EMAIL_ENABLED:
     try:
         from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
+        from sendgrid.helpers.mail import Mail
         sg_client = SendGridAPIClient(SENDGRID_API_KEY)
         logger.info("Email service initialized with SendGrid")
     except ImportError:

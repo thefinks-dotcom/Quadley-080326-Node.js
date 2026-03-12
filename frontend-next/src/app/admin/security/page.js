@@ -60,8 +60,7 @@ function SecurityAlerts() {
   const [filter, setFilter] = useState({ severity: 'all', type: 'all', resolved: 'false' });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
+  const headers = {};
 
   const fetchData = useCallback(async () => {
     try {

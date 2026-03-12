@@ -142,19 +142,12 @@ const AcademicsModule = () => {
     }
 
     try {
-      console.log('Submitting tutor application:', {
-        subjects: tutorApplication.subjects,
-        bio: tutorApplication.bio || '',
-        available_times: tutorApplication.available_times
-      });
-      
       const response = await axios.post(`${API}/tutoring/apply`, {
         subjects: tutorApplication.subjects,
         bio: tutorApplication.bio || '',
         available_times: tutorApplication.available_times
       });
       
-      console.log('Application submitted successfully:', response.data);
       toast.success('Tutor application submitted! Awaiting admin approval.');
       setShowTutorForm(false);
       setTutorApplication({

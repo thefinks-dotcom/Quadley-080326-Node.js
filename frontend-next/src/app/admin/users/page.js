@@ -97,9 +97,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/users/list`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
       setFilteredUsers(response.data); // Initialize filtered users
@@ -132,13 +130,11 @@ const UserManagement = () => {
     setStatusLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
       const newStatus = userToToggle.active === false;
       
       await axios.patch(
         `${API}/api/auth/users/${userToToggle.id}/status`,
-        { active: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { active: newStatus }
       );
       
       toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
@@ -157,11 +153,9 @@ const UserManagement = () => {
     if (!userForDeclaration) return;
     setDeclarationLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(
         `${API}/api/gbv-training/gbv-declaration`,
-        { user_id: userForDeclaration.id, has_declaration: declarationChecked, declaration_notes: declarationNotes },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { user_id: userForDeclaration.id, has_declaration: declarationChecked, declaration_notes: declarationNotes }
       );
       toast.success('GBV declaration status updated');
       setShowDeclarationDialog(false);
@@ -181,7 +175,6 @@ const UserManagement = () => {
     }
     setAddLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.post(
         `${API}/api/users/invite`,
         {
@@ -191,8 +184,7 @@ const UserManagement = () => {
           role: addForm.role,
           floor: addForm.floor.trim() || null,
           room: addForm.room.trim() || null,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       const inviteCode = res.data?.user?.invite_code;
       const emailSent = res.data?.email_sent;
