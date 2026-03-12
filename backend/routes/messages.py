@@ -157,21 +157,27 @@ async def send_message(
     # Sanitize message content
     clean_content = sanitize_html(msg_data.content, max_length=5000)
 
-    # AI CONTENT MODERATION (optional, per-tenant) — skipped when user explicitly overrides nudge
-    ai_flag = None if msg_data.force_send else await _check_ai_moderation(clean_content, current_user.tenant_code)
+    # AI CONTENT MODERATION (optional, per-tenant)
+    # force_send bypasses the local nudge warning but moderation still runs server-side.
+    # Severe categories are always blocked regardless of force_send; only lower-severity
+    # flags are allowed through (and tagged for admin review).
+    SEVERE_CATEGORIES = {
+        "sexual/minors", "violence/graphic", "hate/threatening",
+        "harassment/threatening", "self-harm/instructions",
+    }
+    ai_flag = await _check_ai_moderation(clean_content, current_user.tenant_code)
     if ai_flag:
-        flagged_cats = [
-            k.replace("/", " / ").replace("_", " ")
-            for k, v in ai_flag.get("categories", {}).items() if v
-        ]
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "code": "content_flagged",
-                "categories": flagged_cats,
-                "message": "This message was flagged by AI content moderation."
-            }
-        )
+        flagged_cats = [k for k, v in ai_flag.get("categories", {}).items() if v]
+        severe_hit = any(c in SEVERE_CATEGORIES for c in flagged_cats)
+        if severe_hit or not msg_data.force_send:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "content_flagged",
+                    "categories": [c.replace("/", " / ").replace("_", " ") for c in flagged_cats],
+                    "message": "This message was flagged by AI content moderation."
+                }
+            )
     
     # Generate conversation_id for direct messages (sorted user IDs)
     conversation_id = None
@@ -191,6 +197,8 @@ async def send_message(
     
     msg_doc = message.model_dump()
     msg_doc['timestamp'] = msg_doc['timestamp'].isoformat()
+    if msg_data.force_send:
+        msg_doc['force_sent'] = True
     await tenant_db.messages.insert_one(msg_doc)
     
     return message

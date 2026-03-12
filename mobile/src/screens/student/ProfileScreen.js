@@ -7,6 +7,9 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +29,7 @@ export default function ProfileScreen({ navigation }) {
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
 
   const [deleteStep, setDeleteStep] = useState(0);
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleLogout = () => {
     Alert.alert(
@@ -40,11 +44,12 @@ export default function ProfileScreen({ navigation }) {
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.delete('/auth/users/me');
+      const res = await api.delete('/auth/users/me', { data: { password: deletePassword } });
       return res.data;
     },
     onSuccess: () => {
       setDeleteStep(0);
+      setDeletePassword('');
       Alert.alert(
         'Account Deleted',
         'Your account and all associated personal data have been permanently deleted.',
@@ -52,7 +57,6 @@ export default function ProfileScreen({ navigation }) {
       );
     },
     onError: (err) => {
-      setDeleteStep(0);
       Alert.alert('Error', err.response?.data?.detail || 'Failed to delete account. Please try again.');
     },
   });
@@ -309,11 +313,12 @@ export default function ProfileScreen({ navigation }) {
         </SafeAreaView>
       </Modal>
 
-      {/* Delete Account Modal — Step 2: Final confirm */}
-      <Modal visible={deleteStep === 2} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDeleteStep(0)}>
+      {/* Delete Account Modal — Step 2: Password + final confirm */}
+      <Modal visible={deleteStep === 2} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setDeleteStep(0); setDeletePassword(''); }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
-            <TouchableOpacity onPress={() => setDeleteStep(1)}>
+            <TouchableOpacity onPress={() => { setDeleteStep(1); setDeletePassword(''); }}>
               <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Back</Text>
             </TouchableOpacity>
             <Text style={{ fontSize: 17, fontWeight: '600', color: colors.textPrimary }}>Final Confirmation</Text>
@@ -321,34 +326,64 @@ export default function ProfileScreen({ navigation }) {
           </View>
 
           <View style={{ flex: 1, padding: spacing.xl, justifyContent: 'center' }}>
-            <View style={{ alignItems: 'center', marginBottom: 32 }}>
+            <View style={{ alignItems: 'center', marginBottom: 28 }}>
               <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
                 <Ionicons name="warning-outline" size={32} color="#B91C1C" />
               </View>
               <Text style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: 8 }}>
-                Last chance
+                Confirm your identity
               </Text>
               <Text style={{ fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
-                Tapping the button below will immediately and permanently delete your account for{' '}
+                Enter your password to permanently delete the account for{' '}
                 <Text style={{ fontWeight: '600', color: colors.textPrimary }}>{user?.first_name} {user?.last_name}</Text>.
               </Text>
             </View>
 
+            <Text style={{ fontSize: 13, color: colors.textTertiary, marginBottom: 6 }}>Your password</Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.surfaceSecondary,
+                borderRadius: borderRadius.md,
+                padding: 14,
+                fontSize: 15,
+                color: colors.textPrimary,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginBottom: 20,
+              }}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.textTertiary}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+            />
+
             <TouchableOpacity
               onPress={() => deleteAccountMutation.mutate()}
-              disabled={deleteAccountMutation.isPending}
-              style={{ backgroundColor: '#B91C1C', borderRadius: borderRadius.md, paddingVertical: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 14 }}
+              disabled={deleteAccountMutation.isPending || !deletePassword.trim()}
+              style={{
+                backgroundColor: deletePassword.trim() ? '#B91C1C' : colors.surfaceSecondary,
+                borderRadius: borderRadius.md,
+                paddingVertical: 18,
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 10,
+                marginBottom: 14,
+              }}
             >
               {deleteAccountMutation.isPending
                 ? <ActivityIndicator color="#fff" />
-                : <Ionicons name="trash" size={20} color="#fff" />}
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                : <Ionicons name="trash" size={20} color={deletePassword.trim() ? '#fff' : colors.textTertiary} />}
+              <Text style={{ color: deletePassword.trim() ? '#fff' : colors.textTertiary, fontWeight: '700', fontSize: 16 }}>
                 {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete my account permanently'}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => setDeleteStep(0)}
+              onPress={() => { setDeleteStep(0); setDeletePassword(''); }}
               disabled={deleteAccountMutation.isPending}
               style={{ backgroundColor: colors.surfaceSecondary, borderRadius: borderRadius.md, paddingVertical: 16, alignItems: 'center' }}
             >
@@ -356,6 +391,7 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </SafeAreaView>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
