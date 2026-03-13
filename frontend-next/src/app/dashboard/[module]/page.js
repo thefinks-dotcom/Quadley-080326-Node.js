@@ -26,7 +26,6 @@ import ClubsModule from '@/components/modules/ClubsModule';
 import BirthdayModule from '@/components/modules/BirthdayModule';
 import AdminModule from '@/components/modules/AdminModule';
 import RAFloorManagementModule from '@/components/modules/RAFloorManagementModule';
-import RAFloorEventsModule from '@/components/modules/RAFloorEventsModule';
 import ParcelsModule from '@/components/modules/ParcelsModule';
 
 const MODULE_MAP = {
@@ -54,7 +53,6 @@ const MODULE_MAP = {
   clubs:          ClubsModule,
   birthdays:      BirthdayModule,
   'ra-floor':     RAFloorManagementModule,
-  'ra-events':    RAFloorEventsModule,
   admin:          AdminModule,
   jobs:           AdminModule,
   parcels:        ParcelsModule,

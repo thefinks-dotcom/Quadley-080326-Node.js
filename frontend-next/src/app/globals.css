@@ -335,26 +335,78 @@ html {
 }
 
 /* Quick Access grid — column count driven by --grid-cols CSS variable */
-.quick-access-grid {
+.launcher-grid {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
-  gap: 8px;
+  gap: 4px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
-}
-
-.quick-access-grid > button,
-.quick-access-grid > a {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
 }
 
 @media (min-width: 640px) {
-  .quick-access-grid {
-    gap: 12px;
+  .launcher-grid {
+    gap: 8px;
+  }
+}
+
+.launcher-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border-radius: 16px;
+  transition: background-color 0.15s ease;
+  text-decoration: none;
+  color: currentColor;
+  min-width: 0;
+}
+
+.launcher-tile:hover {
+  background-color: hsl(var(--muted));
+}
+
+@media (min-width: 640px) {
+  .launcher-tile {
+    gap: 8px;
+    padding: 16px 8px;
+    border-radius: 20px;
+  }
+}
+
+.launcher-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .launcher-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+  }
+}
+
+.launcher-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .launcher-label {
+    font-size: 13px;
   }
 }
 

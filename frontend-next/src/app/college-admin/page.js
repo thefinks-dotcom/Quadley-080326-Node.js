@@ -242,7 +242,7 @@ const CollegeAdminDashboard = () => {
     { label: 'Create Event', icon: Calendar, action: () => router.push('/college-admin/events'), color: 'text-primary' },
     { label: 'Safety Reports', icon: Shield, action: () => router.push('/college-admin/safety-support'), color: 'text-destructive' },
     { label: 'Send Recognition', icon: Award, action: () => router.push('/college-admin/recognition'), color: 'text-primary' },
-    { label: 'View as Student', icon: Eye, action: () => router.push('/dashboard'), color: 'text-primary' },
+    { label: 'View as Student', icon: Eye, action: () => router.push('/dashboard?preview=1'), color: 'text-primary' },
   ];
 
   const shortcuts = [
@@ -551,7 +551,7 @@ const CollegeAdminDashboard = () => {
               {mobileMenuOpen ? <X /> : <Menu />}
             </button>
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/dashboard?preview=1')}
               data-testid="home-logo-btn"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
@@ -562,7 +562,7 @@ const CollegeAdminDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/dashboard?preview=1')}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors"
               title="Preview the student and RA experience"
             >
@@ -623,7 +623,7 @@ const CollegeAdminDashboard = () => {
                   <button
                     onClick={() => {
                       setProfileDropdownOpen(false);
-                      router.push('/dashboard');
+                      router.push('/dashboard?preview=1');
                     }}
                     className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-3 transition-colors text-primary"
                   >
@@ -683,7 +683,7 @@ const CollegeAdminDashboard = () => {
               ))}
               <div className="border-t border-border pt-2 mt-2">
                 <button
-                  onClick={() => { router.push('/dashboard'); setMobileMenuOpen(false); }}
+                  onClick={() => { router.push('/dashboard?preview=1'); setMobileMenuOpen(false); }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-primary hover:bg-primary/5 transition-colors"
                 >
                   <Eye className="h-5 w-5" />
