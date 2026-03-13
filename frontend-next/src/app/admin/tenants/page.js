@@ -37,7 +37,11 @@ import {
   Shield,
   UserCog,
   Palette,
-  Layers
+  Layers,
+  FileCheck,
+  FileX,
+  Upload,
+  ExternalLink,
 } from 'lucide-react';
 
 const ALL_MODULES = [
@@ -81,6 +85,9 @@ const TenantManagement = () => {
   const [showModulesDialog, setShowModulesDialog] = useState(false);
   const [modulesLoading, setModulesLoading] = useState(false);
   const [editModules, setEditModules] = useState([]);
+  const [showAuthDocDialog, setShowAuthDocDialog] = useState(false);
+  const [authDocFile, setAuthDocFile] = useState(null);
+  const [authDocLoading, setAuthDocLoading] = useState(false);
   const [newTenant, setNewTenant] = useState({
     tenant_id: '',
     tenant_name: '',
@@ -261,6 +268,42 @@ const TenantManagement = () => {
       toast.error(typeof detail === 'string' ? detail : 'Failed to update modules');
     } finally {
       setModulesLoading(false);
+    }
+  };
+
+  const handleAuthDocUpload = async () => {
+    if (!selectedTenant || !authDocFile) return;
+    setAuthDocLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', authDocFile);
+      await axios.post(`${API}/api/tenants/${selectedTenant.code}/authorization-doc`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Authorization document uploaded');
+      setAuthDocFile(null);
+      setShowAuthDocDialog(false);
+      fetchTenants();
+    } catch (error) {
+      const detail = error.response?.data?.detail;
+      toast.error(typeof detail === 'string' ? detail : 'Failed to upload document');
+    } finally {
+      setAuthDocLoading(false);
+    }
+  };
+
+  const handleAuthDocRemove = async () => {
+    if (!selectedTenant) return;
+    setAuthDocLoading(true);
+    try {
+      await axios.delete(`${API}/api/tenants/${selectedTenant.code}/authorization-doc`);
+      toast.success('Authorization document removed');
+      setShowAuthDocDialog(false);
+      fetchTenants();
+    } catch (error) {
+      toast.error('Failed to remove document');
+    } finally {
+      setAuthDocLoading(false);
     }
   };
 
@@ -480,6 +523,26 @@ const TenantManagement = () => {
                       >
                         <Shield className="h-4 w-4 mr-1" />
                         SSO
+                      </Button>
+                      {/* Authorization Document Button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setAuthDocFile(null);
+                          setShowAuthDocDialog(true);
+                        }}
+                        className={tenant.authorization_doc_url
+                          ? 'text-success border-success/40 hover:bg-success/5'
+                          : 'text-muted-foreground border-border hover:bg-muted'}
+                        data-testid={`auth-doc-${tenant.code}`}
+                        title={tenant.authorization_doc_url ? 'Authorization document on file' : 'No authorization document yet'}
+                      >
+                        {tenant.authorization_doc_url
+                          ? <FileCheck className="h-4 w-4 mr-1" />
+                          : <FileX className="h-4 w-4 mr-1" />}
+                        Auth
                       </Button>
                       {tenant.status === 'pending' && (
                         <Button
@@ -1012,6 +1075,94 @@ const TenantManagement = () => {
               </Button>
               <Button onClick={handleSaveModules} disabled={modulesLoading}>
                 {modulesLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Authorization Document Dialog */}
+        <Dialog open={showAuthDocDialog} onOpenChange={(open) => { setShowAuthDocDialog(open); if (!open) setAuthDocFile(null); }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileCheck className="h-5 w-5 text-primary" />
+                College Authorization — {selectedTenant?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Upload a signed letter or agreement from the college authorizing Quadley to use their name and branding.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="my-4 space-y-4">
+              {selectedTenant?.authorization_doc_url ? (
+                <div className="p-4 bg-success/10 border border-success/30 rounded-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileCheck className="h-5 w-5 text-success shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-success text-sm">Authorization on file</p>
+                        <p className="text-xs text-muted-foreground truncate">{selectedTenant.authorization_doc_filename}</p>
+                        {selectedTenant.authorization_doc_uploaded_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Uploaded {new Date(selectedTenant.authorization_doc_uploaded_at).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <a
+                        href={`/api${selectedTenant.authorization_doc_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" /> View
+                      </a>
+                      <button
+                        onClick={handleAuthDocRemove}
+                        disabled={authDocLoading}
+                        className="text-xs text-destructive hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-muted border border-border rounded-lg flex items-center gap-3">
+                  <FileX className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <p className="text-sm text-muted-foreground">No authorization document on file for this college.</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="auth-doc-upload">
+                  {selectedTenant?.authorization_doc_url ? 'Replace document' : 'Upload authorization document'}
+                </Label>
+                <input
+                  id="auth-doc-upload"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => setAuthDocFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90 cursor-pointer"
+                />
+                <p className="text-xs text-muted-foreground">Accepted: PDF, JPG, PNG — max 10MB</p>
+              </div>
+
+              {authDocFile && (
+                <div className="p-3 bg-muted rounded-lg border border-border text-sm flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate text-foreground">{authDocFile.name}</span>
+                  <span className="text-muted-foreground shrink-0">({(authDocFile.size / 1024).toFixed(0)} KB)</span>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setShowAuthDocDialog(false); setAuthDocFile(null); }} disabled={authDocLoading}>
+                Cancel
+              </Button>
+              <Button onClick={handleAuthDocUpload} disabled={!authDocFile || authDocLoading}>
+                {authDocLoading ? 'Uploading...' : 'Upload Document'}
               </Button>
             </DialogFooter>
           </DialogContent>
