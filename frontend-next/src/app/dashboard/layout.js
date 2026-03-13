@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
 import OnboardingModal from '@/components/OnboardingModal';
@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const mainRef = useRef(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,6 +39,12 @@ export default function DashboardLayout({ children }) {
       setShowOnboarding(true);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [pathname]);
 
   if (loading || !user) return null;
 
@@ -55,7 +62,7 @@ export default function DashboardLayout({ children }) {
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
 
-      <main className="flex-1 overflow-y-auto" style={{ paddingBottom: 'var(--bottom-nav-height)' }}>
+      <main ref={mainRef} className="flex-1 overflow-y-auto" style={{ paddingBottom: 'var(--bottom-nav-height)' }}>
         {children}
       </main>
 
