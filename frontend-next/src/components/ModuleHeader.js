@@ -36,8 +36,12 @@ const ModuleHeader = ({
 
   return (
     <div
-      className="bg-primary sticky top-0 z-20 px-4 pt-4 pb-4"
-      style={{ borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}
+      className="bg-primary sticky top-0 z-20 px-4 pb-4"
+      style={{
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px',
+        paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
+      }}
     >
       <div className="flex items-center gap-3 mb-2">
         {showBack && (
