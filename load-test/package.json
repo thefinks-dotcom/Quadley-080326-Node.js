@@ -1,0 +1,12 @@
+{
+  "name": "quadley-load-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Load & performance test suite for Quadley API",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "autocannon": "^7.15.0"
+  }
+}

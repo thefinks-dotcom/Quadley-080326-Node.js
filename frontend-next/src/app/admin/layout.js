@@ -32,7 +32,7 @@ export default function AdminLayout({ children }) {
 
       <nav
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 flex items-center justify-around"
-        style={{ height: 'var(--bottom-nav-height)' }}
+        style={{ height: 'calc(64px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {TABS.map((tab) => {
           const Icon = tab.icon;

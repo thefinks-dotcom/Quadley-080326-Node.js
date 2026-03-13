@@ -60,7 +60,7 @@ code, .font-mono {
         --info-foreground: 0 0% 100%;
 
         /* Layout tokens */
-        --bottom-nav-height: 64px;
+        --bottom-nav-height: calc(64px + env(safe-area-inset-bottom, 0px));
         --header-height: 64px;
 
         /* Avatar accent (silver-blue) */
@@ -300,6 +300,12 @@ html {
 .bento-grid > .span-12 { grid-column: span 12; }
 
 @media (max-width: 1024px) {
+  .bento-grid > .span-3 { grid-column: span 4; }
+  .bento-grid > .span-4 { grid-column: span 6; }
+  .bento-grid > .span-8 { grid-column: span 12; }
+}
+
+@media (max-width: 768px) {
   .bento-grid > .span-3,
   .bento-grid > .span-4 { grid-column: span 6; }
   .bento-grid > .span-6,
