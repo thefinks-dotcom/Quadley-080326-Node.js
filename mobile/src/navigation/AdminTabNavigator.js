@@ -16,7 +16,7 @@ import AdminRecognitionScreen from '../screens/admin/AdminRecognitionScreen';
 import AdminMessagesScreen from '../screens/admin/AdminMessagesScreen';
 import AdminReportsScreen from '../screens/admin/AdminReportsScreen';
 import AdminSettingsScreen from '../screens/admin/AdminSettingsScreen';
-import StudentViewScreen from '../screens/admin/StudentViewScreen';
+import HomeScreen from '../screens/student/HomeScreen';
 import AnnualDisclosureReportScreen from '../screens/admin/AnnualDisclosureReportScreen';
 import StudentReportsScreen from '../screens/admin/StudentReportsScreen';
 import TenantManagementScreen from '../screens/admin/TenantManagementScreen';
@@ -88,7 +88,7 @@ function DashboardStack() {
       <Stack.Screen name="DashboardMain" component={AdminDashboardScreen} options={{ headerShown: false }} />
       
       {/* Admin-specific Screens */}
-      <Stack.Screen name="StudentView" component={StudentViewScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="StudentView" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminEvents" component={AdminEventsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AdminAnnouncements" component={AdminAnnouncementsScreen} options={{ headerShown: false }} />
