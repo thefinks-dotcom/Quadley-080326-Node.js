@@ -334,34 +334,34 @@ html {
   }
 }
 
-/* Quick Access grid */
+/* Quick Access grid — column count driven by --grid-cols CSS variable */
 .quick-access-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
   gap: 8px;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
 .quick-access-grid > button,
 .quick-access-grid > a {
-  min-width: 0 !important;
-  max-width: 100% !important;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
 }
 
 @media (min-width: 640px) {
   .quick-access-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-columns: repeat(var(--grid-cols-sm, 4), 1fr);
     gap: 12px;
   }
 }
 
 @media (min-width: 1024px) {
   .quick-access-grid {
-    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-columns: repeat(var(--grid-cols-lg, 5), 1fr);
   }
 }
 
