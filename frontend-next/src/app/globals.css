@@ -354,14 +354,7 @@ html {
 
 @media (min-width: 640px) {
   .quick-access-grid {
-    grid-template-columns: repeat(var(--grid-cols-sm, 4), 1fr);
     gap: 12px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .quick-access-grid {
-    grid-template-columns: repeat(var(--grid-cols-lg, 5), 1fr);
   }
 }
 

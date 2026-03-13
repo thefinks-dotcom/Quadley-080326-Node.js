@@ -110,8 +110,6 @@ const HomeModule = () => {
 
   const tileCount = visibleModules.length + 1;
   const gridCols = tileCount <= 4 ? 2 : tileCount <= 8 ? 3 : 4;
-  const gridColsSm = Math.min(gridCols + 1, 5);
-  const gridColsLg = Math.min(gridCols + 2, 6);
 
   const widgetRenderers = {
     parcels: () =>
@@ -385,7 +383,7 @@ const HomeModule = () => {
           <h3 className="font-bold text-lg sm:text-xl mb-3 sm:mb-4">Quick Access</h3>
           <div
             className="quick-access-grid"
-            style={{ '--grid-cols': gridCols, '--grid-cols-sm': gridColsSm, '--grid-cols-lg': gridColsLg }}
+            style={{ '--grid-cols': gridCols }}
           >
             {visibleModules.map((mod) => {
               const Icon = mod.icon;
