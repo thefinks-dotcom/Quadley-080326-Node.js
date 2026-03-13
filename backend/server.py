@@ -1452,6 +1452,52 @@ async def get_users_list(
     return user_list
 
 
+@api_router.delete("/admin/users/{user_id}")
+async def admin_delete_user(
+    user_id: str,
+    current_user = Depends(tenant_get_current_user),
+):
+    """Permanently delete a single user from the tenant. Admin only."""
+    if current_user.role not in ['admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if getattr(current_user, 'id', None) == user_id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    from utils.multi_tenant import get_tenant_db
+    tenant_code = getattr(current_user, 'tenant_code', None)
+    if not tenant_code:
+        raise HTTPException(status_code=403, detail="Tenant context required")
+    t_db = get_tenant_db(tenant_code)
+    result = await t_db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"success": True, "deleted_user_id": user_id}
+
+
+@api_router.post("/admin/users/bulk-delete")
+async def admin_bulk_delete_users(
+    payload: dict,
+    current_user = Depends(tenant_get_current_user),
+):
+    """Permanently delete multiple users from the tenant. Admin only."""
+    if current_user.role not in ['admin', 'super_admin', 'college_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    user_ids = payload.get("user_ids", [])
+    if not user_ids or not isinstance(user_ids, list):
+        raise HTTPException(status_code=400, detail="user_ids list required")
+    # Prevent self-deletion
+    current_id = getattr(current_user, 'id', None)
+    user_ids = [uid for uid in user_ids if uid != current_id]
+    if not user_ids:
+        raise HTTPException(status_code=400, detail="No valid user IDs to delete")
+    from utils.multi_tenant import get_tenant_db
+    tenant_code = getattr(current_user, 'tenant_code', None)
+    if not tenant_code:
+        raise HTTPException(status_code=403, detail="Tenant context required")
+    t_db = get_tenant_db(tenant_code)
+    result = await t_db.users.delete_many({"id": {"$in": user_ids}})
+    return {"success": True, "deleted_count": result.deleted_count}
+
+
 # GDPR/Security endpoints - use tenant-aware auth
 
 # Encryption at rest verification endpoint (GDPR Art. 32, ISO A.10.1)

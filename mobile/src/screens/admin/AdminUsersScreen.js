@@ -45,6 +45,8 @@ export default function AdminUsersScreen({ navigation }) {
   const [emailEditValue, setEmailEditValue] = useState('');
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
   const [newStudent, setNewStudent] = useState({
     email: '',
     first_name: '',
@@ -180,6 +182,83 @@ export default function AdminUsersScreen({ navigation }) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update user details');
     },
   });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId) => {
+      await api.delete(`/admin/users/${userId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+    },
+    onError: (error) => {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to delete user');
+    },
+  });
+
+  const bulkDeleteUsers = useMutation({
+    mutationFn: async (userIds) => {
+      const response = await api.post('/admin/users/bulk-delete', { user_ids: userIds });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      Alert.alert('Deleted', `${data.deleted_count} user${data.deleted_count !== 1 ? 's' : ''} deleted.`);
+      setSelectionMode(false);
+      setSelectedUserIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+    },
+    onError: (error) => {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to delete users');
+    },
+  });
+
+  const handleDeleteUser = (user) => {
+    Alert.alert(
+      'Delete User',
+      `Permanently delete ${user.first_name} ${user.last_name}? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteUser.mutate(user.id),
+        },
+      ]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    const count = selectedUserIds.size;
+    if (count === 0) return;
+    Alert.alert(
+      'Delete Users',
+      `Permanently delete ${count} user${count !== 1 ? 's' : ''}? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: `Delete ${count}`,
+          style: 'destructive',
+          onPress: () => bulkDeleteUsers.mutate(Array.from(selectedUserIds)),
+        },
+      ]
+    );
+  };
+
+  const toggleSelectUser = (userId) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  };
 
   const handleEmailEditSave = () => {
     if (!editFirstName.trim() || !editLastName.trim()) {
@@ -463,6 +542,12 @@ export default function AdminUsersScreen({ navigation }) {
       onPress: () => handleRoleChange(user) 
     });
     
+    buttons.push({
+      text: 'Delete User',
+      style: 'destructive',
+      onPress: () => handleDeleteUser(user),
+    });
+
     buttons.push({ text: 'Cancel', style: 'cancel' });
     
     const statusText = isPending ? 'Pending Setup' : (user.active !== false ? 'Active' : 'Inactive');
@@ -479,12 +564,14 @@ export default function AdminUsersScreen({ navigation }) {
 
   const renderUser = ({ item }) => {
     const isPending = item.pending_setup;
+    const isSelected = selectedUserIds.has(item.id);
     return (
       <TouchableOpacity
-        onPress={() => handleUserPress(item)}
+        onPress={() => selectionMode ? toggleSelectUser(item.id) : handleUserPress(item)}
+        onLongPress={() => { if (!selectionMode) { setSelectionMode(true); toggleSelectUser(item.id); } }}
         data-testid={`user-item-${item.id}`}
         style={{
-          backgroundColor: colors.surface,
+          backgroundColor: isSelected ? colors.primary + '10' : colors.surface,
           padding: spacing.lg,
           borderBottomWidth: 1,
           borderBottomColor: colors.surfaceSecondary,
@@ -493,6 +580,16 @@ export default function AdminUsersScreen({ navigation }) {
           opacity: item.active === false && !isPending ? 0.6 : 1,
         }}
       >
+        {selectionMode && (
+          <View style={{
+            width: 24, height: 24, borderRadius: 12, marginRight: 12,
+            backgroundColor: isSelected ? colors.primary : 'transparent',
+            borderWidth: 2, borderColor: isSelected ? colors.primary : colors.border,
+            justifyContent: 'center', alignItems: 'center',
+          }}>
+            {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+          </View>
+        )}
         <View
           style={{
             width: 48,
@@ -596,17 +693,45 @@ export default function AdminUsersScreen({ navigation }) {
       )}
       {!isLoading && <>
 
-      {/* Search + Export */}
+      {/* Search + Export + Select */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: spacing.sm }}>
-          <TouchableOpacity 
-            onPress={exportUsersCSV}
-            data-testid="export-users-btn"
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.sm }}
-          >
-            <Ionicons name="download-outline" size={18} color={colors.textPrimary} />
-            <Text style={{ marginLeft: 6, color: colors.textPrimary, fontWeight: '500', fontSize: 14 }}>Export</Text>
-          </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: spacing.sm }}>
+          {!selectionMode ? (
+            <>
+              <TouchableOpacity
+                onPress={() => setSelectionMode(true)}
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.sm }}
+              >
+                <Ionicons name="checkmark-circle-outline" size={18} color={colors.textPrimary} />
+                <Text style={{ marginLeft: 6, color: colors.textPrimary, fontWeight: '500', fontSize: 14 }}>Select</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={exportUsersCSV}
+                data-testid="export-users-btn"
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.sm }}
+              >
+                <Ionicons name="download-outline" size={18} color={colors.textPrimary} />
+                <Text style={{ marginLeft: 6, color: colors.textPrimary, fontWeight: '500', fontSize: 14 }}>Export</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                onPress={toggleSelectAll}
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.sm }}
+              >
+                <Text style={{ color: primaryColor, fontWeight: '600', fontSize: 14 }}>
+                  {selectedUserIds.size === filteredUsers.length ? 'Deselect All' : 'Select All'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => { setSelectionMode(false); setSelectedUserIds(new Set()); }}
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceSecondary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.sm }}
+              >
+                <Text style={{ color: colors.textSecondary, fontWeight: '500', fontSize: 14 }}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Search */}
@@ -1013,6 +1138,34 @@ export default function AdminUsersScreen({ navigation }) {
         </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Bulk Delete Action Bar */}
+      {selectionMode && selectedUserIds.size > 0 && (
+        <View style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border,
+          padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 12,
+          shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4,
+        }}>
+          <Text style={{ flex: 1, color: colors.textSecondary, fontSize: 14 }}>
+            {selectedUserIds.size} user{selectedUserIds.size !== 1 ? 's' : ''} selected
+          </Text>
+          <TouchableOpacity
+            onPress={handleBulkDelete}
+            disabled={bulkDeleteUsers.isPending}
+            style={{
+              backgroundColor: colors.error,
+              paddingHorizontal: 20, paddingVertical: 12,
+              borderRadius: borderRadius.md, flexDirection: 'row', alignItems: 'center',
+            }}
+          >
+            <Ionicons name="trash-outline" size={18} color="#fff" />
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14, marginLeft: 6 }}>
+              {bulkDeleteUsers.isPending ? 'Deleting...' : `Delete ${selectedUserIds.size}`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Bulk Import Results Modal */}
       <Modal

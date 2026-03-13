@@ -115,4 +115,6 @@ export const ENDPOINTS = {
   // User List (Admin)
   USERS_LIST: '/admin/users',
   USER_SEARCH: '/admin/users/search',
+  ADMIN_USER_DELETE: (id) => `/admin/users/${id}`,
+  ADMIN_USERS_BULK_DELETE: '/admin/users/bulk-delete',
 };
