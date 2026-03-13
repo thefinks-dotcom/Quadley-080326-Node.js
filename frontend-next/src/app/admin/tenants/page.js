@@ -42,26 +42,10 @@ import {
   FileX,
   Upload,
   ExternalLink,
+  GripVertical,
+  X,
 } from 'lucide-react';
-
-const ALL_MODULES = [
-  { id: 'events',          label: 'Events' },
-  { id: 'announcements',   label: 'Announcements' },
-  { id: 'messages',        label: 'Messages' },
-  { id: 'jobs',            label: 'Jobs' },
-  { id: 'dining',          label: 'Dining' },
-  { id: 'maintenance',     label: 'Maintenance' },
-  { id: 'recognition',     label: 'Recognition' },
-  { id: 'wellbeing',       label: 'Wellbeing' },
-  { id: 'academics',       label: 'Academics' },
-  { id: 'cocurricular',    label: 'Co-curricular' },
-  { id: 'floor',           label: 'Floor' },
-  { id: 'birthdays',       label: 'Birthdays' },
-  { id: 'finance',         label: 'Finance' },
-  { id: 'safe_disclosure', label: 'Safe Disclosure' },
-  { id: 'parcels',         label: 'Parcels' },
-  { id: 'bookings',        label: 'Bookings' },
-];
+import { MODULE_REGISTRY } from '@/config/moduleRegistry';
 
 const API = '';
 
@@ -85,6 +69,7 @@ const TenantManagement = () => {
   const [showModulesDialog, setShowModulesDialog] = useState(false);
   const [modulesLoading, setModulesLoading] = useState(false);
   const [editModules, setEditModules] = useState([]);
+  const [draggedModuleIndex, setDraggedModuleIndex] = useState(null);
   const [showAuthDocDialog, setShowAuthDocDialog] = useState(false);
   const [authDocFile, setAuthDocFile] = useState(null);
   const [authDocLoading, setAuthDocLoading] = useState(false);
@@ -101,7 +86,7 @@ const TenantManagement = () => {
     logo_url: '',
     primary_color: '#3b82f6',
     secondary_color: '#1f2937',
-    enabled_modules: ALL_MODULES.map(m => m.id),
+    enabled_modules: MODULE_REGISTRY.map(m => m.id),
   });
 
   const toggleModule = (moduleId) => {
@@ -113,6 +98,23 @@ const TenantManagement = () => {
       return { ...prev, enabled_modules: updated };
     });
   };
+
+  const handleDragStart = (e, index) => {
+    setDraggedModuleIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedModuleIndex === null || draggedModuleIndex === index) return;
+    const newModules = [...editModules];
+    const [dragged] = newModules.splice(draggedModuleIndex, 1);
+    newModules.splice(index, 0, dragged);
+    setEditModules(newModules);
+    setDraggedModuleIndex(index);
+  };
+
+  const handleDragEnd = () => setDraggedModuleIndex(null);
 
   useEffect(() => {
     fetchTenants();
@@ -215,7 +217,7 @@ const TenantManagement = () => {
         logo_url: '',
         primary_color: '#3b82f6',
         secondary_color: '#1f2937',
-        enabled_modules: ALL_MODULES.map(m => m.id),
+        enabled_modules: MODULE_REGISTRY.map(m => m.id),
       });
       fetchTenants();
     } catch (error) {
@@ -504,7 +506,7 @@ const TenantManagement = () => {
                         variant="outline"
                         onClick={() => {
                           setSelectedTenant(tenant);
-                          setEditModules(tenant.enabled_modules || ALL_MODULES.map(m => m.id));
+                          setEditModules(tenant.enabled_modules || MODULE_REGISTRY.map(m => m.id));
                           setShowModulesDialog(true);
                         }}
                         className="text-primary border-border hover:bg-muted"
@@ -897,12 +899,12 @@ const TenantManagement = () => {
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h3 className="font-semibold text-sm text-foreground">
-                    Enabled Modules ({newTenant.enabled_modules.length}/{ALL_MODULES.length})
+                    Enabled Modules ({newTenant.enabled_modules.length}/{MODULE_REGISTRY.length})
                   </h3>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setNewTenant(p => ({...p, enabled_modules: ALL_MODULES.map(m => m.id)}))}
+                      onClick={() => setNewTenant(p => ({...p, enabled_modules: MODULE_REGISTRY.map(m => m.id)}))}
                       className="text-xs text-primary hover:underline"
                     >All</button>
                     <span className="text-xs text-muted-foreground">·</span>
@@ -914,19 +916,21 @@ const TenantManagement = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {ALL_MODULES.map(mod => {
+                  {MODULE_REGISTRY.map(mod => {
+                    const Icon = mod.icon;
                     const active = newTenant.enabled_modules.includes(mod.id);
                     return (
                       <button
                         key={mod.id}
                         type="button"
                         onClick={() => toggleModule(mod.id)}
-                        className={`text-xs px-2 py-1.5 rounded-md border text-left transition-colors ${
+                        className={`flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-md border text-left transition-colors ${
                           active
                             ? 'bg-primary text-white border-primary'
                             : 'bg-background text-muted-foreground border-border hover:border-primary/50'
                         }`}
                       >
+                        <Icon className="h-3 w-3 shrink-0" />
                         {mod.label}
                       </button>
                     );
@@ -1020,54 +1024,75 @@ const TenantManagement = () => {
                 Toggle which modules are available to users of this tenant.
               </DialogDescription>
             </DialogHeader>
-            <div className="my-4">
-              <div className="flex items-center justify-between mb-3">
+            <div className="my-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {editModules.length} of {ALL_MODULES.length} enabled
+                  {editModules.length} of {MODULE_REGISTRY.length} enabled
                 </span>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditModules(ALL_MODULES.map(m => m.id))}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditModules([])}
-                  >
-                    None
-                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditModules(MODULE_REGISTRY.map(m => m.id))}>All</Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditModules([])}>None</Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
-                {ALL_MODULES.map((mod) => {
-                  const active = editModules.includes(mod.id);
-                  return (
-                    <button
-                      key={mod.id}
-                      type="button"
-                      onClick={() =>
-                        setEditModules(prev =>
-                          prev.includes(mod.id)
-                            ? prev.filter(m => m !== mod.id)
-                            : [...prev, mod.id]
-                        )
-                      }
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all text-left ${
-                        active
-                          ? 'bg-primary/10 border-primary text-primary'
-                          : 'bg-muted border-border text-muted-foreground hover:border-primary/40'
-                      }`}
-                    >
-                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${active ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
-                      {mod.label}
-                    </button>
-                  );
-                })}
-              </div>
+
+              {editModules.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Enabled — drag to reorder</p>
+                  {editModules.map((modId, index) => {
+                    const mod = MODULE_REGISTRY.find(m => m.id === modId);
+                    if (!mod) return null;
+                    const Icon = mod.icon;
+                    return (
+                      <div
+                        key={mod.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border bg-primary/5 border-primary/20 cursor-grab active:cursor-grabbing select-none ${draggedModuleIndex === index ? 'opacity-40' : ''}`}
+                      >
+                        <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                        <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${mod.gradient} flex items-center justify-center shrink-0`}>
+                          <Icon className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <span className="text-sm font-medium flex-1">{mod.label}</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditModules(prev => prev.filter(m => m !== mod.id))}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
+                          title="Remove"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {MODULE_REGISTRY.filter(m => !editModules.includes(m.id)).length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Available to add</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {MODULE_REGISTRY.filter(m => !editModules.includes(m.id)).map((mod) => {
+                      const Icon = mod.icon;
+                      return (
+                        <button
+                          key={mod.id}
+                          type="button"
+                          onClick={() => setEditModules(prev => [...prev, mod.id])}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-border bg-muted text-muted-foreground hover:border-primary/40 hover:text-foreground transition-all text-left"
+                        >
+                          <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${mod.gradient} flex items-center justify-center shrink-0 opacity-60`}>
+                            <Icon className="h-3 w-3 text-white" />
+                          </div>
+                          <span className="text-sm">{mod.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowModulesDialog(false)} disabled={modulesLoading}>
