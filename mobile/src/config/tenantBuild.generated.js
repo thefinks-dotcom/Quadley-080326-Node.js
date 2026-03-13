@@ -2,7 +2,7 @@
 // Re-generate: TENANT=grace_college npx expo prebuild --platform ios --clean
 const BUILD_CONFIG = {
   tenant: "grace_college",
-  tenantName: "Grace College",
+  tenantName: "Grace Test",
   primaryColor: "#E05A20",
   secondaryColor: "#3E1B5E",
 };

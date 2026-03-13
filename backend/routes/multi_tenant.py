@@ -251,7 +251,10 @@ async def list_tenants(
             max_users=t.get('max_users', 100),
             status=t['status'],
             user_count=t.get('user_count', 0),
-            created_at=t['created_at'] if isinstance(t['created_at'], str) else t['created_at'].isoformat()
+            created_at=t['created_at'] if isinstance(t['created_at'], str) else t['created_at'].isoformat(),
+            authorization_doc_url=t.get('authorization_doc_url'),
+            authorization_doc_filename=t.get('authorization_doc_filename'),
+            authorization_doc_uploaded_at=t.get('authorization_doc_uploaded_at'),
         )
         for t in tenants
     ]
@@ -323,6 +326,109 @@ async def upload_tenant_logo(
         "logo_url": logo_url
     }
 
+@router.post("/{tenant_code}/authorization-doc")
+async def upload_authorization_doc(
+    tenant_code: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload an authorization document for a tenant (PDF, JPG, or PNG).
+    Proves the college has approved use of their name and branding. Super Admin only.
+    """
+    from pathlib import Path
+    from utils.file_validation import generate_safe_filename
+
+    if current_user.role != "super_admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only super admins can upload authorization documents")
+
+    tenant = await master_db.tenants.find_one({"code": tenant_code})
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    content = await file.read()
+
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+
+    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/jpg"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only PDF, JPG, and PNG files are accepted.")
+
+    upload_dir = Path("/app/backend/uploads/auth_docs")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_filename = generate_safe_filename(file.filename, f"authdoc_{tenant_code}", content)
+    file_path = upload_dir / safe_filename
+
+    # Remove old doc file if one already exists
+    old_doc = tenant.get("authorization_doc_url")
+    if old_doc and old_doc.startswith("/api/uploads/auth_docs/"):
+        old_path = upload_dir / old_doc.split("/")[-1]
+        if old_path.exists():
+            old_path.unlink()
+
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    doc_url = f"/api/uploads/auth_docs/{safe_filename}"
+    now = datetime.now(timezone.utc).isoformat()
+
+    await master_db.tenants.update_one(
+        {"code": tenant_code},
+        {"$set": {
+            "authorization_doc_url": doc_url,
+            "authorization_doc_filename": file.filename,
+            "authorization_doc_uploaded_at": now,
+            "authorization_doc_uploaded_by": current_user.id,
+        }}
+    )
+
+    logger.info(f"Authorization doc uploaded for tenant {tenant_code} by user {current_user.id}")
+
+    return {
+        "message": "Authorization document uploaded successfully",
+        "authorization_doc_url": doc_url,
+        "authorization_doc_filename": file.filename,
+        "authorization_doc_uploaded_at": now,
+    }
+
+
+@router.delete("/{tenant_code}/authorization-doc")
+async def delete_authorization_doc(
+    tenant_code: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Remove an authorization document for a tenant. Super Admin only."""
+    from pathlib import Path
+
+    if current_user.role != "super_admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only super admins can remove authorization documents")
+
+    tenant = await master_db.tenants.find_one({"code": tenant_code})
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+    old_doc = tenant.get("authorization_doc_url")
+    if old_doc and old_doc.startswith("/api/uploads/auth_docs/"):
+        upload_dir = Path("/app/backend/uploads/auth_docs")
+        old_path = upload_dir / old_doc.split("/")[-1]
+        if old_path.exists():
+            old_path.unlink()
+
+    await master_db.tenants.update_one(
+        {"code": tenant_code},
+        {"$unset": {
+            "authorization_doc_url": "",
+            "authorization_doc_filename": "",
+            "authorization_doc_uploaded_at": "",
+            "authorization_doc_uploaded_by": "",
+        }}
+    )
+
+    return {"message": "Authorization document removed"}
+
+
 @router.get("/{tenant_code}", response_model=TenantResponse)
 async def get_tenant(
     tenant_code: str,
@@ -357,7 +463,10 @@ async def get_tenant(
         max_users=tenant.get('max_users', 100),
         status=tenant['status'],
         user_count=tenant.get('user_count', 0),
-        created_at=tenant['created_at'] if isinstance(tenant['created_at'], str) else tenant['created_at'].isoformat()
+        created_at=tenant['created_at'] if isinstance(tenant['created_at'], str) else tenant['created_at'].isoformat(),
+        authorization_doc_url=tenant.get('authorization_doc_url'),
+        authorization_doc_filename=tenant.get('authorization_doc_filename'),
+        authorization_doc_uploaded_at=tenant.get('authorization_doc_uploaded_at'),
     )
 
 @router.put("/{tenant_code}", response_model=TenantResponse)

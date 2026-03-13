@@ -135,6 +135,9 @@ class TenantResponse(BaseModel):
     status: str
     user_count: int
     created_at: str
+    authorization_doc_url: Optional[str] = None
+    authorization_doc_filename: Optional[str] = None
+    authorization_doc_uploaded_at: Optional[str] = None
 
 # ====== INVITATION MODELS ======
 
