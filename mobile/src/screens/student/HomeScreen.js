@@ -23,105 +23,67 @@ import { useAppTheme } from '../../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Build-time fallback colors
 const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
 const buildSecondaryColor = BUILD_CONFIG.secondaryColor || defaultColors.background;
 const buildTenantCode = BUILD_CONFIG.tenant;
-// For white-label builds the app icon is baked in at build time and should always be shown.
-// Only the generic Quadley build supports overriding the logo via a DB-stored URL.
 const BUILD_IS_WHITE_LABEL = buildTenantCode !== 'quadley';
 const buildStaticLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
 
-// Swiss Technical Quick Access Button
-const QuickAccessButton = ({ icon, label, onPress, badge, primaryColor, secondaryColor, colors }) => (
+const LauncherTile = ({ icon, label, onPress, badge, primaryColor, colors }) => (
   <TouchableOpacity
     onPress={onPress}
     activeOpacity={0.7}
     style={{
       width: '25%',
       alignItems: 'center',
-      marginBottom: spacing.lg,
-      position: 'relative',
+      paddingVertical: spacing.md,
+      paddingHorizontal: 4,
     }}
     testID={`quick-access-${label.toLowerCase().replace(/\s/g, '-')}`}
   >
-    <View style={{
-      width: 58,
-      height: 58,
-      borderRadius: borderRadius.md,
-      backgroundColor: secondaryColor + '12',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: spacing.sm,
-      borderWidth: 1,
-      borderColor: secondaryColor + '25',
-      ...shadows.sm,
-    }}>
-      <Ionicons name={icon} size={26} color={primaryColor} />
+    <View style={{ position: 'relative' }}>
+      <View style={{
+        width: 62,
+        height: 62,
+        borderRadius: 16,
+        backgroundColor: primaryColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...shadows.sm,
+      }}>
+        <Ionicons name={icon} size={28} color="#fff" />
+      </View>
+      {badge > 0 && (
+        <View style={{
+          position: 'absolute',
+          top: -4,
+          right: -4,
+          backgroundColor: colors.error,
+          borderRadius: borderRadius.full,
+          minWidth: 20,
+          height: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 2,
+          borderColor: colors.background,
+        }}>
+          <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+            {badge > 9 ? '9+' : badge}
+          </Text>
+        </View>
+      )}
     </View>
     <Text style={{
       color: colors.textSecondary,
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: '500',
       textAlign: 'center',
-      letterSpacing: 0.2,
+      marginTop: 6,
+      letterSpacing: 0.1,
     }} numberOfLines={1}>
       {label}
     </Text>
-    {badge > 0 && (
-      <View style={{
-        position: 'absolute',
-        top: -4,
-        right: 8,
-        backgroundColor: colors.error,
-        borderRadius: borderRadius.full,
-        minWidth: 18,
-        height: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: colors.surface,
-      }}>
-        <Text style={{ color: colors.textInverse, fontSize: 10, fontWeight: 'bold' }}>{badge}</Text>
-      </View>
-    )}
   </TouchableOpacity>
-);
-
-// Section Header Component
-const SectionHeader = ({ title, onViewAll, accentColor, secondaryAccent, colors }) => (
-  <View style={{ 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-  }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <View style={{
-        width: 4,
-        height: 16,
-        borderRadius: 2,
-        backgroundColor: accentColor,
-        marginRight: spacing.sm,
-      }} />
-      <Text style={{
-        ...typography.label,
-        letterSpacing: 0.3,
-      }}>
-        {title}
-      </Text>
-    </View>
-    {onViewAll && (
-      <TouchableOpacity
-        onPress={onViewAll}
-        style={{ flexDirection: 'row', alignItems: 'center', padding: spacing.xs }}
-      >
-        <Text style={{ color: accentColor, fontWeight: '600', fontSize: 13 }}>View All</Text>
-        <Ionicons name="chevron-forward" size={14} color={accentColor} style={{ marginLeft: 2 }} />
-      </TouchableOpacity>
-    )}
-  </View>
 );
 
 export default function HomeScreen({ navigation }) {
@@ -156,15 +118,6 @@ export default function HomeScreen({ navigation }) {
     [announcements, readIds]
   );
 
-  const { data: events, refetch: refetchEvents } = useQuery({
-    queryKey: ['events'],
-    queryFn: async () => {
-      const response = await api.get(ENDPOINTS.EVENTS);
-      return response.data.slice(0, 3);
-    },
-    enabled: isModuleEnabled('events'),
-  });
-
   const { data: dashboard } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
@@ -181,89 +134,39 @@ export default function HomeScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchAnnouncements(), refetchEvents()]);
+    await refetchAnnouncements();
     setRefreshing(false);
   };
 
   const isRA = user?.role === 'ra';
 
-  const formatEventDate = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const date = parseISO(dateStr);
-      if (isToday(date)) return `Today, ${format(date, 'h:mm a')}`;
-      if (isTomorrow(date)) return `Tomorrow, ${format(date, 'h:mm a')}`;
-      return format(date, 'EEE, MMM d');
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const screenToModule = {
-    'Calendar': 'events', 'Events': 'events', 'Messages': 'messages',
-    'Announcements': 'announcements', 'Dining': 'dining', 'Floor': 'floor',
-    'Recognition': 'recognition', 'Birthdays': 'birthdays', 'CoCurricular': 'cocurricular',
-    'Maintenance': 'maintenance', 'Parcels': 'parcels', 'Bookings': 'bookings',
-    'Academics': 'academics', 'Jobs': 'jobs',
-    'Wellbeing': 'wellbeing', 'SafeDisclosure': 'safe_disclosure',
-  };
-
   const primaryColor = branding?.primaryColor || buildPrimaryColor;
   const secondaryColor = branding?.secondaryColor || buildSecondaryColor;
 
-  const moduleCategories = [
-    {
-      title: 'Campus Life',
-      modules: [
-        { icon: 'calendar-outline', label: 'Calendar', screen: 'Calendar', module: 'events' },
-        { icon: 'ticket-outline', label: 'Events', screen: 'Events', module: 'events' },
-        { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining', module: 'dining' },
-      ],
-    },
-    {
-      title: 'Community',
-      modules: [
-        { icon: 'people-outline', label: 'My Floor', screen: 'Floor', module: 'floor' },
-        { icon: 'star-outline', label: 'Shoutouts', screen: 'Recognition', module: 'recognition' },
-        { icon: 'gift-outline', label: 'Birthdays', screen: 'Birthdays', module: 'birthdays' },
-        { icon: 'flag-outline', label: 'Activities', screen: 'CoCurricular', module: 'cocurricular' },
-      ],
-    },
-    {
-      title: 'Services',
-      modules: [
-        { icon: 'construct-outline', label: 'Fixes', screen: 'Maintenance', module: 'maintenance' },
-        { icon: 'cube-outline', label: 'Parcels', screen: 'Parcels', module: 'parcels' },
-        { icon: 'calendar-number-outline', label: 'Bookings', screen: 'Bookings', module: 'bookings' },
-      ],
-    },
-    {
-      title: 'Growth & Wellbeing',
-      modules: [
-        { icon: 'book-outline', label: 'Study', screen: 'Academics', module: 'academics' },
-        { icon: 'briefcase-outline', label: 'Jobs', screen: 'Jobs', module: 'jobs' },
-        { icon: 'heart-outline', label: 'Wellbeing', screen: 'Wellbeing', module: 'wellbeing' },
-        { icon: 'shield-checkmark-outline', label: 'Safety', screen: 'SafeDisclosure', module: 'safe_disclosure' },
-      ],
-    },
-    ...(isRA ? [{
-      title: 'RA Tools',
-      modules: [
-        { icon: 'document-text-outline', label: 'Incidents', screen: 'RAIncidentReporting' },
-        { icon: 'people-circle-outline', label: 'Floor Mgmt', screen: 'RAFloorManagement' },
-        { icon: 'calendar-outline', label: 'Floor Events', screen: 'RAFloorManagement' },
-      ],
-    }] : []),
-  ];
-
-  const filteredCategories = moduleCategories.map(category => ({
-    ...category,
-    modules: category.modules.filter(mod =>
-      !mod.module || isModuleEnabled(mod.module)
-    )
-  })).filter(category => category.modules.length > 0);
-
   const unreadCount = dashboard?.unread_notifications || 0;
+
+  const allModules = [
+    { icon: 'newspaper-outline', label: 'News', screen: 'Announcements', module: 'announcements', badge: unreadNewsCount },
+    { icon: 'chatbubbles-outline', label: 'Messages', screen: 'Messages', module: 'messages', badge: dashboard?.unread_messages_count || 0 },
+    { icon: 'calendar-outline', label: 'Events', screen: 'Events', module: 'events' },
+    { icon: 'restaurant-outline', label: 'Dining', screen: 'Dining', module: 'dining' },
+    { icon: 'people-outline', label: 'My Floor', screen: 'Floor', module: 'floor' },
+    { icon: 'star-outline', label: 'Shoutouts', screen: 'Recognition', module: 'recognition' },
+    { icon: 'gift-outline', label: 'Birthdays', screen: 'Birthdays', module: 'birthdays' },
+    { icon: 'flag-outline', label: 'Activities', screen: 'CoCurricular', module: 'cocurricular' },
+    { icon: 'construct-outline', label: 'Fixes', screen: 'Maintenance', module: 'maintenance' },
+    { icon: 'cube-outline', label: 'Parcels', screen: 'Parcels', module: 'parcels' },
+    { icon: 'calendar-number-outline', label: 'Bookings', screen: 'Bookings', module: 'bookings' },
+    { icon: 'book-outline', label: 'Study', screen: 'Academics', module: 'academics' },
+    { icon: 'briefcase-outline', label: 'Jobs', screen: 'Jobs', module: 'jobs' },
+    { icon: 'heart-outline', label: 'Wellbeing', screen: 'Wellbeing', module: 'wellbeing' },
+    { icon: 'shield-checkmark-outline', label: 'Safety', screen: 'SafeDisclosure', module: 'safe_disclosure' },
+  ].filter(mod => isModuleEnabled(mod.module));
+
+  const raTools = [
+    { icon: 'document-text-outline', label: 'Incidents', screen: 'RAIncidentReporting' },
+    { icon: 'people-circle-outline', label: 'Floor Mgmt', screen: 'RAFloorManagement' },
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} testID="home-screen">
@@ -274,7 +177,7 @@ export default function HomeScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header - Swiss Technical Style */}
+        {/* Header */}
         <View style={{
           backgroundColor: primaryColor,
           paddingHorizontal: spacing.lg,
@@ -320,7 +223,7 @@ export default function HomeScreen({ navigation }) {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('Notifications')}
               style={{
                 width: 40,
@@ -340,7 +243,7 @@ export default function HomeScreen({ navigation }) {
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: primaryColor,
+                  backgroundColor: colors.error,
                 }} />
               )}
             </TouchableOpacity>
@@ -403,66 +306,97 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Module Categories */}
-        <View style={{ backgroundColor: secondaryColor + '0A', paddingBottom: spacing.lg, marginTop: spacing.sm }}>
-        {filteredCategories.map((category, catIndex) => {
-          const isAlternate = catIndex % 2 === 1;
-          const sectionAccent = isAlternate ? secondaryColor : primaryColor;
-          return (
-          <View key={`cat-${catIndex}`} style={{ marginTop: spacing.xl }}>
+        {/* Flat Launcher Grid */}
+        <View style={{
+          marginHorizontal: spacing.lg,
+          marginTop: spacing.xl,
+          backgroundColor: colors.surface,
+          borderRadius: borderRadius.xl,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.sm,
+        }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {allModules.map((item, index) => (
+              <LauncherTile
+                key={`module-${item.label}-${index}`}
+                icon={item.icon}
+                label={item.label}
+                badge={item.badge}
+                primaryColor={primaryColor}
+                colors={colors}
+                onPress={() => navigation.navigate(item.screen, item.params)}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* RA Tools — only visible for RA users */}
+        {isRA && (
+          <View style={{ marginHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <Text style={{
-              ...typography.caption,
-              paddingHorizontal: spacing.lg,
-              marginBottom: spacing.md,
-              color: isAlternate ? secondaryColor : colors.textTertiary,
+              fontSize: 11,
+              fontWeight: '700',
+              color: colors.textTertiary,
+              letterSpacing: 0.8,
+              textTransform: 'uppercase',
+              marginBottom: spacing.sm,
+              paddingHorizontal: spacing.xs,
             }}>
-              {category.title}
+              RA Tools
             </Text>
             <View style={{
-              marginHorizontal: spacing.lg,
               backgroundColor: colors.surface,
-              borderRadius: borderRadius.lg,
-              paddingHorizontal: spacing.sm,
-              paddingTop: spacing.md,
+              borderRadius: borderRadius.xl,
               borderWidth: 1,
-              borderColor: isAlternate ? secondaryColor + '30' : colors.border,
+              borderColor: secondaryColor + '40',
               borderTopWidth: 2,
-              borderTopColor: sectionAccent + '50',
+              borderTopColor: secondaryColor,
+              paddingHorizontal: spacing.sm,
+              paddingVertical: spacing.sm,
             }}>
-              <View style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'space-evenly',
-              }}>
-                {category.modules.map((item, index) => (
-                  <QuickAccessButton
-                    key={`${category.title}-${item.label}-${index}`}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {raTools.map((item, index) => (
+                  <LauncherTile
+                    key={`ra-${item.label}-${index}`}
                     icon={item.icon}
                     label={item.label}
-                    badge={item.badge}
-                    primaryColor={primaryColor}
-                    secondaryColor={secondaryColor}
+                    primaryColor={secondaryColor || primaryColor}
                     colors={colors}
-                    onPress={() => navigation.navigate(item.screen, item.params)}
+                    onPress={() => navigation.navigate(item.screen)}
                   />
                 ))}
               </View>
             </View>
           </View>
-          );
-        })}
-        </View>
+        )}
 
         {/* Recent Announcements */}
         {isModuleEnabled('announcements') && (
-          <View style={{ marginTop: spacing.xxl }}>
-            <SectionHeader 
-              title="Latest News" 
-              accentColor={primaryColor}
-              secondaryAccent={secondaryColor}
-              colors={colors}
-              onViewAll={() => navigation.navigate('Announcements')} 
-            />
+          <View style={{ marginTop: spacing.xxl, marginBottom: 100 }}>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: spacing.lg,
+              marginBottom: spacing.md,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{
+                  width: 4, height: 16, borderRadius: 2,
+                  backgroundColor: primaryColor, marginRight: spacing.sm,
+                }} />
+                <Text style={{ ...typography.label, letterSpacing: 0.3 }}>Latest News</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Announcements')}
+                style={{ flexDirection: 'row', alignItems: 'center', padding: spacing.xs }}
+              >
+                <Text style={{ color: primaryColor, fontWeight: '600', fontSize: 13 }}>View All</Text>
+                <Ionicons name="chevron-forward" size={14} color={primaryColor} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            </View>
             <View style={{ paddingHorizontal: spacing.lg }}>
               {announcements?.length > 0 ? announcements.slice(0, 3).map((announcement, idx) => (
                 <TouchableOpacity
@@ -522,14 +456,10 @@ export default function HomeScreen({ navigation }) {
                   borderWidth: 1,
                   borderColor: colors.border,
                 }}>
-                  <View style={{ 
-                    width: 56, 
-                    height: 56, 
-                    borderRadius: borderRadius.md, 
-                    backgroundColor: colors.surfaceSecondary, 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    marginBottom: spacing.md 
+                  <View style={{
+                    width: 56, height: 56, borderRadius: borderRadius.md,
+                    backgroundColor: colors.surfaceSecondary,
+                    justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md,
                   }}>
                     <Ionicons name="newspaper-outline" size={28} color={primaryColor} />
                   </View>
@@ -541,93 +471,6 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-        {/* Upcoming Events */}
-        {isModuleEnabled('events') && (
-          <View style={{ marginTop: spacing.xl, marginBottom: 100 }}>
-            <SectionHeader 
-              title="Upcoming Events" 
-              accentColor={secondaryColor}
-              secondaryAccent={secondaryColor}
-              colors={colors}
-              onViewAll={() => navigation.navigate('Events')} 
-            />
-            <View style={{ paddingHorizontal: spacing.lg }}>
-              {events?.length > 0 ? events.map((event, idx) => (
-                <TouchableOpacity
-                  key={event.id || `event-${idx}`}
-                  onPress={() => navigation.navigate('EventDetail', { event })}
-                  activeOpacity={0.7}
-                  style={{
-                    backgroundColor: colors.surface,
-                    padding: spacing.lg,
-                    borderRadius: borderRadius.md,
-                    marginBottom: spacing.sm,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                  testID={`event-${idx}`}
-                >
-                  <View style={{
-                    width: 48,
-                    height: 48,
-                    backgroundColor: secondaryColor + '20',
-                    borderRadius: borderRadius.md,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: spacing.md,
-                  }}>
-                    <Ionicons name="calendar" size={22} color={secondaryColor} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ ...typography.label }} numberOfLines={1}>
-                      {event.title}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                      <Ionicons name="time-outline" size={13} color={colors.textTertiary} />
-                      <Text style={{ fontSize: 12, color: colors.textTertiary, marginLeft: 4 }}>
-                        {formatEventDate(event.date || event.start_time)}
-                      </Text>
-                    </View>
-                    {event.location && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                        <Ionicons name="location-outline" size={13} color={colors.textTertiary} />
-                        <Text style={{ fontSize: 12, color: colors.textTertiary, marginLeft: 4 }} numberOfLines={1}>
-                          {event.location}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.border} />
-                </TouchableOpacity>
-              )) : (
-                <View style={{
-                  backgroundColor: colors.surface,
-                  padding: spacing.xxxl,
-                  borderRadius: borderRadius.lg,
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}>
-                  <View style={{ 
-                    width: 56, 
-                    height: 56, 
-                    borderRadius: borderRadius.md, 
-                    backgroundColor: secondaryColor + '15', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    marginBottom: spacing.md 
-                  }}>
-                    <Ionicons name="calendar-outline" size={28} color={secondaryColor} />
-                  </View>
-                  <Text style={{ ...typography.bodyMedium }}>No upcoming events</Text>
-                  <Text style={{ ...typography.bodySmall, marginTop: spacing.xs }}>Events will show up here</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
       </ScrollView>
       </AnimatedScreen>
     </SafeAreaView>

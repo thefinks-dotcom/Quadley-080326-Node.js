@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '25';
+const iosBuildNumber = '26';
 
 const TENANT_CONFIGS = {
   quadley: {
