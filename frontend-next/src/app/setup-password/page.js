@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import TenantLogo from '@/components/TenantLogo';
 import { CheckCircle, XCircle, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { validatePassword } from '@/utils/registrationValidation';
 
 const RequirementItem = ({ met, text }) => (
   <div className={`flex items-center gap-2 text-xs ${met ? 'text-success' : 'text-muted-foreground'}`}>
@@ -60,15 +61,6 @@ function SetupPasswordInner() {
     };
     validateToken();
   }, [token]);
-
-  const validatePassword = (pwd) => {
-    const minLength = pwd.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(pwd);
-    const hasLowerCase = /[a-z]/.test(pwd);
-    const hasNumber = /[0-9]/.test(pwd);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
-    return { isValid: minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar, minLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar };
-  };
 
   const validation = validatePassword(password);
   const passwordsMatch = password && confirmPassword && password === confirmPassword;

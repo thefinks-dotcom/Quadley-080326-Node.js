@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from 'sonner';
 import TenantLogo from '@/components/TenantLogo';
 import { Shield, Key, CheckCircle, ArrowRight, Lock, Users, Calendar, Award, Eye, EyeOff } from 'lucide-react';
+import { validatePassword } from '@/utils/registrationValidation';
 
 const getRedirectPath = (user) => {
   if (['super_admin', 'admin', 'college_admin'].includes(user?.role)) return '/admin';
@@ -66,19 +67,6 @@ const Login = () => {
     { heading: '5. Retention and Your Rights', content: '• Retention: Data is retained for the duration of your enrollment plus a mandatory buffer for audit and financial records (typically 6 years).\n• Right to Deletion: Users may submit a "Request Data Deletion" via the platform. Quadley will process these requests in coordination with the residential college, subject to legal reporting hold requirements.' },
   ];
 
-  const validatePassword = (password) => {
-    const minLength = password.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    return {
-      isValid: minLength && hasUpperCase && hasLowerCase && hasSpecialChar,
-      minLength,
-      hasUpperCase,
-      hasLowerCase,
-      hasSpecialChar
-    };
-  };
 
   const handleJoinVerify = async (e) => {
     e.preventDefault();
@@ -256,7 +244,7 @@ const Login = () => {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card className="p-8 bg-white border border-border rounded-xl" data-testid="mfa-setup-card">
+          <Card className="p-5 sm:p-8 bg-white border border-border rounded-xl" data-testid="mfa-setup-card">
             <form onSubmit={(e) => { e.preventDefault(); handleMfaSetupStart(); }}>
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -293,7 +281,7 @@ const Login = () => {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card className="p-8 bg-white border border-border rounded-xl">
+          <Card className="p-5 sm:p-8 bg-white border border-border rounded-xl">
             <form onSubmit={(e) => { e.preventDefault(); handleMfaSetupVerify(); }}>
               <div className="mb-6">
                 <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Step 1 of 2</span>
@@ -330,7 +318,7 @@ const Login = () => {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card className="p-8 bg-white border border-border rounded-xl">
+          <Card className="p-5 sm:p-8 bg-white border border-border rounded-xl">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-warning rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Key className="w-8 h-8 text-white" />
@@ -363,7 +351,7 @@ const Login = () => {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card className="p-8 bg-white border border-border rounded-xl">
+          <Card className="p-5 sm:p-8 bg-white border border-border rounded-xl">
             <form onSubmit={(e) => { e.preventDefault(); handleMfaVerify(); }}>
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -445,7 +433,7 @@ const Login = () => {
             </h2>
           </div>
 
-          <Card className="p-8 bg-white border border-border rounded-xl shadow-sm">
+          <Card className="p-5 sm:p-8 bg-white border border-border rounded-xl shadow-sm">
             <div className="mb-6">
               <h2 className="font-heading text-xl font-bold text-foreground tracking-tight">Sign in</h2>
               <p className="text-muted-foreground text-sm mt-1">Enter your credentials to access your account</p>
@@ -463,7 +451,7 @@ const Login = () => {
                 </div>
                 <div className="relative">
                   <Input id="password" type={showLoginPassword ? 'text' : 'password'} placeholder="Enter your password" value={loginData.password} onChange={(e) => setLoginData({ ...loginData, password: e.target.value })} className="h-11 border-border pr-10" required data-testid="password-input" />
-                  <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground flex items-center justify-center w-10 h-10">
                     {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -474,10 +462,19 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
-              <button type="button" onClick={() => setShowJoinDialog(true)} className="text-sm text-primary hover:underline" data-testid="join-college-btn">
-                Join your college →
-              </button>
+            <div className="mt-5 text-center space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowJoinDialog(true)}
+                className="w-full h-11 border-primary text-primary hover:bg-primary/5 rounded-lg font-medium"
+                data-testid="join-college-btn"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Join your college
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              <p className="text-xs text-muted-foreground">You'll need an invite code from your college.</p>
             </div>
           </Card>
 
@@ -532,7 +529,7 @@ const Login = () => {
                 <Label>Set your password</Label>
                 <div className="relative">
                   <Input type={showJoinPassword ? 'text' : 'password'} value={joinPassword} onChange={(e) => setJoinPassword(e.target.value)} placeholder="Create a strong password" className="pr-10" data-testid="join-password-input" />
-                  <button type="button" onClick={() => setShowJoinPassword(!showJoinPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <button type="button" onClick={() => setShowJoinPassword(!showJoinPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground flex items-center justify-center w-10 h-10">
                     {showJoinPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -553,7 +550,7 @@ const Login = () => {
       </Dialog>
 
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[calc(100%-2rem)] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Terms of Service & Privacy Policy</DialogTitle>
           </DialogHeader>

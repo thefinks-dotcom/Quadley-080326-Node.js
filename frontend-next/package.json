@@ -11,7 +11,8 @@
     "build:ios": "NEXT_EXPORT=true next build",
     "start": "next start -p 5000",
     "cap:sync": "npx cap sync ios",
-    "ios": "yarn build:ios && npx cap sync ios && npx cap open ios"
+    "ios": "yarn build:ios && npx cap sync ios && npx cap open ios",
+    "test": "jest --verbose"
   },
   "dependencies": {
     "@capacitor/cli": "^7.2.0",
@@ -68,9 +69,17 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@jest/globals": "^30.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "autoprefixer": "^10.4.20",
+    "babel-jest": "^30.3.0",
     "eslint": "9.23.0",
     "eslint-config-next": "15.5.12",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   },
