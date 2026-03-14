@@ -8,7 +8,6 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,10 +15,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL, ENDPOINTS } from '../../config/api';
 import api from '../../services/api';
-import { colors, borderRadius, spacing, inputStyle, buttonPrimary } from '../../theme';
+import { borderRadius, spacing, inputStyle, buttonPrimary } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import TermsOfServiceModal from '../../components/TermsOfServiceModal';
+import BUILD_CONFIG from '../../config/tenantBuild.generated';
+import TENANT_LOGOS from '../../utils/tenantLogos';
+
+const buildTenantCode = BUILD_CONFIG.tenant;
+const buildPrimaryColor = BUILD_CONFIG.primaryColor;
+const buildTenantName = BUILD_CONFIG.tenantName;
+const buildLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
+
+// iPadOS 26 crashes with KeyboardAvoidingView behavior="padding" — disable on iPad
+const kvBehavior = Platform.OS === 'ios'
+  ? (Platform.isPad ? undefined : 'padding')
+  : 'height';
 
 export default function InviteCodeScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -29,6 +40,7 @@ export default function InviteCodeScreen({ navigation }) {
   const [inviteData, setInviteData] = useState(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Registration fields
   const [firstName, setFirstName] = useState('');
@@ -43,10 +55,14 @@ export default function InviteCodeScreen({ navigation }) {
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
 
+  // Always use the build's tenant color — consistent on both steps
+  const primaryColor = buildPrimaryColor;
+
   const handleVerifyCode = async () => {
+    setErrorMessage('');
     const code = inviteCode.trim().toUpperCase();
     if (!code) {
-      Alert.alert('Error', 'Please enter your invite code');
+      setErrorMessage('Please enter your invite code');
       return;
     }
 
@@ -62,88 +78,82 @@ export default function InviteCodeScreen({ navigation }) {
       setStep('register');
     } catch (err) {
       const msg = err.response?.data?.detail || 'Invalid or expired invite code';
-      Alert.alert('Invalid Code', msg);
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async () => {
+    setErrorMessage('');
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert('Error', 'Please enter your first and last name');
+      setErrorMessage('Please enter your first and last name');
       return;
     }
     if (!agreedToTerms) {
-      Alert.alert('Terms Required', 'Please agree to the Terms of Service & Privacy Policy to continue.');
+      setErrorMessage('Please agree to the Terms of Service & Privacy Policy to continue.');
       return;
     }
     if (password.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters');
+      setErrorMessage('Password must be at least 8 characters');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     setLoading(true);
-    const result = await registerWithCode({
-      invite_code: inviteCode.trim().toUpperCase(),
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      password,
-    });
-    setLoading(false);
-
-    if (!result.success) {
-      Alert.alert('Registration Failed', result.error);
+    try {
+      const result = await registerWithCode({
+        invite_code: inviteCode.trim().toUpperCase(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        password,
+      });
+      if (!result.success) {
+        setErrorMessage(result.error || 'Registration failed. Please try again.');
+      }
+    } catch (e) {
+      setErrorMessage('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const primaryColor = inviteData?.tenant_primary_color || colors.primary;
-  const secondaryColor = colors.background;
-
   if (step === 'register' && inviteData) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <KeyboardAvoidingView behavior={kvBehavior} style={{ flex: 1 }}>
           <ScrollView
             contentContainerStyle={{ flexGrow: 1, padding: spacing.xxl }}
             keyboardShouldPersistTaps="handled"
           >
             {/* Back button */}
             <TouchableOpacity
-              onPress={() => setStep('code')}
+              onPress={() => { setStep('code'); setErrorMessage(''); }}
               style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xxl }}
             >
               <Ionicons name="arrow-back" size={22} color={colors.textSecondary} />
               <Text style={{ fontSize: 14, color: colors.textSecondary, marginLeft: 6 }}>Back</Text>
             </TouchableOpacity>
 
-            {/* Tenant branding */}
+            {/* Tenant branding — uses build logo + color */}
             <View style={{ alignItems: 'center', marginBottom: spacing.xxxl }}>
-              {inviteData.tenant_logo ? (
+              <View style={{
+                padding: spacing.sm,
+                backgroundColor: primaryColor,
+                borderRadius: borderRadius.lg,
+                marginBottom: spacing.md,
+              }}>
                 <Image
-                  source={{ uri: `${API_BASE_URL.replace('/api', '')}${inviteData.tenant_logo}` }}
-                  style={{ width: 60, height: 60, borderRadius: borderRadius.lg, marginBottom: spacing.md }}
+                  source={buildLogo}
+                  style={{ width: 52, height: 52, borderRadius: borderRadius.sm }}
                   resizeMode="contain"
                 />
-              ) : (
-                <View style={{
-                  width: 60, height: 60, backgroundColor: primaryColor,
-                  borderRadius: borderRadius.lg, justifyContent: 'center', alignItems: 'center',
-                  marginBottom: spacing.md,
-                }}>
-                  <Text style={{ fontSize: 26, fontWeight: '700', color: colors.textInverse }}>
-                    {inviteData.tenant_name?.[0] || 'Q'}
-                  </Text>
-                </View>
-              )}
+              </View>
               <Text style={{ fontSize: 20, fontWeight: '700', color: colors.textPrimary, letterSpacing: -0.3 }}>
-                {inviteData.tenant_name}
+                {inviteData.tenant_name || buildTenantName}
               </Text>
               <Text style={{ fontSize: 15, color: colors.textSecondary, marginTop: 4 }}>
                 Create your account
@@ -233,7 +243,7 @@ export default function InviteCodeScreen({ navigation }) {
             </View>
 
             {/* Terms of Service Checkbox */}
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xxl }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.lg }}>
               <TouchableOpacity
                 onPress={() => setAgreedToTerms(!agreedToTerms)}
                 activeOpacity={0.7}
@@ -257,6 +267,23 @@ export default function InviteCodeScreen({ navigation }) {
                 </Text>
               </Text>
             </View>
+
+            {/* Inline error */}
+            {!!errorMessage && (
+              <View style={{
+                backgroundColor: '#fef2f2',
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                borderColor: '#fecaca',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                marginBottom: spacing.md,
+              }}>
+                <Text style={{ fontSize: 14, color: '#dc2626', lineHeight: 20 }}>
+                  {errorMessage}
+                </Text>
+              </View>
+            )}
 
             {/* Register Button */}
             <TouchableOpacity
@@ -284,10 +311,7 @@ export default function InviteCodeScreen({ navigation }) {
   // Step 1: Enter invite code
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoidingView behavior={kvBehavior} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, padding: spacing.xxl }}
           keyboardShouldPersistTaps="handled"
@@ -301,7 +325,7 @@ export default function InviteCodeScreen({ navigation }) {
             <Text style={{ fontSize: 14, color: colors.textSecondary, marginLeft: 6 }}>Back to Login</Text>
           </TouchableOpacity>
 
-          {/* Header with tenant color */}
+          {/* Header with build tenant color */}
           <View style={{
             backgroundColor: primaryColor,
             borderRadius: borderRadius.xl,
@@ -355,6 +379,7 @@ export default function InviteCodeScreen({ navigation }) {
                 placeholderTextColor={colors.textTertiary}
                 value={inviteCode}
                 onChangeText={(text) => {
+                  setErrorMessage('');
                   let cleaned = text.toUpperCase().replace(/[^A-Z0-9-]/g, '');
                   let letters = cleaned.replace(/-/g, '');
                   if (letters.length > 4) {
@@ -369,6 +394,23 @@ export default function InviteCodeScreen({ navigation }) {
                 onSubmitEditing={handleVerifyCode}
               />
             </View>
+
+            {/* Inline error */}
+            {!!errorMessage && (
+              <View style={{
+                backgroundColor: '#fef2f2',
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                borderColor: '#fecaca',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                marginTop: spacing.md,
+              }}>
+                <Text style={{ fontSize: 14, color: '#dc2626', lineHeight: 20 }}>
+                  {errorMessage}
+                </Text>
+              </View>
+            )}
 
             {/* Verify Button */}
             <TouchableOpacity
