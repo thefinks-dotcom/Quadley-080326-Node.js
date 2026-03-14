@@ -16,6 +16,7 @@ def sanitize_html(text, max_length=10000):
 import logging
 import os
 import jwt
+import httpx
 
 from models import User, UserCreate, UserUpdate, UserLogin, StudyStreak, ALL_MODULES
 from utils.auth import (
@@ -1757,6 +1758,443 @@ async def register_with_invite_code(request: Request, data: InviteCodeRegisterRe
     )
 
     return response
+
+
+# ---------------------------------------------------------------------------
+# Social / OAuth Auth
+# ---------------------------------------------------------------------------
+_apple_jwks_cache: dict = {}
+_apple_jwks_cached_at: float = 0.0
+
+GOOGLE_WEB_CLIENT_ID = os.environ.get("GOOGLE_WEB_CLIENT_ID", "")
+
+ALL_TENANT_BUNDLE_IDS = [
+    "com.gracecollege.app",
+    "com.quadley.app",
+    "com.ormond.college.app",
+    "com.murphyshark.app",
+]
+
+
+async def _verify_google_token(id_token_str: str) -> dict:
+    """Verify a Google ID token and return the payload claims."""
+    import asyncio
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+
+    if not GOOGLE_WEB_CLIENT_ID:
+        raise HTTPException(status_code=501, detail="Google Sign-In is not configured on this server")
+
+    def _sync_verify():
+        return google_id_token.verify_oauth2_token(
+            id_token_str,
+            google_requests.Request(),
+            GOOGLE_WEB_CLIENT_ID,
+        )
+
+    try:
+        return await asyncio.to_thread(_sync_verify)
+    except Exception as e:
+        logger.warning(f"Google token verification failed: {e}")
+        raise HTTPException(status_code=401, detail="Invalid or expired Google token")
+
+
+async def _get_apple_public_keys() -> list:
+    """Fetch Apple's JWKS (cached for 1 hour)."""
+    import time
+    global _apple_jwks_cache, _apple_jwks_cached_at
+    if time.time() - _apple_jwks_cached_at < 3600 and _apple_jwks_cache:
+        return _apple_jwks_cache.get("keys", [])
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get("https://appleid.apple.com/auth/keys")
+        resp.raise_for_status()
+        _apple_jwks_cache = resp.json()
+        _apple_jwks_cached_at = time.time()
+    return _apple_jwks_cache.get("keys", [])
+
+
+async def _verify_apple_token(identity_token: str, bundle_id: str) -> dict:
+    """Verify an Apple identity token and return the payload claims."""
+    import jwt as pyjwt
+    from jwt.algorithms import RSAAlgorithm
+
+    try:
+        header = pyjwt.get_unverified_header(identity_token)
+        kid = header.get("kid")
+        keys = await _get_apple_public_keys()
+        for jwk in keys:
+            if jwk.get("kid") == kid:
+                public_key = RSAAlgorithm.from_jwk(jwk)
+                payload = pyjwt.decode(
+                    identity_token,
+                    public_key,
+                    algorithms=["RS256"],
+                    audience=bundle_id,
+                    issuer="https://appleid.apple.com",
+                )
+                return payload
+        raise HTTPException(status_code=401, detail="Apple public key not found for this token")
+    except pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Apple token has expired")
+    except pyjwt.InvalidTokenError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid Apple token: {str(e)}")
+
+
+async def _find_user_by_email_for_social(email: str):
+    """Search all active tenant DBs for a user by email.
+    Returns (user_doc, tenant_code, tenant_info) or (None, None, None)."""
+    email = email.lower()
+
+    super_admin = await master_db.super_admins.find_one({"email": email})
+    if super_admin:
+        return super_admin, None, {"code": None, "name": "Super Admin", "enabled_modules": ALL_MODULES}
+
+    tenants = await master_db.tenants.find({"status": "active"}).to_list(1000)
+    for tenant in tenants:
+        try:
+            t_db = get_tenant_db(tenant["code"])
+            candidate = await t_db.users.find_one({"email": email})
+            if candidate:
+                tenant_info = {
+                    "code": tenant["code"],
+                    "name": tenant["name"],
+                    "enabled_modules": tenant.get("enabled_modules", []),
+                    "branding": tenant.get("branding"),
+                    "logo_url": tenant.get("logo_url"),
+                }
+                return candidate, tenant["code"], tenant_info
+        except Exception as e:
+            logger.warning(f"Social auth tenant search error for {tenant['code']}: {e}")
+            continue
+
+    fallback = await db.users.find_one({"email": email})
+    if fallback:
+        return fallback, None, None
+
+    return None, None, None
+
+
+def _build_social_session_response(user_doc: dict, tenant_code: str, tenant_info: dict) -> JSONResponse:
+    """Build a standard login JSONResponse for social auth flows."""
+    if isinstance(user_doc.get("created_at"), str):
+        user_doc["created_at"] = datetime.fromisoformat(user_doc["created_at"])
+
+    user = User(**{k: v for k, v in user_doc.items() if k not in ("password", "_id")})
+    token_data: dict = {"sub": user.id}
+    if tenant_code:
+        token_data["tenant"] = tenant_code
+    access_token = create_access_token(token_data)
+
+    resp_content: dict = {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user.model_dump(mode="json"),
+        "mfa_required": False,
+        "mfa_enabled": False,
+    }
+    if tenant_info:
+        resp_content["tenant"] = tenant_info
+
+    response = JSONResponse(content=resp_content)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=COOKIE_HTTPONLY,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=COOKIE_MAX_AGE,
+        path="/",
+    )
+    return response
+
+
+async def _complete_invite_registration_social(
+    code: str,
+    first_name: str,
+    last_name: str,
+    provider: str,
+    social_id: str,
+    ip_address: str,
+) -> JSONResponse:
+    """Shared logic for invite-code registration via Google or Apple."""
+    invitation = await master_db.invitations.find_one({"invite_code": code, "status": "pending"})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid or expired invite code")
+
+    expires_at = invitation.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at and datetime.now(timezone.utc) > expires_at:
+        await master_db.invitations.update_one(
+            {"invite_code": code},
+            {"$set": {"status": "expired"}},
+        )
+        raise HTTPException(status_code=400, detail="This invite code has expired")
+
+    tenant_code = invitation["tenant_code"]
+    tenant = await master_db.tenants.find_one({"code": tenant_code})
+    if not tenant or tenant.get("status") != "active":
+        raise HTTPException(status_code=400, detail="The associated organisation is no longer active")
+
+    tenant_db = get_tenant_db(tenant_code)
+    email = invitation["email"].lower()
+
+    existing = await tenant_db.users.find_one({"email": email})
+    if existing:
+        has_password = existing.get("password") or existing.get("password_hash")
+        must_change = existing.get("must_change_password", False)
+        if has_password and not must_change and not existing.get("pending_setup"):
+            raise HTTPException(status_code=400, detail="User already registered")
+
+        await tenant_db.users.update_one(
+            {"email": email},
+            {"$set": {
+                "first_name": first_name,
+                "last_name": last_name,
+                "active": True,
+                "pending_setup": False,
+                "must_change_password": False,
+                "social_provider": provider,
+                "social_id": social_id,
+            }},
+        )
+        await master_db.invitations.update_one(
+            {"invite_code": code},
+            {"$set": {"status": "accepted", "accepted_at": datetime.now(timezone.utc).isoformat()}},
+        )
+
+        access_token = create_access_token({"sub": existing.get("id"), "tenant": tenant_code})
+        log_security_event(
+            SecurityEvent.REGISTRATION,
+            user_id=existing.get("id"),
+            user_email=email,
+            ip_address=ip_address,
+            details={"tenant": tenant_code, "via": "invite_code", "provider": provider, "pre_existing": True},
+        )
+
+        response = JSONResponse(content={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": existing.get("id"),
+                "user_id": existing.get("user_id"),
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "role": invitation["role"],
+                "tenant_code": tenant_code,
+            },
+            "tenant": {
+                "code": tenant["code"],
+                "name": tenant["name"],
+                "enabled_modules": tenant.get("enabled_modules", []),
+            },
+        })
+        response.set_cookie(
+            key="access_token", value=access_token,
+            httponly=COOKIE_HTTPONLY, secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE, max_age=COOKIE_MAX_AGE, path="/",
+        )
+        return response
+
+    next_seq = tenant.get("next_user_sequence", 1)
+    user_id = generate_user_id(tenant_code, next_seq)
+
+    user = User(
+        user_id=user_id,
+        tenant_code=tenant_code,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        role=invitation["role"],
+    )
+    user_doc = user.model_dump()
+    user_doc["created_at"] = user_doc["created_at"].isoformat()
+    user_doc["active"] = True
+    user_doc["pending_setup"] = False
+    user_doc["social_provider"] = provider
+    user_doc["social_id"] = social_id
+
+    await tenant_db.users.insert_one(user_doc)
+    await master_db.tenants.update_one(
+        {"code": tenant_code},
+        {"$inc": {"user_count": 1, "next_user_sequence": 1}},
+    )
+    await master_db.invitations.update_one(
+        {"invite_code": code},
+        {"$set": {"status": "accepted", "accepted_at": datetime.now(timezone.utc).isoformat()}},
+    )
+
+    access_token = create_access_token({"sub": user.id, "tenant": tenant_code})
+    log_security_event(
+        SecurityEvent.REGISTRATION,
+        user_id=user.id,
+        user_email=email,
+        ip_address=ip_address,
+        details={"tenant": tenant_code, "via": "invite_code", "provider": provider},
+    )
+
+    response = JSONResponse(content={
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user.model_dump(mode="json"),
+        "tenant": {
+            "code": tenant["code"],
+            "name": tenant["name"],
+            "enabled_modules": tenant.get("enabled_modules", []),
+        },
+    })
+    response.set_cookie(
+        key="access_token", value=access_token,
+        httponly=COOKIE_HTTPONLY, secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE, max_age=COOKIE_MAX_AGE, path="/",
+    )
+    return response
+
+
+class SocialGoogleRequest(BaseModel):
+    id_token: str
+
+
+class SocialAppleRequest(BaseModel):
+    identity_token: str
+    bundle_id: str
+
+
+class InviteCodeGoogleRequest(BaseModel):
+    invite_code: str
+    id_token: str
+    first_name: str
+    last_name: str
+
+
+class InviteCodeAppleRequest(BaseModel):
+    invite_code: str
+    identity_token: str
+    bundle_id: str
+    first_name: str
+    last_name: str
+
+
+@router.post("/social/google")
+@limiter.limit("10/minute")
+async def social_login_google(request: Request, data: SocialGoogleRequest):
+    """Sign in with an existing account using a Google ID token from the mobile app."""
+    ip_address = request.client.host if request.client else "unknown"
+
+    claims = await _verify_google_token(data.id_token)
+    email = claims.get("email", "").lower()
+    if not email or not claims.get("email_verified"):
+        raise HTTPException(status_code=401, detail="Google account email is not verified")
+
+    user_doc, tenant_code, tenant_info = await _find_user_by_email_for_social(email)
+    if not user_doc:
+        raise HTTPException(
+            status_code=404,
+            detail="No Quadley account found for this Google account. Please use your invite code to create an account first."
+        )
+    if not user_doc.get("active", True):
+        raise HTTPException(status_code=403, detail="Account is deactivated. Contact your administrator.")
+
+    log_security_event(
+        SecurityEvent.LOGIN_SUCCESS, user_id=user_doc.get("id"), user_email=email,
+        ip_address=ip_address, details={"provider": "google", "tenant": tenant_code},
+    )
+    return _build_social_session_response(user_doc, tenant_code, tenant_info)
+
+
+@router.post("/social/apple")
+@limiter.limit("10/minute")
+async def social_login_apple(request: Request, data: SocialAppleRequest):
+    """Sign in with an existing account using an Apple identity token from the mobile app."""
+    ip_address = request.client.host if request.client else "unknown"
+
+    claims = await _verify_apple_token(data.identity_token, data.bundle_id)
+    email = claims.get("email", "").lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Could not retrieve email from Apple ID. Ensure email sharing is enabled.")
+
+    user_doc, tenant_code, tenant_info = await _find_user_by_email_for_social(email)
+    if not user_doc:
+        raise HTTPException(
+            status_code=404,
+            detail="No Quadley account found for this Apple ID. Please use your invite code to create an account first."
+        )
+    if not user_doc.get("active", True):
+        raise HTTPException(status_code=403, detail="Account is deactivated. Contact your administrator.")
+
+    log_security_event(
+        SecurityEvent.LOGIN_SUCCESS, user_id=user_doc.get("id"), user_email=email,
+        ip_address=ip_address, details={"provider": "apple", "tenant": tenant_code},
+    )
+    return _build_social_session_response(user_doc, tenant_code, tenant_info)
+
+
+@router.post("/invite-code/register-google")
+@limiter.limit("5/minute")
+async def register_with_invite_code_google(request: Request, data: InviteCodeGoogleRequest):
+    """Complete account setup using an invite code + Google ID token (no password needed)."""
+    ip_address = request.client.host if request.client else "unknown"
+    code = data.invite_code.strip().upper()
+
+    claims = await _verify_google_token(data.id_token)
+    google_email = claims.get("email", "").lower()
+    if not google_email or not claims.get("email_verified"):
+        raise HTTPException(status_code=401, detail="Google account email is not verified")
+
+    invitation = await master_db.invitations.find_one({"invite_code": code, "status": "pending"})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid or expired invite code")
+
+    if invitation["email"].lower() != google_email:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Your Google account ({google_email}) doesn't match the invited email ({invitation['email']}). Please sign in with the correct Google account."
+        )
+
+    return await _complete_invite_registration_social(
+        code=code,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        provider="google",
+        social_id=claims.get("sub", ""),
+        ip_address=ip_address,
+    )
+
+
+@router.post("/invite-code/register-apple")
+@limiter.limit("5/minute")
+async def register_with_invite_code_apple(request: Request, data: InviteCodeAppleRequest):
+    """Complete account setup using an invite code + Apple identity token (no password needed)."""
+    ip_address = request.client.host if request.client else "unknown"
+    code = data.invite_code.strip().upper()
+
+    claims = await _verify_apple_token(data.identity_token, data.bundle_id)
+    apple_email = claims.get("email", "").lower()
+    if not apple_email:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not retrieve email from Apple ID. Please enable email sharing in your Apple ID settings."
+        )
+
+    invitation = await master_db.invitations.find_one({"invite_code": code, "status": "pending"})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid or expired invite code")
+
+    if invitation["email"].lower() != apple_email:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Your Apple ID ({apple_email}) doesn't match the invited email ({invitation['email']}). Please sign in with the correct Apple ID."
+        )
+
+    return await _complete_invite_registration_social(
+        code=code,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        provider="apple",
+        social_id=claims.get("sub", ""),
+        ip_address=ip_address,
+    )
 
 
 @router.get("/tenant/config")

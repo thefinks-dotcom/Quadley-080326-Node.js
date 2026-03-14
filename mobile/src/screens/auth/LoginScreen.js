@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import Constants from 'expo-constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { warmupConnection } from '../../services/api';
@@ -26,19 +29,19 @@ const buildTenantName = BUILD_CONFIG.tenantName;
 const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
 const buildLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
 
+const BUNDLE_ID = Constants.expoConfig?.ios?.bundleIdentifier || 'com.quadley.app';
+
 export default function LoginScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [socialLoading, setSocialLoading] = useState(null);
+  const { login, loginWithGoogle, loginWithApple } = useAuth();
   const { tenant, branding } = useTenant();
   const passwordRef = useRef(null);
 
-  // Login screen ALWAYS shows the build's white-label branding.
-  // Stored tenant data (from a previous session on a different build) must not
-  // bleed into the login screen identity — the build IS the tenant here.
   const primaryColor = buildPrimaryColor;
   const displayName = buildTenantName;
   const tenantLogo = buildLogo;
@@ -64,6 +67,62 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setSocialLoading('google');
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      const idToken = response?.data?.idToken;
+      if (!idToken) throw new Error('No ID token returned from Google');
+
+      const result = await loginWithGoogle(idToken);
+      if (!result.success) {
+        Alert.alert('Sign-in Failed', result.error);
+      }
+    } catch (err) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled — no alert needed
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        // sign-in already in progress
+      } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Not Available', 'Google Play Services not available on this device.');
+      } else {
+        const message = err.response?.data?.detail || err.message || 'Google sign-in failed';
+        Alert.alert('Sign-in Failed', message);
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setSocialLoading('apple');
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) throw new Error('No identity token from Apple');
+
+      const result = await loginWithApple(credential.identityToken, BUNDLE_ID);
+      if (!result.success) {
+        Alert.alert('Sign-in Failed', result.error);
+      }
+    } catch (err) {
+      if (err.code === 'ERR_REQUEST_CANCELED') {
+        // user cancelled
+      } else {
+        const message = err.response?.data?.detail || err.message || 'Apple sign-in failed';
+        Alert.alert('Sign-in Failed', message);
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView
@@ -74,7 +133,7 @@ export default function LoginScreen({ navigation }) {
           contentContainerStyle={{ flexGrow: 1, padding: spacing.xxl }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo & Branding — compact */}
+          {/* Logo & Branding */}
           <View style={{ alignItems: 'center', marginTop: spacing.xxl, marginBottom: spacing.xxxl }}>
             <View style={{
               padding: spacing.sm,
@@ -96,7 +155,7 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* Sign In Form */}
+          {/* Social Sign-In */}
           <View style={{
             backgroundColor: colors.surface,
             borderRadius: borderRadius.xl,
@@ -107,10 +166,61 @@ export default function LoginScreen({ navigation }) {
           }}>
             <Text style={{
               fontSize: 18, fontWeight: '600', color: colors.textPrimary,
-              marginBottom: spacing.xl,
+              marginBottom: spacing.lg,
             }}>
               Sign in
             </Text>
+
+            {/* Google Button */}
+            <TouchableOpacity
+              onPress={handleGoogleLogin}
+              disabled={!!socialLoading}
+              activeOpacity={0.8}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff',
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                borderColor: '#dadce0',
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                marginBottom: spacing.md,
+                opacity: socialLoading ? 0.6 : 1,
+              }}
+            >
+              {socialLoading === 'google' ? (
+                <ActivityIndicator color="#4285F4" />
+              ) : (
+                <>
+                  <GoogleIcon size={20} />
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#3c4043', marginLeft: 10 }}>
+                    Continue with Google
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Apple Button — iOS only */}
+            {Platform.OS === 'ios' && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={borderRadius.md}
+                style={{ height: 48, marginBottom: spacing.lg }}
+                onPress={handleAppleLogin}
+              />
+            )}
+
+            {/* Divider */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <Text style={{ fontSize: 12, color: colors.textTertiary, marginHorizontal: spacing.sm }}>
+                or sign in with email
+              </Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+            </View>
 
             {/* Email */}
             <Text style={{ fontSize: 13, fontWeight: '500', color: colors.textSecondary, marginBottom: 6 }}>
@@ -127,7 +237,6 @@ export default function LoginScreen({ navigation }) {
                 style={{
                   flex: 1, paddingVertical: 14, paddingHorizontal: 10,
                   fontSize: 16, color: colors.textPrimary,
-                  letterSpacing: 0,
                 }}
                 placeholder="you@college.edu"
                 placeholderTextColor={colors.textTertiary}
@@ -138,7 +247,6 @@ export default function LoginScreen({ navigation }) {
                 autoCorrect={false}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
-                data-testid="login-email-input"
               />
             </View>
 
@@ -166,7 +274,6 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry={!showPassword}
                 returnKeyType="go"
                 onSubmitEditing={handleLogin}
-                data-testid="login-password-input"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -195,7 +302,6 @@ export default function LoginScreen({ navigation }) {
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
-              data-testid="login-submit-btn"
               style={{
                 backgroundColor: primaryColor,
                 paddingVertical: 16,
@@ -217,11 +323,10 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Join Section — prominent, not hidden */}
+          {/* Join Section */}
           <TouchableOpacity
             onPress={() => navigation.navigate('InviteCode')}
             activeOpacity={0.8}
-            data-testid="join-with-invite-btn"
             style={{
               backgroundColor: colors.surface,
               borderRadius: borderRadius.xl,
@@ -254,5 +359,15 @@ export default function LoginScreen({ navigation }) {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+function GoogleIcon({ size = 20 }) {
+  return (
+    <View style={{ width: size, height: size }}>
+      <Text style={{ fontSize: size, lineHeight: size + 2 }}>
+        <Text style={{ color: '#4285F4' }}>G</Text>
+      </Text>
+    </View>
   );
 }

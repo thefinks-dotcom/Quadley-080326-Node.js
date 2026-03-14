@@ -19,8 +19,18 @@ import {
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import * as SplashScreen from 'expo-splash-screen';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import Constants from 'expo-constants';
 
 SplashScreen.preventAutoHideAsync();
+
+// Configure Google Sign-In once at app startup.
+// iosClientId and webClientId come from app.config.js extra (set via env vars at build time).
+GoogleSignin.configure({
+  webClientId: Constants.expoConfig?.extra?.googleWebClientId || '',
+  iosClientId: Constants.expoConfig?.extra?.googleIosClientId || '',
+  offlineAccess: false,
+});
 
 // Ignore specific warnings that don't affect functionality
 LogBox.ignoreLogs([
