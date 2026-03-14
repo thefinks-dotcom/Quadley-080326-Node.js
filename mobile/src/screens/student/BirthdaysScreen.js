@@ -10,8 +10,9 @@ import { format, isToday, isTomorrow, isThisWeek, isThisMonth, parseISO } from '
 import { useTenant } from '../../contexts/TenantContext';
 import { colors as defaultColors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
-export default function BirthdaysScreen() {
+export default function BirthdaysScreen({ navigation }) {
   const { branding } = useTenant();
   const { themeColors: colors } = useAppTheme();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -86,24 +87,8 @@ export default function BirthdaysScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="birthdays-screen">
+      <ModuleHeader title="Birthdays" onBack={() => navigation.goBack()} />
       <AnimatedScreen>
-      {/* Header */}
-      <View style={{
-        backgroundColor: primaryColor, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons name="gift" size={22} color={colors.textInverse} />
-          </View>
-          <View style={{ marginLeft: spacing.md }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Birthdays</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-              {todayCount > 0 ? `${todayCount} birthday${todayCount > 1 ? 's' : ''} today!` : 'Celebrate your community'}
-            </Text>
-          </View>
-        </View>
-      </View>
 
       {/* Tabs */}
       <View style={{

@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
@@ -198,44 +199,31 @@ export default function JobsScreen({ navigation }) {
 
   const ListHeader = (
     <View>
-      {/* Hero Header */}
-      <View style={{
-        backgroundColor: primaryColor, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{
-            width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)',
-            borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center',
-          }}>
-            <Ionicons name="briefcase" size={22} color={colors.textInverse} />
-          </View>
-          <View style={{ marginLeft: spacing.md, flex: 1 }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Jobs</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-              {jobCount} available · {appCount} applied
-            </Text>
-          </View>
+      {/* Search */}
+      {activeTab === 'available' && (
+        <View style={{
+          flexDirection: 'row', alignItems: 'center',
+          backgroundColor: colors.surfaceSecondary,
+          borderRadius: borderRadius.md,
+          paddingHorizontal: spacing.md,
+          marginHorizontal: spacing.lg,
+          marginTop: spacing.lg,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}>
+          <Ionicons name="search" size={18} color={colors.textTertiary} />
+          <TextInput
+            data-testid="search-jobs-input"
+            style={{
+              flex: 1, paddingVertical: 10, paddingHorizontal: spacing.sm,
+              fontSize: 15, color: colors.textPrimary,
+            }}
+            placeholder="Search jobs..." placeholderTextColor={colors.textTertiary}
+            value={searchQuery} onChangeText={setSearchQuery}
+          />
         </View>
-        {activeTab === 'available' && (
-          <View style={{
-            flexDirection: 'row', alignItems: 'center',
-            backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: borderRadius.md,
-            paddingHorizontal: spacing.md, marginTop: spacing.md,
-          }}>
-            <Ionicons name="search" size={18} color="rgba(255,255,255,0.5)" />
-            <TextInput
-              data-testid="search-jobs-input"
-              style={{
-                flex: 1, paddingVertical: 10, paddingHorizontal: spacing.sm,
-                fontSize: 15, color: colors.textInverse,
-              }}
-              placeholder="Search jobs..." placeholderTextColor="rgba(255,255,255,0.4)"
-              value={searchQuery} onChangeText={setSearchQuery}
-            />
-          </View>
-        )}
-      </View>
+      )}
 
       {/* Pill Tabs */}
       <View style={{
@@ -282,6 +270,7 @@ export default function JobsScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="jobs-screen">
+      <ModuleHeader title="Jobs" onBack={() => navigation.goBack()} />
       <AnimatedScreen>
       {/* List — header is inside FlatList so pull-to-refresh works from the top */}
       <FlatList

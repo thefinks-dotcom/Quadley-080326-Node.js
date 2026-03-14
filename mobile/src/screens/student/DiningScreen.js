@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
@@ -119,22 +120,8 @@ export default function DiningScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="dining-screen">
+      <ModuleHeader title="Dining" onBack={() => navigation.goBack()} />
       <AnimatedScreen>
-      {/* Header */}
-      <View style={{ backgroundColor: primaryColor, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl, borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Dining</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>{format(selectedDate, 'EEEE, MMMM d')}</Text>
-          </View>
-          {lateMeals?.length > 0 && (
-            <TouchableOpacity onPress={() => setViewAllRequestsModal(true)} style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: borderRadius.md, flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="time-outline" size={14} color={colors.textInverse} />
-              <Text style={{ color: colors.textInverse, fontWeight: '600', fontSize: 12, marginLeft: 4 }}>{lateMeals.length} Requests</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
 
       {/* Date Selector */}
       <FlatList

@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
@@ -133,21 +134,8 @@ export default function RecognitionScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} testID="recognition-screen">
+      <ModuleHeader title="Recognition" onBack={() => navigation.goBack()} onAdd={openCreateModal} />
       <AnimatedScreen>
-      <View style={{
-        backgroundColor: primaryColor, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons name="star" size={22} color={colors.textInverse} />
-          </View>
-          <View style={{ marginLeft: spacing.md }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Shoutouts</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>{shoutouts?.length || 0} shoutouts shared</Text>
-          </View>
-        </View>
-      </View>
 
       <FlatList
         data={shoutouts} keyExtractor={(i, idx) => i.id || `item-${idx}`} renderItem={renderShoutout}
@@ -165,11 +153,6 @@ export default function RecognitionScreen() {
       />
       </AnimatedScreen>
 
-      {/* FAB */}
-      <TouchableOpacity onPress={openCreateModal} testID="add-shoutout-fab"
-        style={{ position: 'absolute', bottom: 24, right: 24, width: 52, height: 52, backgroundColor: primaryColor, borderRadius: borderRadius.xl, justifyContent: 'center', alignItems: 'center', ...shadows.lg }}>
-        <Ionicons name="add" size={26} color={colors.textInverse} />
-      </TouchableOpacity>
 
       {/* Single Modal — toggles between form view and picker view */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { if (showPicker) { setShowPicker(false); } else { setModalVisible(false); } }}>

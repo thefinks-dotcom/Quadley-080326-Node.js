@@ -18,6 +18,7 @@ import { colors, borderRadius, spacing, shadows, typography } from '../../theme'
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../contexts/AuthContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
 export default function EventsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -154,6 +155,7 @@ export default function EventsScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <ModuleHeader title="Events" onBack={() => navigation.goBack()} />
       {/* Category Filter */}
       <FlatList
         horizontal

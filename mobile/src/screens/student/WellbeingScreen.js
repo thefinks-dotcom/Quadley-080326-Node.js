@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors as defaultColors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
@@ -54,6 +55,7 @@ export default function WellbeingScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <ModuleHeader title="Wellbeing" onBack={() => navigation.goBack()} />
       <AnimatedScreen>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero Section */}

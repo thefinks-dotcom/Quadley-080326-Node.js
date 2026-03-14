@@ -21,8 +21,9 @@ import debounce from 'lodash.debounce';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
-export default function CoCurricularScreen() {
+export default function CoCurricularScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -205,6 +206,7 @@ export default function CoCurricularScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <ModuleHeader title="Activities" onBack={() => navigation.goBack()} />
       {/* Search Bar */}
       <View style={{ backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <View style={{ 

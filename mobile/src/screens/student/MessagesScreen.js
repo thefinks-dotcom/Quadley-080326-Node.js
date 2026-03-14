@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
@@ -176,68 +177,39 @@ export default function MessagesScreen({ navigation }) {
   if (!conversations && isLoading) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={primaryColor} /></SafeAreaView>;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']} testID="messages-screen">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} testID="messages-screen">
+      <ModuleHeader
+        title="Messages"
+        onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+        onAdd={() => setNewMessageModalVisible(true)}
+      />
       <AnimatedScreen>
-      {/* Hero Header */}
+      {/* Search */}
       <View style={{
-        backgroundColor: primaryColor,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl,
-        borderBottomRightRadius: borderRadius.xxl,
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: colors.surfaceSecondary,
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        marginBottom: spacing.sm,
+        borderRadius: borderRadius.md,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
       }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {navigation.canGoBack() && (
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
-            >
-              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
-            </TouchableOpacity>
-          )}
-          {!navigation.canGoBack() && (
-            <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="chatbubbles" size={22} color={colors.textInverse} />
-            </View>
-          )}
-          <View style={{ flex: 1, marginLeft: spacing.md }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Messages</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-              {totalUnread > 0 ? `${totalUnread} unread` : `${conversations?.length || 0} conversations`}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => setNewMessageModalVisible(true)}
-            testID="new-message-header-btn"
-            style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <Ionicons name="create-outline" size={22} color={colors.textInverse} />
+        <Ionicons name="search" size={16} color={colors.textTertiary} />
+        <TextInput
+          style={{ flex: 1, paddingVertical: 10, paddingLeft: 8, fontSize: 14, color: colors.textPrimary }}
+          placeholder="Search conversations..."
+          placeholderTextColor={colors.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          testID="messages-search-input"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={16} color={colors.textTertiary} />
           </TouchableOpacity>
-        </View>
-        {/* Search integrated into header */}
-        <View style={{
-          flexDirection: 'row', alignItems: 'center',
-          backgroundColor: 'rgba(255,255,255,0.15)',
-          borderRadius: borderRadius.md,
-          paddingHorizontal: 12,
-          marginTop: spacing.md,
-        }}>
-          <Ionicons name="search" size={16} color="rgba(255,255,255,0.5)" />
-          <TextInput
-            style={{ flex: 1, paddingVertical: 10, paddingLeft: 8, fontSize: 14, color: colors.textInverse }}
-            placeholder="Search conversations..."
-            placeholderTextColor="rgba(255,255,255,0.4)"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            testID="messages-search-input"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.5)" />
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
       </View>
 
       {/* Pill Tabs */}

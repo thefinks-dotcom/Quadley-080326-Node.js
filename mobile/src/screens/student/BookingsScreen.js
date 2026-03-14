@@ -18,8 +18,9 @@ import { format, addDays } from 'date-fns';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
-export default function BookingsScreen() {
+export default function BookingsScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -193,6 +194,7 @@ export default function BookingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <ModuleHeader title="Bookings" onBack={() => navigation.goBack()} />
       {/* Tab Bar */}
       <View style={{ 
         flexDirection: 'row', 

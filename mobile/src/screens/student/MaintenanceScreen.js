@@ -22,8 +22,9 @@ import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
 import { format } from 'date-fns';
 import { useTenant } from '../../contexts/TenantContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
-export default function MaintenanceScreen() {
+export default function MaintenanceScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
   const { branding } = useTenant();
   const primaryColor = branding?.primaryColor || colors.primary;
@@ -185,6 +186,7 @@ export default function MaintenanceScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <ModuleHeader title="Maintenance" onBack={() => navigation.goBack()} onAdd={() => setModalVisible(true)} />
       <FlatList
         data={requests}
         keyExtractor={(item, index) => item.id || `item-${index}`}
@@ -203,24 +205,6 @@ export default function MaintenanceScreen() {
         contentContainerStyle={{ paddingVertical: 16 }}
       />
 
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          backgroundColor: primaryColor,
-          borderRadius: 28,
-          justifyContent: 'center',
-          alignItems: 'center',
-          ...shadows.lg,
-        }}
-      >
-        <Ionicons name="add" size={28} color={colors.textInverse} />
-      </TouchableOpacity>
 
       {/* Create Modal */}
       <Modal

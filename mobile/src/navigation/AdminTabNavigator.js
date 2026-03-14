@@ -113,25 +113,25 @@ function DashboardStack() {
       <Stack.Screen name="GBVTraining" component={GBVTrainingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.name || 'Chat' })} />
 
-      {/* Student Modules (accessible by Admin) */}
-      <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
-      <Stack.Screen name="Events" component={EventsScreen} options={{ title: 'Events' }} />
+      {/* Student Modules (accessible by Admin) — all use headerShown: false; each screen owns its ModuleHeader */}
+      <Stack.Screen name="Calendar" component={CalendarScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Events" component={EventsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ title: 'Event Details' }} />
-      <Stack.Screen name="Announcements" component={AnnouncementsScreen} options={{ title: 'News' }} />
-      <Stack.Screen name="Jobs" component={JobsScreen} options={{ title: 'College Jobs' }} />
+      <Stack.Screen name="Announcements" component={AnnouncementsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Jobs" component={JobsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Job Details' }} />
-      <Stack.Screen name="Dining" component={DiningScreen} options={{ title: 'Dining' }} />
-      <Stack.Screen name="Maintenance" component={MaintenanceScreen} options={{ title: 'Maintenance' }} />
-      <Stack.Screen name="Recognition" component={RecognitionScreen} options={{ title: 'Shoutouts' }} />
-      <Stack.Screen name="Wellbeing" component={WellbeingScreen} options={{ title: 'Wellbeing' }} />
+      <Stack.Screen name="Dining" component={DiningScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Maintenance" component={MaintenanceScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Recognition" component={RecognitionScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Wellbeing" component={WellbeingScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="Academics" component={AcademicsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="CoCurricular" component={CoCurricularScreen} options={{ title: 'Activities' }} />
-      <Stack.Screen name="Floor" component={FloorScreen} options={{ title: 'My Floor' }} />
-      <Stack.Screen name="Birthdays" component={BirthdaysScreen} options={{ title: 'Birthdays' }} />
-      <Stack.Screen name="SafeDisclosure" component={SafeDisclosureScreen} options={{ title: 'Safe Disclosure' }} />
-      <Stack.Screen name="Parcels" component={ParcelsScreen} options={{ title: 'My Parcels' }} />
-      <Stack.Screen name="Bookings" component={BookingsScreen} options={{ title: 'Bookings' }} />
+      <Stack.Screen name="CoCurricular" component={CoCurricularScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Floor" component={FloorScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Birthdays" component={BirthdaysScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SafeDisclosure" component={SafeDisclosureScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Parcels" component={ParcelsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Bookings" component={BookingsScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
