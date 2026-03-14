@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '34';
+const iosBuildNumber = '35';
 
 const TENANT_CONFIGS = {
   quadley: {
@@ -139,12 +139,27 @@ module.exports = {
       "expo-notifications",
       "expo-document-picker",
       "@react-native-community/datetimepicker",
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          // Reversed iOS Client ID from Google Cloud Console.
+          // Set GOOGLE_IOS_URL_SCHEME env var (format: com.googleusercontent.apps.XXXXXX)
+          // before running `TENANT=xxx npx expo prebuild`
+          iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || "com.googleusercontent.apps.PLACEHOLDER",
+        },
+      ],
     ],
     extra: {
       tenant: TENANT,
       tenantName: tenantConfig.name,
       primaryColor: tenantConfig.primaryColor,
       secondaryColor: tenantConfig.secondaryColor,
+      // Google OAuth — set these env vars before running prebuild
+      // GOOGLE_WEB_CLIENT_ID: Web client ID (used by backend for token verification)
+      // GOOGLE_IOS_CLIENT_ID: iOS client ID from Google Cloud Console
+      googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || "",
+      googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || "",
       ...(tenantConfig.projectId ? { eas: { projectId: tenantConfig.projectId } } : {}),
     },
   },
