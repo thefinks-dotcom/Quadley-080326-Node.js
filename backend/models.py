@@ -4,17 +4,19 @@ from typing import Optional, List
 from datetime import datetime, timezone
 from enum import Enum
 import uuid
-import random
+import secrets
 import string
 
 
 def _generate_invite_code(tenant_prefix: str = "") -> str:
-    """Generate a short, readable invite code like ORMD-7K3X."""
+    """Generate a short, readable invite code like ORMD-7K3X.
+    Uses secrets.choice (cryptographically secure PRNG) instead of random.choices.
+    """
     prefix = tenant_prefix[:4].upper() if tenant_prefix else "QUAD"
     chars = string.ascii_uppercase + string.digits
     # Remove ambiguous characters
     chars = chars.replace("O", "").replace("0", "").replace("I", "").replace("1", "").replace("L", "")
-    suffix = "".join(random.choices(chars, k=4))
+    suffix = "".join(secrets.choice(chars) for _ in range(4))
     return f"{prefix}-{suffix}"
 
 # ====== ENUMS ======

@@ -13,8 +13,10 @@ from models import (
 from utils.auth import hash_password
 from utils.multi_tenant import master_db, get_tenant_db
 from utils.tenant import TenantContext, require_role
-from utils.email_service import send_email, is_email_enabled
+from utils.email_service import send_student_invite_email, is_email_enabled
+from datetime import timedelta
 import uuid
+import secrets
 
 router = APIRouter(prefix="/user-provisioning", tags=["user-provisioning"])
 
@@ -98,10 +100,12 @@ async def upload_users_csv(
     error_count = 0
     errors = []
     created_users = []
-    
-    # Default password for CSV imports (users must change on first login)
-    default_password = f"Welcome{datetime.now().year}!"
-    
+
+    # Fetch tenant branding for invite emails
+    tenant_branding = tenant.get('branding', {}) if tenant else {}
+    primary_color = tenant_branding.get('primary_color') or tenant.get('primary_color', '#0f172a') if tenant else '#0f172a'
+    tenant_display_name = tenant.get('name', ctx.tenant_id) if tenant else ctx.tenant_id
+
     for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
         try:
             # Sanitize CSV values to prevent formula injection
@@ -163,32 +167,34 @@ async def upload_users_csv(
                 birthday=user_data["birthday"]
             )
             
+            # Use setup-token flow — no default password stored or transmitted
+            setup_token = secrets.token_urlsafe(32)
+            token_expiry = datetime.now(timezone.utc) + timedelta(days=7)
+
             user_doc = user.model_dump()
             user_doc['created_at'] = user_doc['created_at'].isoformat()
-            user_doc['password'] = hash_password(default_password)
-            user_doc['must_change_password'] = True  # Flag for first login
-            
+            user_doc['password'] = None
+            user_doc['pending_setup'] = True
+            user_doc['active'] = False
+            user_doc['setup_token'] = setup_token
+            user_doc['setup_token_expires'] = token_expiry.isoformat()
+
             await tenant_db.users.insert_one(user_doc)
-            
+
             success_count += 1
             created_users.append(user_data["email"])
-            
-            # Send welcome email if enabled
+
+            # Send invite email with setup link (no password in email)
             if send_welcome_emails and is_email_enabled():
                 try:
-                    await send_email(
+                    await send_student_invite_email(
                         to_email=user_data["email"],
-                        subject="Welcome to Quadley - Your Account is Ready",
-                        html_content=f"""
-                        <h2>Welcome to Quadley, {user_data["first_name"]}!</h2>
-                        <p>Your account has been created. Here are your login details:</p>
-                        <ul>
-                            <li><strong>Email:</strong> {user_data["email"]}</li>
-                            <li><strong>Temporary Password:</strong> {default_password}</li>
-                        </ul>
-                        <p><strong>Important:</strong> You will be required to change your password on first login.</p>
-                        <p>If you have any questions, please contact your college administrator.</p>
-                        """
+                        user_name=user_data["first_name"],
+                        setup_token=setup_token,
+                        floor=user_data.get("floor"),
+                        room=None,
+                        tenant_name=tenant_display_name,
+                        primary_color=primary_color,
                     )
                 except Exception:
                     # Log but don't fail the import if email fails
