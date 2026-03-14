@@ -13,9 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import Constants from 'expo-constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL, ENDPOINTS } from '../../config/api';
 import api from '../../services/api';
@@ -23,8 +20,6 @@ import { colors, borderRadius, spacing, inputStyle, buttonPrimary } from '../../
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import TermsOfServiceModal from '../../components/TermsOfServiceModal';
-
-const BUNDLE_ID = Constants.expoConfig?.ios?.bundleIdentifier || 'com.quadley.app';
 
 export default function InviteCodeScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -34,8 +29,6 @@ export default function InviteCodeScreen({ navigation }) {
   const [inviteData, setInviteData] = useState(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(null);
 
   // Registration fields
   const [firstName, setFirstName] = useState('');
@@ -45,7 +38,7 @@ export default function InviteCodeScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { registerWithCode, registerWithGoogle, registerWithApple } = useAuth();
+  const { registerWithCode } = useAuth();
   const lastNameRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
@@ -75,94 +68,15 @@ export default function InviteCodeScreen({ navigation }) {
     }
   };
 
-  const requireTerms = () => {
-    if (!agreedToTerms) {
-      Alert.alert('Terms Required', 'Please agree to the Terms of Service & Privacy Policy to continue.');
-      return false;
-    }
-    return true;
-  };
-
-  const requireName = () => {
+  const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       Alert.alert('Error', 'Please enter your first and last name');
-      return false;
+      return;
     }
-    return true;
-  };
-
-  const handleGoogleRegister = async () => {
-    if (!requireName() || !requireTerms()) return;
-
-    setSocialLoading('google');
-    try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-      const idToken = response?.data?.idToken;
-      if (!idToken) throw new Error('No ID token returned from Google');
-
-      const result = await registerWithGoogle(
-        inviteCode.trim().toUpperCase(),
-        idToken,
-        firstName.trim(),
-        lastName.trim(),
-      );
-      if (!result.success) {
-        Alert.alert('Registration Failed', result.error);
-      }
-    } catch (err) {
-      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled
-      } else if (err.code === statusCodes.IN_PROGRESS) {
-        // already in progress
-      } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Not Available', 'Google Play Services not available on this device.');
-      } else {
-        const message = err.response?.data?.detail || err.message || 'Google sign-in failed';
-        Alert.alert('Registration Failed', message);
-      }
-    } finally {
-      setSocialLoading(null);
+    if (!agreedToTerms) {
+      Alert.alert('Terms Required', 'Please agree to the Terms of Service & Privacy Policy to continue.');
+      return;
     }
-  };
-
-  const handleAppleRegister = async () => {
-    if (!requireName() || !requireTerms()) return;
-
-    setSocialLoading('apple');
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      if (!credential.identityToken) throw new Error('No identity token from Apple');
-
-      const result = await registerWithApple(
-        inviteCode.trim().toUpperCase(),
-        credential.identityToken,
-        BUNDLE_ID,
-        firstName.trim(),
-        lastName.trim(),
-      );
-      if (!result.success) {
-        Alert.alert('Registration Failed', result.error);
-      }
-    } catch (err) {
-      if (err.code === 'ERR_REQUEST_CANCELED') {
-        // user cancelled
-      } else {
-        const message = err.response?.data?.detail || err.message || 'Apple sign-in failed';
-        Alert.alert('Registration Failed', message);
-      }
-    } finally {
-      setSocialLoading(null);
-    }
-  };
-
-  const handlePasswordRegister = async () => {
-    if (!requireName() || !requireTerms()) return;
     if (password.length < 8) {
       Alert.alert('Error', 'Password must be at least 8 characters');
       return;
@@ -187,10 +101,11 @@ export default function InviteCodeScreen({ navigation }) {
   };
 
   const primaryColor = inviteData?.tenant_primary_color || colors.primary;
+  const secondaryColor = colors.background;
 
   if (step === 'register' && inviteData) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -264,7 +179,7 @@ export default function InviteCodeScreen({ navigation }) {
             </View>
 
             {/* Last Name */}
-            <View style={{ marginBottom: spacing.xxl }}>
+            <View style={{ marginBottom: spacing.lg }}>
               <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, marginBottom: spacing.sm }}>Last Name</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', ...inputStyle }}>
                 <Ionicons name="person-outline" size={18} color={colors.textTertiary} />
@@ -273,8 +188,47 @@ export default function InviteCodeScreen({ navigation }) {
                   style={{ flex: 1, paddingVertical: 0, paddingHorizontal: spacing.md, fontSize: 16, color: colors.textPrimary }}
                   placeholder="Last name" placeholderTextColor={colors.textTertiary}
                   value={lastName} onChangeText={setLastName}
-                  autoCapitalize="words" returnKeyType="done"
+                  autoCapitalize="words" returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                 />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, marginBottom: spacing.sm }}>Password</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', ...inputStyle }}>
+                <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
+                <TextInput
+                  ref={passwordRef}
+                  style={{ flex: 1, paddingVertical: 0, paddingHorizontal: spacing.md, fontSize: 16, color: colors.textPrimary }}
+                  placeholder="Create a password" placeholderTextColor={colors.textTertiary}
+                  value={password} onChangeText={setPassword}
+                  secureTextEntry={!showPassword} returnKeyType="next"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textTertiary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Confirm Password */}
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, marginBottom: spacing.sm }}>Confirm Password</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', ...inputStyle }}>
+                <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
+                <TextInput
+                  ref={confirmRef}
+                  style={{ flex: 1, paddingVertical: 0, paddingHorizontal: spacing.md, fontSize: 16, color: colors.textPrimary }}
+                  placeholder="Confirm your password" placeholderTextColor={colors.textTertiary}
+                  value={confirmPassword} onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword} returnKeyType="go"
+                  onSubmitEditing={handleRegister}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                  <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textTertiary} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -304,135 +258,18 @@ export default function InviteCodeScreen({ navigation }) {
               </Text>
             </View>
 
-            {/* ── Social Sign-In (Primary) ── */}
-            <View style={{
-              backgroundColor: colors.surface,
-              borderRadius: borderRadius.xl,
-              borderWidth: 1,
-              borderColor: colors.border,
-              padding: spacing.xl,
-              marginBottom: spacing.lg,
-            }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.md, textAlign: 'center' }}>
-                Continue with
-              </Text>
-
-              {/* Google */}
-              <TouchableOpacity
-                onPress={handleGoogleRegister}
-                disabled={!!socialLoading || loading}
-                activeOpacity={0.8}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#fff',
-                  borderRadius: borderRadius.md,
-                  borderWidth: 1,
-                  borderColor: '#dadce0',
-                  paddingVertical: 14,
-                  marginBottom: spacing.md,
-                  opacity: (socialLoading || loading) ? 0.6 : 1,
-                }}
-              >
-                {socialLoading === 'google' ? (
-                  <ActivityIndicator color="#4285F4" />
-                ) : (
-                  <>
-                    <Text style={{ fontSize: 18, color: '#4285F4', fontWeight: '700', marginRight: 10 }}>G</Text>
-                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#3c4043' }}>Google</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* Apple — iOS only */}
-              {Platform.OS === 'ios' && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                  cornerRadius={borderRadius.md}
-                  style={{ height: 48 }}
-                  onPress={handleAppleRegister}
-                />
-              )}
-            </View>
-
-            {/* ── Password Option (Secondary / Collapsible) ── */}
+            {/* Register Button */}
             <TouchableOpacity
-              onPress={() => setShowPasswordForm(!showPasswordForm)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: spacing.md,
-                marginBottom: showPasswordForm ? spacing.md : spacing.lg,
-              }}
-              activeOpacity={0.7}
+              onPress={handleRegister}
+              disabled={loading || !agreedToTerms}
+              style={{ ...buttonPrimary, backgroundColor: primaryColor, opacity: (loading || !agreedToTerms) ? 0.5 : 1, marginBottom: spacing.lg }}
             >
-              <Text style={{ fontSize: 13, color: colors.textTertiary }}>
-                {showPasswordForm ? 'Hide password option' : 'Set a password instead'}
-              </Text>
-              <Ionicons
-                name={showPasswordForm ? 'chevron-up' : 'chevron-down'}
-                size={14}
-                color={colors.textTertiary}
-                style={{ marginLeft: 4 }}
-              />
+              {loading ? (
+                <ActivityIndicator color={colors.textInverse} />
+              ) : (
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textInverse }}>Create Account</Text>
+              )}
             </TouchableOpacity>
-
-            {showPasswordForm && (
-              <View style={{ marginBottom: spacing.lg }}>
-                {/* Password */}
-                <View style={{ marginBottom: spacing.lg }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, marginBottom: spacing.sm }}>Password</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', ...inputStyle }}>
-                    <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
-                    <TextInput
-                      ref={passwordRef}
-                      style={{ flex: 1, paddingVertical: 0, paddingHorizontal: spacing.md, fontSize: 16, color: colors.textPrimary }}
-                      placeholder="Create a password" placeholderTextColor={colors.textTertiary}
-                      value={password} onChangeText={setPassword}
-                      secureTextEntry={!showPassword} returnKeyType="next"
-                      onSubmitEditing={() => confirmRef.current?.focus()}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textTertiary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Confirm Password */}
-                <View style={{ marginBottom: spacing.lg }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.textSecondary, marginBottom: spacing.sm }}>Confirm Password</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', ...inputStyle }}>
-                    <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
-                    <TextInput
-                      ref={confirmRef}
-                      style={{ flex: 1, paddingVertical: 0, paddingHorizontal: spacing.md, fontSize: 16, color: colors.textPrimary }}
-                      placeholder="Confirm your password" placeholderTextColor={colors.textTertiary}
-                      value={confirmPassword} onChangeText={setConfirmPassword}
-                      secureTextEntry={!showConfirmPassword} returnKeyType="go"
-                      onSubmitEditing={handlePasswordRegister}
-                    />
-                    <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textTertiary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={handlePasswordRegister}
-                  disabled={loading || !agreedToTerms}
-                  style={{ ...buttonPrimary, backgroundColor: primaryColor, opacity: (loading || !agreedToTerms) ? 0.5 : 1 }}
-                >
-                  {loading ? (
-                    <ActivityIndicator color={colors.textInverse} />
-                  ) : (
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textInverse }}>Create Account</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
           </ScrollView>
         </KeyboardAvoidingView>
         <TermsOfServiceModal
@@ -464,7 +301,7 @@ export default function InviteCodeScreen({ navigation }) {
             <Text style={{ fontSize: 14, color: colors.textSecondary, marginLeft: 6 }}>Back to Login</Text>
           </TouchableOpacity>
 
-          {/* Header */}
+          {/* Header with tenant color */}
           <View style={{
             backgroundColor: primaryColor,
             borderRadius: borderRadius.xl,
@@ -533,6 +370,7 @@ export default function InviteCodeScreen({ navigation }) {
               />
             </View>
 
+            {/* Verify Button */}
             <TouchableOpacity
               onPress={handleVerifyCode}
               disabled={loading}
