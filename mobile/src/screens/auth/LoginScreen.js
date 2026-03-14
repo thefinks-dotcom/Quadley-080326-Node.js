@@ -8,7 +8,6 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,6 +31,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { login } = useAuth();
   const { tenant, branding } = useTenant();
   const passwordRef = useRef(null);
@@ -48,26 +48,37 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
+    setErrorMessage('');
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both email and password');
+      setErrorMessage('Please enter both email and password');
       return;
     }
     setLoading(true);
-    const result = await login(email.trim().toLowerCase(), password);
-    setLoading(false);
-    if (!result.success) {
-      if (result.error.includes('Network') || result.error.includes('timed out') || result.error.includes('timeout')) {
-        Alert.alert('Connection Issue', 'Having trouble connecting to the server. Please check your internet connection and try again.', [{ text: 'OK' }]);
-      } else {
-        Alert.alert('Login Failed', result.error);
+    try {
+      const result = await login(email.trim().toLowerCase(), password);
+      if (!result.success) {
+        if (result.error.includes('Network') || result.error.includes('timed out') || result.error.includes('timeout')) {
+          setErrorMessage('Having trouble connecting. Please check your internet and try again.');
+        } else {
+          setErrorMessage(result.error);
+        }
       }
+    } catch (e) {
+      setErrorMessage('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
+
+  // iPadOS 26 crashes with KeyboardAvoidingView behavior="padding" — disable on iPad
+  const kvBehavior = Platform.OS === 'ios'
+    ? (Platform.isPad ? undefined : 'padding')
+    : 'height';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={kvBehavior}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -189,6 +200,23 @@ export default function LoginScreen({ navigation }) {
                 Forgot Password?
               </Text>
             </TouchableOpacity>
+
+            {/* Inline error — replaces Alert.alert to avoid iPad iOS 26 popover crash */}
+            {!!errorMessage && (
+              <View style={{
+                backgroundColor: '#fef2f2',
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                borderColor: '#fecaca',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                marginBottom: spacing.md,
+              }}>
+                <Text style={{ fontSize: 14, color: '#dc2626', lineHeight: 20 }}>
+                  {errorMessage}
+                </Text>
+              </View>
+            )}
 
             {/* Sign In Button */}
             <TouchableOpacity

@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '39';
+const iosBuildNumber = '40';
 
 // Google OAuth client IDs per tenant/platform
 // iOS client ID → reversed = iosUrlScheme (com.googleusercontent.apps.<reversed-client-id>)
