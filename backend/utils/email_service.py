@@ -3,6 +3,7 @@
 Uses SendGrid API for reliable email delivery.
 """
 import os
+import asyncio
 import logging
 from typing import Optional
 from datetime import datetime
@@ -71,7 +72,7 @@ async def send_email(
         if text_content:
             message.plain_text_content = text_content
         
-        response = sg_client.send(message)
+        response = await asyncio.to_thread(sg_client.send, message)
         
         if response.status_code in [200, 201, 202]:
             logger.info(f"Email sent successfully to {to_email}")

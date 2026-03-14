@@ -1,5 +1,5 @@
 """Admin and RA Floor Management routes"""
-from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Request
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Request, BackgroundTasks
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr
@@ -148,6 +148,7 @@ class InviteStudentRequest(BaseModel):
 @router.post("/users/invite")
 async def invite_student(
     invite_data: InviteStudentRequest,
+    background_tasks: BackgroundTasks,
     tenant_data: tuple = Depends(get_tenant_db_for_user)
 ):
     """
@@ -252,8 +253,9 @@ async def invite_student(
     t_branding = tenant.get('branding', {}) if tenant else {}
     t_primary = t_branding.get('primary_color') or tenant.get('primary_color', '#0f172a') if tenant else '#0f172a'
     
-    # Send invitation email with invite code
-    email_sent = send_invitation_email(
+    # Send invitation email in the background — response returns immediately
+    background_tasks.add_task(
+        send_invitation_email,
         to_email=invite_data.email.lower(),
         tenant_name=tenant_name,
         invitation_token=invitation_token,
@@ -265,6 +267,7 @@ async def invite_student(
         android_app_link=android_app_link,
         primary_color=t_primary,
     )
+    email_sent = True
     
     # Return response (exclude _id)
     invitation_doc.pop('_id', None)
@@ -289,6 +292,7 @@ async def invite_student(
 @router.post("/users/resend-invite/{user_id}")
 async def resend_invite(
     user_id: str,
+    background_tasks: BackgroundTasks,
     tenant_data: tuple = Depends(get_tenant_db_for_user)
 ):
     """Resend invitation email to a pending user."""
@@ -351,8 +355,9 @@ async def resend_invite(
     t_branding2 = tenant.get('branding', {}) if tenant else {}
     t_primary2 = t_branding2.get('primary_color') or tenant.get('primary_color', '#0f172a') if tenant else '#0f172a'
     
-    # Send invitation email
-    email_sent = send_invitation_email(
+    # Send invitation email in the background — response returns immediately
+    background_tasks.add_task(
+        send_invitation_email,
         to_email=invitation["email"],
         tenant_name=tenant_name,
         invitation_token=invitation["token"],
@@ -365,9 +370,6 @@ async def resend_invite(
         primary_color=t_primary2,
     )
     
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Failed to send email")
-    
     return {
         "message": f"Invitation resent to {invitation['email']}",
         "email_sent": True
@@ -377,6 +379,7 @@ async def resend_invite(
 @router.post("/users/{user_id}/activate")
 async def activate_user(
     user_id: str,
+    background_tasks: BackgroundTasks,
     tenant_data: tuple = Depends(get_tenant_db_for_user)
 ):
     """
@@ -440,19 +443,18 @@ async def activate_user(
     t_branding = tenant.get('branding', {}) if tenant else {}
     t_primary = t_branding.get('primary_color') or tenant.get('primary_color', '#0f172a') if tenant else '#0f172a'
 
-    try:
-        send_invitation_email(
-            to_email=email.lower(),
-            tenant_name=tenant_name,
-            invitation_token=setup_token,
-            role=user.get("role", "student"),
-            inviter_name=f"{current_user.first_name} {current_user.last_name}".strip() or "Administrator",
-            first_name=user.get("first_name"),
-            invite_code=invite_code,
-            primary_color=t_primary,
-        )
-    except Exception:
-        pass
+    # Fire email in the background — response returns immediately
+    background_tasks.add_task(
+        send_invitation_email,
+        to_email=email.lower(),
+        tenant_name=tenant_name,
+        invitation_token=setup_token,
+        role=user.get("role", "student"),
+        inviter_name=f"{current_user.first_name} {current_user.last_name}".strip() or "Administrator",
+        first_name=user.get("first_name"),
+        invite_code=invite_code,
+        primary_color=t_primary,
+    )
 
     return {
         "message": f"Fresh invitation sent to {email}",
