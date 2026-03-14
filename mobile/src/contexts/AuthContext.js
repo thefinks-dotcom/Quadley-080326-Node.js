@@ -271,70 +271,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (idToken) => {
-    setError(null);
-    try {
-      const result = await authService.loginWithGoogle(idToken);
-      const { access_token, user: newUser, tenant } = result;
-      setToken(access_token);
-      setUser(newUser);
-      if (tenant) await saveTenant(tenant);
-      return { success: true };
-    } catch (err) {
-      const message = err.response?.data?.detail || 'Google sign-in failed';
-      setError(message);
-      return { success: false, error: message };
-    }
-  };
-
-  const loginWithApple = async (identityToken, bundleId) => {
-    setError(null);
-    try {
-      const result = await authService.loginWithApple(identityToken, bundleId);
-      const { access_token, user: newUser, tenant } = result;
-      setToken(access_token);
-      setUser(newUser);
-      if (tenant) await saveTenant(tenant);
-      return { success: true };
-    } catch (err) {
-      const message = err.response?.data?.detail || 'Apple sign-in failed';
-      setError(message);
-      return { success: false, error: message };
-    }
-  };
-
-  const registerWithGoogle = async (inviteCode, idToken, firstName, lastName) => {
-    setError(null);
-    try {
-      const result = await authService.registerWithGoogle(inviteCode, idToken, firstName, lastName);
-      const { access_token, user: newUser, tenant } = result;
-      setToken(access_token);
-      setUser(newUser);
-      if (tenant) await saveTenant(tenant);
-      return { success: true };
-    } catch (err) {
-      const message = err.response?.data?.detail || 'Google registration failed';
-      setError(message);
-      return { success: false, error: message };
-    }
-  };
-
-  const registerWithApple = async (inviteCode, identityToken, bundleId, firstName, lastName) => {
-    setError(null);
-    try {
-      const result = await authService.registerWithApple(inviteCode, identityToken, bundleId, firstName, lastName);
-      const { access_token, user: newUser, tenant } = result;
-      setToken(access_token);
-      setUser(newUser);
-      if (tenant) await saveTenant(tenant);
-      return { success: true };
-    } catch (err) {
-      const message = err.response?.data?.detail || 'Apple registration failed';
-      setError(message);
-      return { success: false, error: message };
-    }
-  };
-
   const registerWithCode = async (codeData) => {
     setError(null);
     try {
@@ -416,12 +352,8 @@ export const AuthProvider = ({ children }) => {
     mfaSetupRequired,
     isConnecting,
     login,
-    loginWithGoogle,
-    loginWithApple,
     register,
     registerWithCode,
-    registerWithGoogle,
-    registerWithApple,
     logout,
     refreshUser,
     completeMfaVerification,

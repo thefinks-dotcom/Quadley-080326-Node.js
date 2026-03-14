@@ -108,68 +108,6 @@ export const authService = {
     return { access_token, user, tenant };
   },
 
-  async loginWithGoogle(idToken) {
-    const response = await api.post(ENDPOINTS.SOCIAL_LOGIN_GOOGLE, { id_token: idToken });
-    const { access_token, user, tenant } = response.data;
-
-    await SecureStore.setItemAsync('access_token', access_token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    if (tenant) await SecureStore.setItemAsync('tenant', JSON.stringify(tenant));
-
-    return { access_token, user, tenant };
-  },
-
-  async loginWithApple(identityToken, bundleId) {
-    const response = await api.post(ENDPOINTS.SOCIAL_LOGIN_APPLE, {
-      identity_token: identityToken,
-      bundle_id: bundleId,
-    });
-    const { access_token, user, tenant } = response.data;
-
-    await SecureStore.setItemAsync('access_token', access_token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    if (tenant) await SecureStore.setItemAsync('tenant', JSON.stringify(tenant));
-
-    return { access_token, user, tenant };
-  },
-
-  async registerWithGoogle(inviteCode, idToken, firstName, lastName) {
-    const response = await api.post(ENDPOINTS.INVITE_CODE_REGISTER_GOOGLE, {
-      invite_code: inviteCode,
-      id_token: idToken,
-      first_name: firstName,
-      last_name: lastName,
-    });
-    const { access_token, user, tenant } = response.data;
-
-    await SecureStore.setItemAsync('access_token', access_token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    if (tenant) await SecureStore.setItemAsync('tenant', JSON.stringify(tenant));
-
-    return { access_token, user, tenant };
-  },
-
-  async registerWithApple(inviteCode, identityToken, bundleId, firstName, lastName) {
-    const response = await api.post(ENDPOINTS.INVITE_CODE_REGISTER_APPLE, {
-      invite_code: inviteCode,
-      identity_token: identityToken,
-      bundle_id: bundleId,
-      first_name: firstName,
-      last_name: lastName,
-    });
-    const { access_token, user, tenant } = response.data;
-
-    await SecureStore.setItemAsync('access_token', access_token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    if (tenant) await SecureStore.setItemAsync('tenant', JSON.stringify(tenant));
-
-    return { access_token, user, tenant };
-  },
-
   async logout() {
     try {
       await api.post(ENDPOINTS.LOGOUT);

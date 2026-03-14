@@ -18,10 +18,6 @@ export const ENDPOINTS = {
   RESET_PASSWORD: '/auth/reset-password',
   INVITE_CODE_VERIFY: '/auth/invite-code/verify',
   INVITE_CODE_REGISTER: '/auth/invite-code/register',
-  INVITE_CODE_REGISTER_GOOGLE: '/auth/invite-code/register-google',
-  INVITE_CODE_REGISTER_APPLE: '/auth/invite-code/register-apple',
-  SOCIAL_LOGIN_GOOGLE: '/auth/social/google',
-  SOCIAL_LOGIN_APPLE: '/auth/social/apple',
   
   // MFA
   MFA_STATUS: '/mfa/status',
