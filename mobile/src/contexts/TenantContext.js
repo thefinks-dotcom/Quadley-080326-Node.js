@@ -10,6 +10,19 @@ const BUILD_TENANT_NAME = BUILD_CONFIG.tenantName;
 const BUILD_PRIMARY = BUILD_CONFIG.primaryColor || colors.primary;
 const BUILD_SECONDARY = BUILD_CONFIG.secondaryColor || colors.textPrimary;
 
+// ── Sanity check ──────────────────────────────────────────────────────────────
+// Catch contamination early: if the generated file somehow contains another
+// tenant's values, log a clear warning so it's immediately obvious in the
+// Metro console. This should never happen if push_to_github.py ran correctly.
+const KNOWN_TENANTS = ['quadley', 'grace_college', 'ormond', 'murphy_shark'];
+if (!KNOWN_TENANTS.includes(BUILD_TENANT)) {
+  console.error(`[TenantContext] ⚠️  Unknown BUILD_TENANT: "${BUILD_TENANT}". Check tenantBuild.generated.js.`);
+}
+if (!BUILD_CONFIG.primaryColor || !BUILD_CONFIG.secondaryColor) {
+  console.error(`[TenantContext] ⚠️  Missing colors in BUILD_CONFIG for tenant "${BUILD_TENANT}". Check tenantBuild.generated.js.`);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // All available modules
 export const ALL_MODULES = [
   'events',
