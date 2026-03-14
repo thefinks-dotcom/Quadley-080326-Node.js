@@ -29,6 +29,7 @@ import {
 import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
 export default function CalendarScreen({ navigation }) {
   const { themeColors: colors } = useAppTheme();
@@ -107,6 +108,7 @@ export default function CalendarScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+      <ModuleHeader title="Calendar" onBack={() => navigation.goBack()} />
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />

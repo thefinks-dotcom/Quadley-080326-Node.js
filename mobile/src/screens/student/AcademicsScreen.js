@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { ENDPOINTS } from '../../config/api';
@@ -223,42 +224,13 @@ export default function AcademicsScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']} data-testid="academics-screen">
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="academics-screen">
+      <ModuleHeader
+        title="Academics"
+        onBack={() => navigation.goBack()}
+        onAdd={activeTab === 'study-groups' ? () => setModalVisible(true) : undefined}
+      />
       <AnimatedScreen>
-      {/* Hero Header */}
-      <View style={{
-        backgroundColor: primaryColor, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl, borderBottomRightRadius: borderRadius.xxl,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {navigation.canGoBack() ? (
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
-            >
-              <Ionicons name="chevron-back" size={22} color={colors.textInverse} />
-            </TouchableOpacity>
-          ) : (
-            <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="book" size={22} color={colors.textInverse} />
-            </View>
-          )}
-          <View style={{ flex: 1, marginLeft: spacing.md }}>
-            <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>Study</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-              {groupCount} groups · {tutorCount} tutors
-            </Text>
-          </View>
-          {activeTab === 'study-groups' && (
-            <TouchableOpacity
-              onPress={() => setModalVisible(true)}
-              style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}
-            >
-              <Ionicons name="add" size={24} color={colors.textInverse} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
 
       {/* Pill Tabs */}
       <View style={{

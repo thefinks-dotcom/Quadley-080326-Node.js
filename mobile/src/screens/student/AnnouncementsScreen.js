@@ -24,6 +24,7 @@ import { borderRadius, spacing, shadows } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { AnimatedScreen } from '../../components/AnimatedScreen';
+import ModuleHeader from '../../components/ModuleHeader';
 
 const EMERGENCY_RED = '#D32F2F';
 const EMERGENCY_DARK = '#B71C1C';
@@ -327,38 +328,9 @@ export default function AnnouncementsScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <ModuleHeader title="News" onBack={() => navigation.goBack()} />
       <AnimatedScreen>
-        {/* Hero Header */}
-        <View style={{
-          backgroundColor: primaryColor,
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.xl,
-          borderBottomLeftRadius: borderRadius.xxl,
-          borderBottomRightRadius: borderRadius.xxl,
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {navigation.canGoBack() ? (
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={{ width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}
-              >
-                <Ionicons name="chevron-back" size={22} color="#fff" />
-              </TouchableOpacity>
-            ) : (
-              <View style={{ width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.md, justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="megaphone" size={22} color="#fff" />
-              </View>
-            )}
-            <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>News</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-                {unreadCount > 0 ? `${unreadCount} unread item${unreadCount !== 1 ? 's' : ''}` : `${announcements.length} announcement${announcements.length !== 1 ? 's' : ''}`}
-              </Text>
-            </View>
-          </View>
-        </View>
 
         {/* Emergency Banner */}
         {unansweredRollcalls.length > 0 && (

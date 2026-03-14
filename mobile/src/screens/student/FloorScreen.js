@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { colors as defaultColors, spacing, borderRadius, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import ModuleHeader from '../../components/ModuleHeader';
 
 export default function FloorScreen({ navigation }) {
   const { branding } = useTenant();
@@ -227,51 +228,11 @@ export default function FloorScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="floor-screen">
+      <ModuleHeader
+        title={isAdmin ? 'Student Directory' : (user?.floor || 'My Floor')}
+        onBack={() => navigation.goBack()}
+      />
       <AnimatedScreen>
-      {/* Header */}
-      <View style={{
-        backgroundColor: primaryColor,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
-        paddingBottom: spacing.xl,
-        borderBottomLeftRadius: borderRadius.xxl,
-        borderBottomRightRadius: borderRadius.xxl,
-      }}>
-        <Text style={{ color: colors.textInverse, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>
-          {isAdmin ? 'Student Directory' : (user?.floor || 'My Floor')}
-        </Text>
-        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2, fontWeight: '500' }}>
-          {isAdmin ? `${residents.length} students` : `${residents.length} residents · ${floorEvents.length} upcoming`}
-        </Text>
-
-        {raInfo && !isRA && (
-          <View style={{
-            flexDirection: 'row', alignItems: 'center',
-            marginTop: spacing.md,
-            backgroundColor: 'rgba(255,255,255,0.12)',
-            padding: spacing.md,
-            borderRadius: borderRadius.md,
-          }}>
-            <View style={{
-              width: 32, height: 32,
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              borderRadius: borderRadius.sm,
-              justifyContent: 'center', alignItems: 'center',
-              marginRight: spacing.sm,
-            }}>
-              <Ionicons name="shield-checkmark" size={16} color={colors.textInverse} />
-            </View>
-            <View>
-              <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                Your RA
-              </Text>
-              <Text style={{ color: colors.textInverse, fontWeight: '600', fontSize: 14 }}>
-                {raInfo.first_name} {raInfo.last_name}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
 
       {/* Tabs */}
       <View style={{
