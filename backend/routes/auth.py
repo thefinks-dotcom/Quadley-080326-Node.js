@@ -1768,12 +1768,31 @@ _apple_jwks_cached_at: float = 0.0
 
 GOOGLE_WEB_CLIENT_ID = os.environ.get("GOOGLE_WEB_CLIENT_ID", "")
 
-ALL_TENANT_BUNDLE_IDS = [
-    "com.gracecollege.app",
-    "com.quadley.app",
-    "com.ormond.college.app",
-    "com.murphyshark.app",
-]
+APPLE_TEAM_ID = os.environ.get("APPLE_TEAM_ID", "")
+
+# Maps bundle ID → (key_id_env_var, private_key_env_var)
+# These are used for server-to-server Apple API calls (e.g. token revocation).
+# Identity token verification uses Apple's public JWKS and does NOT need the private key.
+APPLE_BUNDLE_KEY_MAP = {
+    "com.gracecollege.app": {
+        "key_id": os.environ.get("APPLE_KEY_ID_GRACE", ""),
+        "private_key": os.environ.get("APPLE_PRIVATE_KEY_GRACE", ""),
+    },
+    "com.quadley.app": {
+        "key_id": os.environ.get("APPLE_KEY_ID_QUADLEY", ""),
+        "private_key": os.environ.get("APPLE_PRIVATE_KEY_QUADLEY", ""),
+    },
+    "com.ormond.college.app": {
+        "key_id": os.environ.get("APPLE_KEY_ID_QUADLEY", ""),
+        "private_key": os.environ.get("APPLE_PRIVATE_KEY_QUADLEY", ""),
+    },
+    "com.murphyshark.app": {
+        "key_id": os.environ.get("APPLE_KEY_ID_QUADLEY", ""),
+        "private_key": os.environ.get("APPLE_PRIVATE_KEY_QUADLEY", ""),
+    },
+}
+
+ALL_TENANT_BUNDLE_IDS = list(APPLE_BUNDLE_KEY_MAP.keys())
 
 
 async def _verify_google_token(id_token_str: str) -> dict:
