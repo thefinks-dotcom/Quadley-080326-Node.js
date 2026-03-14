@@ -1954,6 +1954,9 @@ async def _complete_invite_registration_social(
     ip_address: str,
 ) -> JSONResponse:
     """Shared logic for invite-code registration via Google or Apple."""
+    first_name = sanitize_html(first_name, max_length=100)
+    last_name = sanitize_html(last_name, max_length=100)
+
     invitation = await master_db.invitations.find_one({"invite_code": code, "status": "pending"})
     if not invitation:
         raise HTTPException(status_code=404, detail="Invalid or expired invite code")
@@ -2146,6 +2149,9 @@ async def social_login_apple(request: Request, data: SocialAppleRequest):
     """Sign in with an existing account using an Apple identity token from the mobile app."""
     ip_address = request.client.host if request.client else "unknown"
 
+    if data.bundle_id not in ALL_TENANT_BUNDLE_IDS:
+        raise HTTPException(status_code=400, detail="Unrecognised bundle ID")
+
     claims = await _verify_apple_token(data.identity_token, data.bundle_id)
     email = claims.get("email", "").lower()
     if not email:
@@ -2205,6 +2211,9 @@ async def register_with_invite_code_apple(request: Request, data: InviteCodeAppl
     """Complete account setup using an invite code + Apple identity token (no password needed)."""
     ip_address = request.client.host if request.client else "unknown"
     code = data.invite_code.strip().upper()
+
+    if data.bundle_id not in ALL_TENANT_BUNDLE_IDS:
+        raise HTTPException(status_code=400, detail="Unrecognised bundle ID")
 
     claims = await _verify_apple_token(data.identity_token, data.bundle_id)
     apple_email = claims.get("email", "").lower()
