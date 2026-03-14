@@ -842,6 +842,7 @@ export default function AdminUsersScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
           </View>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.isPad ? undefined : 'padding'}>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             {/* Info Banner */}
             <View style={{ backgroundColor: primaryColor + '15', padding: 12, borderRadius: borderRadius.md, marginBottom: 20, borderWidth: 1, borderColor: primaryColor }}>
@@ -988,6 +989,7 @@ export default function AdminUsersScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
           </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
 
