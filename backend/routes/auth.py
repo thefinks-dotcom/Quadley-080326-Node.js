@@ -1768,6 +1768,17 @@ _apple_jwks_cached_at: float = 0.0
 
 GOOGLE_WEB_CLIENT_ID = os.environ.get("GOOGLE_WEB_CLIENT_ID", "")
 
+# All valid Google client IDs across tenants and platforms.
+# Token verification accepts any of these as the audience.
+GOOGLE_ALL_CLIENT_IDS = [
+    cid for cid in [
+        os.environ.get("GOOGLE_WEB_CLIENT_ID", ""),
+        os.environ.get("GOOGLE_IOS_CLIENT_ID_GRACE", ""),
+        os.environ.get("GOOGLE_IOS_CLIENT_ID_QUADLEY", ""),
+        os.environ.get("GOOGLE_ANDROID_CLIENT_ID_GRACE", ""),
+    ] if cid
+]
+
 APPLE_TEAM_ID = os.environ.get("APPLE_TEAM_ID", "")
 
 # Maps bundle ID → (key_id_env_var, private_key_env_var)
@@ -1796,26 +1807,33 @@ ALL_TENANT_BUNDLE_IDS = list(APPLE_BUNDLE_KEY_MAP.keys())
 
 
 async def _verify_google_token(id_token_str: str) -> dict:
-    """Verify a Google ID token and return the payload claims."""
+    """Verify a Google ID token and return the payload claims.
+
+    Tries each configured client ID (web, iOS Grace, iOS Quadley, Android Grace)
+    so tokens from any platform/tenant are accepted.
+    """
     import asyncio
     from google.oauth2 import id_token as google_id_token
     from google.auth.transport import requests as google_requests
 
-    if not GOOGLE_WEB_CLIENT_ID:
+    if not GOOGLE_ALL_CLIENT_IDS:
         raise HTTPException(status_code=501, detail="Google Sign-In is not configured on this server")
 
-    def _sync_verify():
-        return google_id_token.verify_oauth2_token(
-            id_token_str,
-            google_requests.Request(),
-            GOOGLE_WEB_CLIENT_ID,
-        )
+    req = google_requests.Request()
+    last_error = None
 
-    try:
-        return await asyncio.to_thread(_sync_verify)
-    except Exception as e:
-        logger.warning(f"Google token verification failed: {e}")
-        raise HTTPException(status_code=401, detail="Invalid or expired Google token")
+    def _try_verify(client_id: str):
+        return google_id_token.verify_oauth2_token(id_token_str, req, client_id)
+
+    for client_id in GOOGLE_ALL_CLIENT_IDS:
+        try:
+            return await asyncio.to_thread(_try_verify, client_id)
+        except Exception as e:
+            last_error = e
+            continue
+
+    logger.warning(f"Google token verification failed for all client IDs: {last_error}")
+    raise HTTPException(status_code=401, detail="Invalid or expired Google token")
 
 
 async def _get_apple_public_keys() -> list:

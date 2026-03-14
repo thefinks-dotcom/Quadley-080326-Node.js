@@ -15,7 +15,24 @@ const fs = require('fs');
 const path = require('path');
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '36';
+const iosBuildNumber = '37';
+
+// Google OAuth client IDs per tenant/platform
+// iOS client ID → reversed = iosUrlScheme (com.googleusercontent.apps.<reversed-client-id>)
+const GOOGLE_IOS_CLIENT_IDS = {
+  quadley:       "802541348205-c3di5hkpie589gvnd35icn4ea7eu8ohu.apps.googleusercontent.com",
+  ormond:        "802541348205-c3di5hkpie589gvnd35icn4ea7eu8ohu.apps.googleusercontent.com", // uses Quadley key
+  murphy_shark:  "802541348205-c3di5hkpie589gvnd35icn4ea7eu8ohu.apps.googleusercontent.com", // uses Quadley key
+  grace_college: "802541348205-cikk1ar830flufe0d76oare4tucv75nb.apps.googleusercontent.com",
+};
+
+function getIosUrlScheme(iosClientId) {
+  // Reversed client ID: strip ".apps.googleusercontent.com" suffix, reverse the numeric part
+  // Format: com.googleusercontent.apps.<NUMERIC_ID>
+  const match = iosClientId.match(/^(\d+)-(.+)\.apps\.googleusercontent\.com$/);
+  if (!match) return "";
+  return `com.googleusercontent.apps.${match[1]}-${match[2]}`;
+}
 
 const TENANT_CONFIGS = {
   quadley: {
@@ -143,10 +160,10 @@ module.exports = {
       [
         "@react-native-google-signin/google-signin",
         {
-          // Reversed iOS Client ID from Google Cloud Console.
-          // Set GOOGLE_IOS_URL_SCHEME env var (format: com.googleusercontent.apps.XXXXXX)
-          // before running `TENANT=xxx npx expo prebuild`
-          iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || "com.googleusercontent.apps.PLACEHOLDER",
+          // Reversed iOS Client ID — derived automatically from the per-tenant client ID.
+          // Override with GOOGLE_IOS_URL_SCHEME env var if needed.
+          iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME ||
+            getIosUrlScheme(GOOGLE_IOS_CLIENT_IDS[TENANT] || GOOGLE_IOS_CLIENT_IDS.quadley),
         },
       ],
     ],
@@ -155,11 +172,9 @@ module.exports = {
       tenantName: tenantConfig.name,
       primaryColor: tenantConfig.primaryColor,
       secondaryColor: tenantConfig.secondaryColor,
-      // Google OAuth — set these env vars before running prebuild
-      // GOOGLE_WEB_CLIENT_ID: Web client ID (used by backend for token verification)
-      // GOOGLE_IOS_CLIENT_ID: iOS client ID from Google Cloud Console
-      googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || "",
-      googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || "",
+      // Google OAuth client IDs — baked in at prebuild time per tenant
+      googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || "802541348205-v9rraf8f0m7k6t22pe6gj0llbdctrlru.apps.googleusercontent.com",
+      googleIosClientId: GOOGLE_IOS_CLIENT_IDS[TENANT] || GOOGLE_IOS_CLIENT_IDS.quadley,
       ...(tenantConfig.projectId ? { eas: { projectId: tenantConfig.projectId } } : {}),
     },
   },
