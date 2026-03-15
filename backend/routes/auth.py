@@ -1828,16 +1828,28 @@ async def get_tenant_config(current_user: User = Depends(get_current_user)):
     }
 
 
+_branding_cache: dict = {}
+_BRANDING_CACHE_TTL = 300
+
+
 @router.get("/public/tenant/{tenant_code}/branding")
 async def get_public_tenant_branding(tenant_code: str):
     """
     Public endpoint — no auth required.
     Returns branding info for the login page of a specific tenant.
+    Cached in-process for 5 minutes to avoid a DB round-trip on every app launch.
     """
-    import re as _re
+    import time as _time
+
+    key = tenant_code.lower().strip()
+
+    cached = _branding_cache.get(key)
+    if cached and (_time.monotonic() - cached["ts"]) < _BRANDING_CACHE_TTL:
+        return cached["data"]
+
     tenant = await master_db.tenants.find_one(
-        # Case-insensitive match so both "grace_college" and "GRACE_COLLEGE" work.
-        {"code": {"$regex": f"^{_re.escape(tenant_code)}$", "$options": "i"}, "status": "active"},
+        # Exact lowercase match — hits the index on tenants.code.
+        {"code": key, "status": "active"},
         {"_id": 0, "code": 1, "name": 1, "branding": 1,
          "primary_color": 1, "secondary_color": 1, "logo_url": 1, "enabled_modules": 1}
     )
@@ -1845,7 +1857,7 @@ async def get_public_tenant_branding(tenant_code: str):
         raise HTTPException(status_code=404, detail="College not found")
 
     branding = tenant.get("branding") or {}
-    return {
+    payload = {
         "tenant_code": tenant["code"],
         "tenant_name": tenant["name"].strip(),
         "primary_color": branding.get("primary_color") or tenant.get("primary_color", "#3b82f6"),
@@ -1857,6 +1869,9 @@ async def get_public_tenant_branding(tenant_code: str):
         "login_welcome_text": branding.get("login_welcome_text"),
         "enabled_modules": tenant.get("enabled_modules", []),
     }
+
+    _branding_cache[key] = {"data": payload, "ts": _time.monotonic()}
+    return payload
 
 
 
