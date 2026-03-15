@@ -102,15 +102,16 @@ export const TenantProvider = ({ children }) => {
       if (storedTenant) {
         const tenantData = JSON.parse(storedTenant);
 
-        // MISMATCH GUARD: If this is a white-label build (e.g. grace_college) and the
-        // stored tenant is from a different app (e.g. quadley), discard it.
-        // Prevents branding and module contamination across builds on the same device.
-        if (
-          BUILD_TENANT !== 'quadley' &&
-          tenantData.code &&
-          tenantData.code !== BUILD_TENANT
-        ) {
-          console.log(`[Tenant] Stored tenant '${tenantData.code}' != build tenant '${BUILD_TENANT}', clearing.`);
+        // MISMATCH GUARD: If the data was saved by a different build tenant than the
+        // current binary, discard it entirely. This handles two cases:
+        //   1. White-label build (e.g. grace_college) loading Quadley data → clear.
+        //   2. Quadley build loading data that was saved during a contaminated build
+        //      (e.g. when tenantBuild.generated.js wrongly said grace_college) → clear.
+        // The stored_by_build_tenant field is written by saveTenant(); any data
+        // that pre-dates this field is also discarded to clear the contamination era.
+        const savedByBuild = tenantData._savedByBuildTenant;
+        if (!savedByBuild || savedByBuild !== BUILD_TENANT) {
+          console.log(`[Tenant] Stored data was saved by build '${savedByBuild}', current build is '${BUILD_TENANT}' — clearing stale tenant.`);
           await SecureStore.deleteItemAsync('tenant');
           return;
         }
@@ -166,7 +167,12 @@ export const TenantProvider = ({ children }) => {
       }
       
       if (tenantData) {
-        await SecureStore.setItemAsync('tenant', JSON.stringify(tenantData));
+        // Stamp the saved data with which build tenant wrote it so that
+        // loadTenantFromStorage can detect and discard stale cross-build data.
+        await SecureStore.setItemAsync('tenant', JSON.stringify({
+          ...tenantData,
+          _savedByBuildTenant: BUILD_TENANT,
+        }));
       } else {
         await SecureStore.deleteItemAsync('tenant');
       }
