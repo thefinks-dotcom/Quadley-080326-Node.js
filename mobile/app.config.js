@@ -13,9 +13,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { withDangerousMod } = require('@expo/config-plugins');
+
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '51';
+const iosBuildNumber = '52';
 
 // Google OAuth client IDs per tenant/platform
 // iOS client ID → reversed = iosUrlScheme (com.googleusercontent.apps.<reversed-client-id>)
@@ -183,6 +185,35 @@ module.exports = {
             getIosUrlScheme(GOOGLE_IOS_CLIENT_IDS[TENANT] || GOOGLE_IOS_CLIENT_IDS.quadley),
         },
       ],
+      // ── .xcode.env.local writer ─────────────────────────────────────────────
+      //
+      // After expo prebuild creates the ios/ folder, this plugin writes
+      // ios/.xcode.env.local with `export TENANT=<tenant>`.
+      //
+      // Xcode's "Bundle React Native code and images" build phase sources
+      // this file before starting Metro.  Metro then reads TENANT from its
+      // environment, and metro.config.js uses it to resolve
+      // `tenantBuild.generated` to the correct static tenant file — so the
+      // correct build identity is always bundled, regardless of the state of
+      // tenantBuild.generated.js or the Metro transform cache.
+      //
+      // Only written for non-Quadley builds (Quadley is the default fallback).
+      //
+      (config) => {
+        if (TENANT === 'quadley') return config;
+        return withDangerousMod(config, [
+          'ios',
+          (c) => {
+            const xenvPath = path.join(
+              c.modRequest.platformProjectRoot,
+              '.xcode.env.local'
+            );
+            fs.writeFileSync(xenvPath, `export TENANT=${TENANT}\n`, 'utf8');
+            console.log(`✅ Wrote ios/.xcode.env.local → export TENANT=${TENANT}`);
+            return c;
+          },
+        ]);
+      },
     ],
     extra: {
       tenant: TENANT,
