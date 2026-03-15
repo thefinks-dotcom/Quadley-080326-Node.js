@@ -1,18 +1,9 @@
 """Authentication routes with httpOnly cookie support (OWASP A02 compliance)"""
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from typing import Optional, List
-import bleach
-
-def sanitize_html(text, max_length=10000):
-    if not text:
-        return ""
-    text = str(text)[:max_length]
-    return bleach.clean(text, tags=[], strip=True)
 import logging
 import os
 import jwt
@@ -23,7 +14,7 @@ from utils.auth import (
     TOKEN_EXPIRE_MINUTES,
     JWT_SECRET, JWT_ALGORITHM
 )
-from utils.security import validate_password_strength
+from utils.security import validate_password_strength, sanitize_html
 from utils.security_logger import log_security_event, SecurityEvent
 from utils.ip_anomaly import record_login_ip, detect_anomalies
 from utils.account_lockout import check_account_lockout, record_failed_login, clear_login_attempts
@@ -34,9 +25,9 @@ from utils.token_blacklist import (
 from utils.mfa import MFAService
 from utils.email_service import send_password_reset_email, is_email_enabled
 from utils.multi_tenant import master_db, get_tenant_db, generate_user_id
+from utils.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 logger = logging.getLogger(__name__)
 
 # Cookie configuration (OWASP A02 - Secure token storage)

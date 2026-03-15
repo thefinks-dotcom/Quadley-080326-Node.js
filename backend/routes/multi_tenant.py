@@ -22,8 +22,8 @@ from utils.multi_tenant import (
     master_db, get_tenant_db, generate_tenant_code,
     initialize_tenant_database, delete_tenant_database
 )
-from utils.email import (
-    send_invitation_email, 
+from utils.email_service import (
+    send_invitation_email,
     send_tenant_admin_invitation_email
 )
 from utils.admin_audit import log_admin_action, AdminActionType
@@ -661,7 +661,7 @@ async def update_contact_person(
         if invitation:
             tenant_name = tenant.get('name', tenant_code)
             try:
-                send_tenant_admin_invitation_email(
+                await send_tenant_admin_invitation_email(
                     to_email=new_email,
                     tenant_name=tenant_name,
                     tenant_code=tenant_code,
@@ -1650,7 +1650,7 @@ async def resend_invitation(
     # Send email synchronously to catch errors and report actual status
     try:
         if role == 'admin':
-            email_sent = send_tenant_admin_invitation_email(
+            email_sent = await send_tenant_admin_invitation_email(
                 to_email=to_email,
                 tenant_name=tenant_name,
                 tenant_code=tenant_code,
@@ -1661,7 +1661,7 @@ async def resend_invitation(
                 android_app_link=android_app_link,
             )
         else:
-            email_sent = send_invitation_email(
+            email_sent = await send_invitation_email(
                 to_email=to_email,
                 tenant_name=tenant_name,
                 invitation_token=invitation.get('token'),

@@ -12,7 +12,7 @@ import asyncio
 
 from utils.auth import get_current_user
 from utils.multi_tenant import master_db, get_tenant_db
-from utils.email import send_email
+from utils.email_service import send_email
 from models import User
 
 logger = logging.getLogger(__name__)
@@ -398,7 +398,7 @@ async def process_reminder(tenant_code: str, reminder_type: str):
                             for e in events[:5]
                         ])
                         
-                        send_email(
+                        await send_email(
                             to=user.get('email'),
                             subject=f"Tomorrow's Events at {tenant_name}",
                             html_content=f"""
@@ -435,7 +435,7 @@ async def process_reminder(tenant_code: str, reminder_type: str):
                 for admin in admins:
                     recipients_count += 1
                     try:
-                        send_email(
+                        await send_email(
                             to=admin.get('email'),
                             subject=f"Birthdays Today at {tenant_name}",
                             html_content=f"""
@@ -465,7 +465,7 @@ async def process_reminder(tenant_code: str, reminder_type: str):
                 if user and user.get('email'):
                     recipients_count += 1
                     try:
-                        send_email(
+                        await send_email(
                             to=user.get('email'),
                             subject=f"Parcel Reminder - {tenant_name}",
                             html_content=f"""

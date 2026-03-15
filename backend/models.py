@@ -923,3 +923,35 @@ class JobApplicationCreate(BaseModel):
 class JobApplicationStatusUpdate(BaseModel):
     status: str
     admin_notes: Optional[str] = None
+
+# ====== OWEEK MODELS ======
+
+class OWeekActivity(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str
+    activity_type: str
+    points: int = 0
+    created_by: str
+    active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class OWeekActivityCreate(BaseModel):
+    name: str
+    description: str
+    activity_type: str
+    points: int = 0
+
+# ====== TUTORING MODELS ======
+
+class ApprovedTutor(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    student_id: str
+    student_name: str
+    student_email: str
+    subjects: List[str]
+    bio: Optional[str]
+    available_times: str
+    approved_at: datetime
