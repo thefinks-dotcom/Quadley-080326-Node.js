@@ -83,15 +83,22 @@ export const TenantProvider = ({ children }) => {
   }, []);
 
   // Normalize branding from snake_case (backend) to camelCase (frontend).
-  // Accepts either the nested `branding` sub-object or the full tenant document so
-  // that the top-level `logo_url` field returned by the backend is never lost.
+  // Accepts either the nested `branding` sub-object or the full tenant document.
+  // The Tenant model stores colours as TOP-LEVEL fields (primary_color /
+  // secondary_color) rather than inside a nested branding object.  The nested
+  // branding dict is an optional override that takes precedence when present.
+  // Both sources must therefore be checked for every field.
   const normalizeBranding = (raw, topLevel = null) => {
     if (!raw && !topLevel) return null;
     const src = raw || {};
-    const pc = src.primary_color || src.primaryColor || null;
-    const sc = src.secondary_color || src.secondaryColor || null;
-    // Prefer logo_url from the branding sub-object; fall back to top-level logo_url
-    const lu = src.logo_url || src.logoUrl || topLevel?.logo_url || topLevel?.logoUrl || null;
+    // Colours: nested branding object wins; fall back to top-level fields.
+    const pc = src.primary_color || src.primaryColor
+      || topLevel?.primary_color || topLevel?.primaryColor || null;
+    const sc = src.secondary_color || src.secondaryColor
+      || topLevel?.secondary_color || topLevel?.secondaryColor || null;
+    // Logo: branding sub-object → top-level logo_url → topLevel object
+    const lu = src.logo_url || src.logoUrl
+      || topLevel?.logo_url || topLevel?.logoUrl || null;
     if (!pc && !sc && !lu) return null;
     return { primaryColor: pc, secondaryColor: sc, logoUrl: lu };
   };
@@ -181,6 +188,21 @@ export const TenantProvider = ({ children }) => {
     }
   };
 
+  // Refresh branding in-place from a plain object that may contain
+  // primary_color / secondary_color / logo_url in either snake_case or camelCase.
+  // Called by AuthContext when /auth/me returns tenant_branding so colours
+  // stay in sync without needing a full logout/login cycle.
+  const refreshBranding = (raw) => {
+    const normalized = normalizeBranding(raw, raw);
+    if (!normalized) return;
+    setBranding(prev => ({
+      ...prev,
+      ...(normalized.primaryColor && { primaryColor: normalized.primaryColor }),
+      ...(normalized.secondaryColor && { secondaryColor: normalized.secondaryColor }),
+      ...(normalized.logoUrl && { logoUrl: normalized.logoUrl }),
+    }));
+  };
+
   const updateEnabledModules = async (modules) => {
     if (!Array.isArray(modules)) return;
     setEnabledModules(modules);
@@ -244,6 +266,7 @@ export const TenantProvider = ({ children }) => {
     saveTenant,
     clearTenant,
     updateEnabledModules,
+    refreshBranding,
     isModuleEnabled,
     getEnabledModules,
     isSuperAdmin: !tenant || tenant.code === null

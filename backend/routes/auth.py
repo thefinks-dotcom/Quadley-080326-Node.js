@@ -209,12 +209,21 @@ async def login(request: Request, credentials: UserLogin):
                             if candidate_pw and verify_password(credentials.password, candidate_pw):
                                 user_doc = candidate
                                 tenant_code = tenant['code']
+                                # Resolve colours: prefer nested branding object but fall back
+                                # to top-level primary_color / secondary_color fields which is
+                                # how the Tenant model actually stores them.
+                                _branding_obj = tenant.get('branding') or {}
                                 tenant_info = {
                                     "code": tenant['code'],
                                     "name": tenant['name'],
-                                    "enabled_modules": tenant.get('enabled_modules', []),
-                                    "branding": tenant.get('branding'),
-                                    "logo_url": tenant.get('logo_url'),
+                                    "enabled_modules": tenant.get('enabled_modules') or [],
+                                    "branding": _branding_obj,
+                                    "logo_url": _branding_obj.get('logo_url') or tenant.get('logo_url'),
+                                    # Always include top-level colour fields so the mobile
+                                    # client can find them even when the nested branding dict
+                                    # is empty/absent.
+                                    "primary_color": _branding_obj.get('primary_color') or tenant.get('primary_color'),
+                                    "secondary_color": _branding_obj.get('secondary_color') or tenant.get('secondary_color'),
                                 }
                                 break
                     except Exception as e:
@@ -512,7 +521,7 @@ async def login_with_mfa(
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
-    """Get current authenticated user, including tenant enabled_modules"""
+    """Get current authenticated user, including tenant enabled_modules and branding."""
     user_data = current_user.model_dump(mode='json')
     if current_user.role == 'super_admin':
         user_data['enabled_modules'] = ALL_MODULES
@@ -542,10 +551,32 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
         if tenant_code:
             tenant = await master_db.tenants.find_one(
-                {"code": tenant_code}, {"_id": 0, "enabled_modules": 1}
+                {"code": tenant_code},
+                {"_id": 0, "enabled_modules": 1,
+                 "primary_color": 1, "secondary_color": 1,
+                 "logo_url": 1, "branding": 1}
             )
-            user_data['enabled_modules'] = tenant.get('enabled_modules', ALL_MODULES) if tenant else ALL_MODULES
+            if tenant:
+                # Use whatever is stored — an empty list is a valid tenant configuration.
+                # Do NOT fall back to ALL_MODULES here; that silently overrides tenant
+                # restrictions every time the background /me call runs.
+                user_data['enabled_modules'] = tenant.get('enabled_modules') or []
+
+                # Return branding so the mobile client can refresh colours on each
+                # foreground resume without requiring a full logout/login cycle.
+                _branding_obj = tenant.get('branding') or {}
+                user_data['tenant_branding'] = {
+                    'primary_color': _branding_obj.get('primary_color') or tenant.get('primary_color'),
+                    'secondary_color': _branding_obj.get('secondary_color') or tenant.get('secondary_color'),
+                    'logo_url': _branding_obj.get('logo_url') or tenant.get('logo_url'),
+                }
+            else:
+                # Tenant record not found — return no modules rather than ALL so
+                # a misconfigured / deleted tenant cannot accidentally see everything.
+                user_data['enabled_modules'] = []
         else:
+            # No tenant context and not super_admin: shouldn't happen for legitimate
+            # users but guard defensively.
             user_data['enabled_modules'] = ALL_MODULES
     return user_data
 
