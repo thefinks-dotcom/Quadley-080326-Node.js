@@ -140,6 +140,39 @@ async def create_indexes(db):
         return True  # Don't fail startup for index issues
 
 
+async def create_master_indexes(master_db):
+    """
+    Create indexes on the master database (quadley_master).
+    Called separately from create_indexes() because master_db is a different
+    Mongo database than the per-tenant db passed to create_indexes().
+    """
+    logger.info("Creating master database indexes...")
+
+    async def safe(collection, keys, **kwargs):
+        try:
+            kwargs['background'] = True
+            await collection.create_index(keys, **kwargs)
+        except Exception as e:
+            if "IndexKeySpecsConflict" not in str(e) and "DuplicateKey" not in str(e):
+                logger.debug(f"Master index note for {collection.name}: {e}")
+
+    try:
+        # tenants.code is queried on every app launch (branding endpoint)
+        await safe(master_db.tenants, [("code", 1)], unique=True, name="tenants_code_unique")
+        await safe(master_db.tenants, [("code", 1), ("status", 1)], name="tenants_code_status")
+        await safe(master_db.tenants, "id")
+
+        # super_admins looked up by email and id on every auth check
+        await safe(master_db.super_admins, "email", unique=True)
+        await safe(master_db.super_admins, "id")
+
+        logger.info("Master database indexes created/verified successfully")
+        return True
+    except Exception as e:
+        logger.warning(f"Master index creation completed with warnings: {e}")
+        return True
+
+
 async def get_index_stats(db) -> dict:
     """Get statistics about database indexes"""
     stats = {}

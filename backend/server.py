@@ -1894,9 +1894,10 @@ async def startup_event():
         logger.info(f"Security: Running in {env} mode")
     
     # Database optimization: Create indexes
-    from utils.db_optimization import create_indexes
+    from utils.db_optimization import create_indexes, create_master_indexes
     try:
         await create_indexes(db)
+        await create_master_indexes(master_db)
         logger.info("Database: Indexes created/verified")
     except Exception as e:
         logger.warning(f"Database: Could not create indexes - {e}")
