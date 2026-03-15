@@ -82,7 +82,7 @@ async def upload_users_csv(
     tenant_db = get_tenant_db(ctx.tenant_id)
     
     # Get tenant info from master database
-    tenant = await master_db.tenants.find_one({"tenant_id": ctx.tenant_id})
+    tenant = await master_db.tenants.find_one({"tenant_id": str(ctx).tenant_id})
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -264,7 +264,7 @@ async def bulk_sync_users(
     - X-Tenant-ID: Tenant identifier
     """
     # Verify API key from master database
-    tenant = await master_db.tenants.find_one({"tenant_id": tenant_id})
+    tenant = await master_db.tenants.find_one({"tenant_id": str(tenant_id)})
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -335,7 +335,7 @@ async def bulk_sync_users(
                     update_data["year"] = user_data.year
                 
                 await tenant_db.users.update_one(
-                    {"email": email, "tenant_id": tenant_id},
+                    {"email": email, "tenant_id": str(tenant_id)},
                     {"$set": update_data}
                 )
                 updated += 1
@@ -420,7 +420,7 @@ async def generate_api_key(
     
     # Store API key in master tenant database
     await master_db.tenants.update_one(
-        {"tenant_id": ctx.tenant_id},
+        {"tenant_id": str(ctx).tenant_id},
         {
             "$set": {
                 "api_key": api_key,
@@ -451,7 +451,7 @@ async def revoke_api_key(
     Revoke the current API key for the tenant.
     """
     await master_db.tenants.update_one(
-        {"tenant_id": ctx.tenant_id},
+        {"tenant_id": str(ctx).tenant_id},
         {
             "$unset": {"api_key": ""},
             "$set": {"api_key_revoked_at": datetime.now(timezone.utc).isoformat()}

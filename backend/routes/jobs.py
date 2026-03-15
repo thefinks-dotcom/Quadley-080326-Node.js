@@ -73,7 +73,7 @@ async def create_job(
         SecurityEvent.ADMIN_ACTION,
         user_id=current_user.id,
         user_email=current_user.email,
-        details={"action": "create_job", "job_id": job.id, "title": job.title}
+        details={"action": "create_job", "job_id": str(job).id, "title": job.title}
     )
     
     return job
@@ -107,7 +107,7 @@ async def get_jobs(
             job['updated_at'] = datetime.fromisoformat(job['updated_at'])
         
         # Get applications count
-        app_count = await tenant_db.job_applications.count_documents({"job_id": job['id']})
+        app_count = await tenant_db.job_applications.count_documents({"job_id": str(job)['id']})
         job['applications_count'] = app_count
     
     return jobs
@@ -221,7 +221,7 @@ async def get_job(
 ):
     """Get a specific job by ID"""
     tenant_db, current_user = tenant_data
-    job = await tenant_db.jobs.find_one({"id": job_id}, {"_id": 0})
+    job = await tenant_db.jobs.find_one({"id": str(job_id)}, {"_id": 0})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
@@ -233,7 +233,7 @@ async def get_job(
         job['created_at'] = datetime.fromisoformat(job['created_at'])
     
     # Get applications count
-    app_count = await tenant_db.job_applications.count_documents({"job_id": job_id})
+    app_count = await tenant_db.job_applications.count_documents({"job_id": str(job_id)})
     job['applications_count'] = app_count
     
     return job
@@ -251,16 +251,16 @@ async def update_job(
     if current_user.role not in JOB_ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Only admins can update job postings")
     
-    job = await tenant_db.jobs.find_one({"id": job_id}, {"_id": 0})
+    job = await tenant_db.jobs.find_one({"id": str(job_id)}, {"_id": 0})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
     update_data = {k: v for k, v in job_data.model_dump().items() if v is not None}
     update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
     
-    await tenant_db.jobs.update_one({"id": job_id}, {"$set": update_data})
+    await tenant_db.jobs.update_one({"id": str(job_id)}, {"$set": update_data})
     
-    updated_job = await tenant_db.jobs.find_one({"id": job_id}, {"_id": 0})
+    updated_job = await tenant_db.jobs.find_one({"id": str(job_id)}, {"_id": 0})
     if isinstance(updated_job.get('created_at'), str):
         updated_job['created_at'] = datetime.fromisoformat(updated_job['created_at'])
     if isinstance(updated_job.get('updated_at'), str):
@@ -280,19 +280,19 @@ async def delete_job(
     if current_user.role not in JOB_ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Only admins can delete job postings")
     
-    job = await tenant_db.jobs.find_one({"id": job_id})
+    job = await tenant_db.jobs.find_one({"id": str(job_id)})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
     # Delete job and all its applications
-    await tenant_db.jobs.delete_one({"id": job_id})
-    await tenant_db.job_applications.delete_many({"job_id": job_id})
+    await tenant_db.jobs.delete_one({"id": str(job_id)})
+    await tenant_db.job_applications.delete_many({"job_id": str(job_id)})
     
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
         user_id=current_user.id,
         user_email=current_user.email,
-        details={"action": "delete_job", "job_id": job_id}
+        details={"action": "delete_job", "job_id": str(job_id)}
     )
     
     return {"message": "Job deleted successfully"}
@@ -311,7 +311,7 @@ async def apply_for_job(
     tenant_db, current_user = tenant_data
     
     # Get job
-    job = await tenant_db.jobs.find_one({"id": job_id}, {"_id": 0})
+    job = await tenant_db.jobs.find_one({"id": str(job_id)}, {"_id": 0})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
@@ -390,7 +390,7 @@ async def upload_resume(
     tenant_db, current_user = tenant_data
     
     # Verify job exists
-    job = await tenant_db.jobs.find_one({"id": job_id})
+    job = await tenant_db.jobs.find_one({"id": str(job_id)})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
@@ -435,7 +435,7 @@ async def upload_resume(
     
     # Update application with resume URL
     await tenant_db.job_applications.update_one(
-        {"id": application['id']},
+        {"id": str(application)['id']},
         {"$set": {"resume_url": resume_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
@@ -454,7 +454,7 @@ async def get_job_applications(
     if current_user.role not in JOB_ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Only admins can view all applications")
     
-    query = {"job_id": job_id}
+    query = {"job_id": str(job_id)}
     if status:
         query["status"] = status
     
@@ -482,7 +482,7 @@ async def update_application_status(
     if current_user.role not in JOB_ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Only admins can update application status")
     
-    application = await tenant_db.job_applications.find_one({"id": application_id})
+    application = await tenant_db.job_applications.find_one({"id": str(application_id)})
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -500,7 +500,7 @@ async def update_application_status(
     if status_update.admin_notes:
         update_data["admin_notes"] = status_update.admin_notes
     
-    await tenant_db.job_applications.update_one({"id": application_id}, {"$set": update_data})
+    await tenant_db.job_applications.update_one({"id": str(application_id)}, {"$set": update_data})
     
     # Notify the applicant of status change (background task)
     # Security: Pass tenant_code for notification isolation
@@ -535,7 +535,7 @@ async def withdraw_application(
     """Withdraw own application or delete any application (admin)"""
     tenant_db, current_user = tenant_data
     
-    application = await tenant_db.job_applications.find_one({"id": application_id})
+    application = await tenant_db.job_applications.find_one({"id": str(application_id)})
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     
@@ -546,11 +546,11 @@ async def withdraw_application(
         
         # Mark as withdrawn instead of deleting
         await tenant_db.job_applications.update_one(
-            {"id": application_id},
+            {"id": str(application_id)},
             {"$set": {"status": "withdrawn", "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
         return {"message": "Application withdrawn"}
     
     # Admins can delete applications
-    await tenant_db.job_applications.delete_one({"id": application_id})
+    await tenant_db.job_applications.delete_one({"id": str(application_id)})
     return {"message": "Application deleted"}

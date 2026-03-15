@@ -145,7 +145,7 @@ def get_tenant_filter(user) -> dict:
     
     tenant_id = getattr(user, 'tenant_id', None)
     if tenant_id:
-        return {"tenant_id": tenant_id}
+        return {"tenant_id": str(tenant_id)}
     
     return {}
 

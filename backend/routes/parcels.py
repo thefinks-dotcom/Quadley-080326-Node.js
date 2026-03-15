@@ -31,7 +31,7 @@ async def create_parcel_notification(
     if current_user.role not in ["admin", "super_admin", "ra"]:
         raise HTTPException(status_code=403, detail="Only admins can create parcel notifications")
     
-    student = await tenant_db.users.find_one({"id": parcel_data.student_id}, {"_id": 0})
+    student = await tenant_db.users.find_one({"id": str(parcel_data).student_id}, {"_id": 0})
     
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -71,7 +71,7 @@ async def get_parcels(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     if current_user.role in ["admin", "super_admin", "college_admin", "ra"]:
         parcels = await tenant_db.parcel_notifications.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     else:
-        parcels = await tenant_db.parcel_notifications.find({"student_id": current_user.id}, {"_id": 0}).sort("created_at", -1).to_list(200)
+        parcels = await tenant_db.parcel_notifications.find({"student_id": str(current_user).id}, {"_id": 0}).sort("created_at", -1).to_list(200)
     
     return parcels
 
@@ -82,7 +82,7 @@ async def get_my_pending_parcels(tenant_data: tuple = Depends(get_tenant_db_for_
     tenant_db, current_user = tenant_data
     
     parcels = await tenant_db.parcel_notifications.find(
-        {"student_id": current_user.id, "status": "waiting"},
+        {"student_id": str(current_user).id, "status": "waiting"},
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
@@ -97,7 +97,7 @@ async def mark_parcel_collected(
     """Mark parcel as collected - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    parcel = await tenant_db.parcel_notifications.find_one({"id": parcel_id})
+    parcel = await tenant_db.parcel_notifications.find_one({"id": str(parcel_id)})
     
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcel not found")
@@ -106,7 +106,7 @@ async def mark_parcel_collected(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     await tenant_db.parcel_notifications.update_one(
-        {"id": parcel_id},
+        {"id": str(parcel_id)},
         {"$set": {
             "status": "collected",
             "collected_at": datetime.now(timezone.utc).isoformat()

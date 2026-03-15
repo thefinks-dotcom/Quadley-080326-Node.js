@@ -61,12 +61,12 @@ async def update_wellbeing_resource(
     if current_user.role not in ['ra', 'admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    existing = await tenant_db.wellbeing_resources.find_one({"id": resource_id}, {"_id": 0})
+    existing = await tenant_db.wellbeing_resources.find_one({"id": str(resource_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Resource not found")
     
     await tenant_db.wellbeing_resources.update_one(
-        {"id": resource_id},
+        {"id": str(resource_id)},
         {"$set": {
             "title": resource_data.title,
             "description": resource_data.description,
@@ -75,7 +75,7 @@ async def update_wellbeing_resource(
         }}
     )
     
-    updated = await tenant_db.wellbeing_resources.find_one({"id": resource_id}, {"_id": 0})
+    updated = await tenant_db.wellbeing_resources.find_one({"id": str(resource_id)}, {"_id": 0})
     if isinstance(updated.get('created_at'), str):
         updated['created_at'] = datetime.fromisoformat(updated['created_at'])
     
@@ -93,10 +93,10 @@ async def delete_wellbeing_resource(
     if current_user.role not in ['ra', 'admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    existing = await tenant_db.wellbeing_resources.find_one({"id": resource_id}, {"_id": 0})
+    existing = await tenant_db.wellbeing_resources.find_one({"id": str(resource_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Resource not found")
     
-    await tenant_db.wellbeing_resources.delete_one({"id": resource_id})
+    await tenant_db.wellbeing_resources.delete_one({"id": str(resource_id)})
     
     return {"message": "Wellbeing resource deleted"}

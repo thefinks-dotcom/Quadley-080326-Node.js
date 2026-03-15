@@ -104,7 +104,7 @@ async def create_shoutout(
                 title=f"You were recognized by {sender_name}!",
                 body=shoutout_data.message[:100],
                 notification_type="shoutout",
-                data={"shoutout_id": shoutout_doc["id"], "category": shoutout_data.category},
+                data={"shoutout_id": str(shoutout_doc)["id"], "category": shoutout_data.category},
             )
             await notify_shoutout(tenant_db, to_user_id, sender_name, shoutout_data.message)
             logger.info(f"Shoutout notification sent to {to_user_id} from {current_user.id}")
@@ -144,7 +144,7 @@ async def checkin_library(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Check in to library for study streak - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    streak = await tenant_db.study_streaks.find_one({"student_id": current_user.id})
+    streak = await tenant_db.study_streaks.find_one({"student_id": str(current_user).id})
     
     if not streak:
         streak = StudyStreak(student_id=current_user.id, current_streak=1, longest_streak=1, total_visits=1, last_visit=datetime.now(timezone.utc))
@@ -167,7 +167,7 @@ async def checkin_library(tenant_data: tuple = Depends(get_tenant_db_for_user)):
         longest_streak = max(current_streak, streak.get('longest_streak', 0))
         
         await tenant_db.study_streaks.update_one(
-            {"student_id": current_user.id},
+            {"student_id": str(current_user).id},
             {"$set": {
                 "current_streak": current_streak,
                 "longest_streak": longest_streak,
@@ -185,7 +185,7 @@ async def get_my_streak(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get current user's study streak - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    streak = await tenant_db.study_streaks.find_one({"student_id": current_user.id}, {"_id": 0})
+    streak = await tenant_db.study_streaks.find_one({"student_id": str(current_user).id}, {"_id": 0})
     
     if not streak:
         return {"current_streak": 0, "longest_streak": 0, "total_visits": 0}

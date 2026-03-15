@@ -61,7 +61,7 @@ async def submit_ra_application(
     """Submit RA application - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    ra_app = await tenant_db.ra_applications.find_one({"id": ra_app_id}, {"_id": 0})
+    ra_app = await tenant_db.ra_applications.find_one({"id": str(ra_app_id)}, {"_id": 0})
     if not ra_app:
         raise HTTPException(status_code=404, detail="RA application not found")
     
@@ -102,7 +102,7 @@ async def get_ra_application_submissions(
         raise HTTPException(status_code=403, detail="Only admins can view submissions")
     
     submissions = await tenant_db.ra_application_submissions.find(
-        {"ra_application_id": ra_app_id},
+        {"ra_application_id": str(ra_app_id)},
         {"_id": 0}
     ).sort("submitted_at", -1).to_list(1000)
     

@@ -193,18 +193,18 @@ async def get_current_user(
         # User belongs to a specific tenant
         try:
             tenant_db = get_tenant_db(tenant_code)
-            user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+            user_doc = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
         except Exception as e:
             logging.warning(f"Error accessing tenant database: {e}")
     
     # Fallback: Check master database for super_admin or legacy users
     if not user_doc:
         # Check super_admins collection first
-        user_doc = await master_db.super_admins.find_one({"id": user_id}, {"_id": 0, "password": 0})
+        user_doc = await master_db.super_admins.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
         
         # Fallback: Check old users collection (for backwards compatibility during migration)
         if not user_doc:
-            user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+            user_doc = await db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
     
     if not user_doc:
         raise HTTPException(status_code=401, detail="User not found")
@@ -259,15 +259,15 @@ async def get_current_user_optional(
     if tenant_code:
         try:
             tenant_db = get_tenant_db(tenant_code)
-            user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+            user_doc = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
         except Exception:
             pass
     
     # Fallback: Check master database for super_admin or legacy users
     if not user_doc:
-        user_doc = await master_db.super_admins.find_one({"id": user_id}, {"_id": 0, "password": 0})
+        user_doc = await master_db.super_admins.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
         if not user_doc:
-            user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+            user_doc = await db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
     
     if not user_doc:
         return None
@@ -346,7 +346,7 @@ async def get_tenant_db_for_user(
         raise HTTPException(status_code=400, detail=str(e))
     
     # Get user from tenant database
-    user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    user_doc = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 0})
     
     if not user_doc:
         raise HTTPException(status_code=401, detail="User not found in tenant")

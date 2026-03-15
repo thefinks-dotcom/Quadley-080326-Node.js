@@ -311,11 +311,11 @@ async def login(request: Request, credentials: UserLogin):
         
         # Auto-migrate: if MFA was set up in global DB but not tenant DB, copy it over
         if not mfa_enabled and tenant_code:
-            global_user = await db.users.find_one({"id": user.id}, {"_id": 0, "mfa_enabled": 1, "mfa_secret": 1, "mfa_backup_codes": 1})
+            global_user = await db.users.find_one({"id": str(user).id}, {"_id": 0, "mfa_enabled": 1, "mfa_secret": 1, "mfa_backup_codes": 1})
             if global_user and global_user.get('mfa_enabled'):
                 tenant_db_fix = get_tenant_db(tenant_code)
                 await tenant_db_fix.users.update_one(
-                    {"id": user.id},
+                    {"id": str(user).id},
                     {"$set": {
                         "mfa_enabled": True,
                         "mfa_secret": global_user.get("mfa_secret"),
@@ -530,7 +530,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
                     try:
                         t_db = get_tenant_db(t['code'])
                         found = await t_db.users.find_one(
-                            {"id": current_user.id}, {"_id": 0, "id": 1}
+                            {"id": str(current_user).id}, {"_id": 0, "id": 1}
                         )
                         if found:
                             tenant_code = t['code']
@@ -726,7 +726,7 @@ async def update_me(updates: UserUpdate, current_user: User = Depends(get_curren
             target_db = get_tenant_db(current_user.tenant_code)
         else:
             target_db = db
-        await target_db.users.update_one({"id": current_user.id}, {"$set": update_data})
+        await target_db.users.update_one({"id": str(current_user).id}, {"$set": update_data})
     return {"message": "Profile updated"}
 
 
@@ -743,7 +743,7 @@ async def change_password(
         raise HTTPException(status_code=400, detail="Both current and new password are required")
     
     # Get user from database with password
-    user_doc = await db.users.find_one({"id": current_user.id})
+    user_doc = await db.users.find_one({"id": str(current_user).id})
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -757,7 +757,7 @@ async def change_password(
     # Hash and update new password
     hashed_password = hash_password(new_password)
     await db.users.update_one(
-        {"id": current_user.id},
+        {"id": str(current_user).id},
         {"$set": {"password": hashed_password}}
     )
     
@@ -790,9 +790,9 @@ async def request_email_change(
 
     is_super_admin = current_user.role == 'super_admin'
     user_doc = (
-        await master_db.super_admins.find_one({"id": current_user.id})
+        await master_db.super_admins.find_one({"id": str(current_user).id})
         if is_super_admin
-        else await db.users.find_one({"id": current_user.id})
+        else await db.users.find_one({"id": str(current_user).id})
     )
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
@@ -828,7 +828,7 @@ async def request_email_change(
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
     # Store the pending change in DB
-    await db.email_change_requests.delete_many({"user_id": current_user.id})
+    await db.email_change_requests.delete_many({"user_id": str(current_user).id})
     await db.email_change_requests.insert_one({
         "user_id": current_user.id,
         "old_email": current_user.email,
@@ -890,7 +890,7 @@ async def verify_email_change(
         raise HTTPException(status_code=400, detail="Verification code is required")
 
     pending = await db.email_change_requests.find_one(
-        {"user_id": current_user.id},
+        {"user_id": str(current_user).id},
         {"_id": 0}
     )
     if not pending:
@@ -899,7 +899,7 @@ async def verify_email_change(
     # Check expiry
     expires_at = datetime.fromisoformat(pending['expires_at'])
     if datetime.now(timezone.utc) > expires_at:
-        await db.email_change_requests.delete_many({"user_id": current_user.id})
+        await db.email_change_requests.delete_many({"user_id": str(current_user).id})
         raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
 
     if pending['code'] != code:
@@ -916,20 +916,20 @@ async def verify_email_change(
     }
 
     if is_super_admin:
-        await master_db.super_admins.update_one({"id": current_user.id}, {"$set": update_data})
+        await master_db.super_admins.update_one({"id": str(current_user).id}, {"$set": update_data})
     else:
-        await db.users.update_one({"id": current_user.id}, {"$set": update_data})
+        await db.users.update_one({"id": str(current_user).id}, {"$set": update_data})
 
     # Also update across tenant databases if applicable
     if current_user.tenant_code:
         try:
             tenant_db = get_tenant_db(current_user.tenant_code)
-            await tenant_db.users.update_one({"id": current_user.id}, {"$set": update_data})
+            await tenant_db.users.update_one({"id": str(current_user).id}, {"$set": update_data})
         except Exception as e:
             logger.warning(f"Failed to update email in tenant DB: {e}")
 
     # Clean up the request
-    await db.email_change_requests.delete_many({"user_id": current_user.id})
+    await db.email_change_requests.delete_many({"user_id": str(current_user).id})
 
     logger.info(f"Email changed for user {current_user.id}: {old_email} -> {new_email}")
 
@@ -1104,7 +1104,7 @@ async def update_user_status(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Find the target user
-    target_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    target_user = await db.users.find_one({"id": str(user_id)}, {"_id": 0})
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -1119,7 +1119,7 @@ async def update_user_status(
     active = status_data.get("active", True)
     
     await db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {"active": active}}
     )
     
@@ -1244,7 +1244,7 @@ async def setup_password(request: Request, request_data: dict):
     hashed_password = hash_password(new_password)
 
     await target_db.users.update_one(
-        {"id": user["id"]},
+        {"id": str(user)["id"]},
         {"$set": {
             "password": hashed_password,
             "active": True,
@@ -1511,7 +1511,7 @@ async def register_via_invitation(request: Request, data: InvitationRegisterRequ
         user_id=user.id,
         user_email=user.email,
         ip_address=ip_address,
-        details={"tenant": tenant_code, "user_id": user_id, "via": "invitation"}
+        details={"tenant": tenant_code, "user_id": str(user_id), "via": "invitation"}
     )
     
     # Create response
@@ -1681,7 +1681,7 @@ async def register_with_invite_code(request: Request, data: InviteCodeRegisterRe
             user_id=existing.get('id'),
             user_email=invitation["email"].lower(),
             ip_address=ip_address,
-            details={"tenant": tenant_code, "user_id": existing.get('user_id'), "via": "invite_code", "pre_existing": True},
+            details={"tenant": tenant_code, "user_id": str(existing).get('user_id'), "via": "invite_code", "pre_existing": True},
         )
         
         logger.info(f"Pre-created user completed registration: {invitation['email']} in {tenant_code}")
@@ -1754,7 +1754,7 @@ async def register_with_invite_code(request: Request, data: InviteCodeRegisterRe
         user_id=user.id,
         user_email=user.email,
         ip_address=ip_address,
-        details={"tenant": tenant_code, "user_id": user_id, "via": "invite_code"},
+        details={"tenant": tenant_code, "user_id": str(user_id), "via": "invite_code"},
     )
 
     response = JSONResponse(content={
@@ -1890,7 +1890,7 @@ async def delete_my_account(
     user_id = current_user.id
 
     # Re-authenticate: verify the supplied password matches the stored hash
-    user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "password": 1})
+    user_doc = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0, "password": 1})
     if not user_doc or not verify_password(body.password, user_doc.get("password", "")):
         raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
     deleted_at = datetime.now(timezone.utc).isoformat()
@@ -1899,7 +1899,7 @@ async def delete_my_account(
     # Anonymise user record — keep the document for referential integrity but
     # strip all personally-identifiable fields.
     await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {
             "email": anon_email,
             "first_name": "Deleted",
@@ -1921,7 +1921,7 @@ async def delete_my_account(
     )
 
     # Delete push notification tokens
-    await tenant_db.push_tokens.delete_many({"user_id": user_id})
+    await tenant_db.push_tokens.delete_many({"user_id": str(user_id)})
 
     # Log deletion for compliance audit trail
     await tenant_db.audit_log.insert_one({

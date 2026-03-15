@@ -91,7 +91,7 @@ async def update_floor_event(
     """Update a floor event (creator or RA/admin) - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    existing = await tenant_db.floor_events.find_one({"id": event_id}, {"_id": 0})
+    existing = await tenant_db.floor_events.find_one({"id": str(event_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Floor event not found")
     
@@ -107,9 +107,9 @@ async def update_floor_event(
     if event_data.max_attendees is not None:
         update_data["max_attendees"] = event_data.max_attendees
     
-    await tenant_db.floor_events.update_one({"id": event_id}, {"$set": update_data})
+    await tenant_db.floor_events.update_one({"id": str(event_id)}, {"$set": update_data})
     
-    updated = await tenant_db.floor_events.find_one({"id": event_id}, {"_id": 0})
+    updated = await tenant_db.floor_events.find_one({"id": str(event_id)}, {"_id": 0})
     if isinstance(updated.get('date'), str):
         updated['date'] = datetime.fromisoformat(updated['date'])
     if isinstance(updated.get('created_at'), str):
@@ -126,14 +126,14 @@ async def delete_floor_event(
     """Delete a floor event (creator or RA/admin) - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    existing = await tenant_db.floor_events.find_one({"id": event_id}, {"_id": 0})
+    existing = await tenant_db.floor_events.find_one({"id": str(event_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Floor event not found")
     
     if existing.get('created_by') != current_user.id and current_user.role not in ['ra', 'admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    await tenant_db.floor_events.delete_one({"id": event_id})
+    await tenant_db.floor_events.delete_one({"id": str(event_id)})
     return {"message": "Floor event deleted"}
 
 
@@ -145,7 +145,7 @@ async def rsvp_floor_event(
     """RSVP to a floor event - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    event = await tenant_db.floor_events.find_one({"id": event_id})
+    event = await tenant_db.floor_events.find_one({"id": str(event_id)})
     
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -158,7 +158,7 @@ async def rsvp_floor_event(
     attendees.append(current_user.id)
     
     await tenant_db.floor_events.update_one(
-        {"id": event_id},
+        {"id": str(event_id)},
         {"$set": {"attendees": attendees}}
     )
     
@@ -302,7 +302,7 @@ async def get_floor_surveys(tenant_data: tuple = Depends(get_tenant_db_for_user)
 async def respond_to_floor_survey(survey_id: str, response_data: dict, tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Submit a floor survey response - tenant isolated"""
     tenant_db, current_user = tenant_data
-    survey = await tenant_db.floor_surveys.find_one({"id": survey_id})
+    survey = await tenant_db.floor_surveys.find_one({"id": str(survey_id)})
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 
@@ -335,7 +335,7 @@ async def get_survey_responses(survey_id: str, tenant_data: tuple = Depends(get_
         raise HTTPException(status_code=403, detail="Not authorized")
 
     responses = await tenant_db.floor_survey_responses.find(
-        {"survey_id": survey_id},
+        {"survey_id": str(survey_id)},
         {"_id": 0}
     ).to_list(100)
 

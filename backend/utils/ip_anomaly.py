@@ -94,7 +94,7 @@ async def detect_anomalies(
     cutoff = (datetime.now(timezone.utc) - timedelta(minutes=window_mins)).isoformat()
 
     recent_logins = await master_db.ip_login_history.find(
-        {"user_id": user_id, "success": True, "timestamp": {"$gte": cutoff}},
+        {"user_id": str(user_id), "success": True, "timestamp": {"$gte": cutoff}},
         {"_id": 0, "ip_address": 1},
     ).to_list(500)
 

@@ -63,7 +63,7 @@ async def get_tutor_applications(tenant_data: tuple = Depends(get_tenant_db_for_
         applications = await tenant_db.tutor_applications.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     else:
         applications = await tenant_db.tutor_applications.find(
-            {"student_id": current_user.id}, 
+            {"student_id": str(current_user).id}, 
             {"_id": 0}
         ).sort("created_at", -1).to_list(100)
     
@@ -85,12 +85,12 @@ async def review_tutor_application(
     if status not in ["approved", "rejected"]:
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
     
-    existing = await tenant_db.tutor_applications.find_one({"id": application_id})
+    existing = await tenant_db.tutor_applications.find_one({"id": str(application_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Application not found")
     
     await tenant_db.tutor_applications.update_one(
-        {"id": application_id},
+        {"id": str(application_id)},
         {"$set": {
             "status": status,
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
@@ -194,12 +194,12 @@ async def admin_remove_tutor(
     if current_user.role not in ["admin", "super_admin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Only admins can remove tutors")
     
-    existing = await tenant_db.tutor_applications.find_one({"id": tutor_id})
+    existing = await tenant_db.tutor_applications.find_one({"id": str(tutor_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Tutor not found")
     
     await tenant_db.tutor_applications.update_one(
-        {"id": tutor_id},
+        {"id": str(tutor_id)},
         {"$set": {
             "status": "revoked",
             "revoked_at": datetime.now(timezone.utc).isoformat(),

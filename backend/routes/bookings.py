@@ -40,7 +40,7 @@ async def get_bookings(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     """Get user's bookings - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    bookings = await tenant_db.bookings.find({"student_id": current_user.id}, {"_id": 0}).sort("date", -1).to_list(50)
+    bookings = await tenant_db.bookings.find({"student_id": str(current_user).id}, {"_id": 0}).sort("date", -1).to_list(50)
     
     for booking in bookings:
         if isinstance(booking.get('date'), str):

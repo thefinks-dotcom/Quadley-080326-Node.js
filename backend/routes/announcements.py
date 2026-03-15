@@ -184,12 +184,12 @@ async def delete_announcement(
     if current_user.role not in ['ra', 'admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    existing = await tenant_db.announcements.find_one({"id": announcement_id})
+    existing = await tenant_db.announcements.find_one({"id": str(announcement_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Announcement not found")
 
-    await tenant_db.announcements.delete_one({"id": announcement_id})
-    await tenant_db.announcement_reads.delete_many({"announcement_id": announcement_id})
+    await tenant_db.announcements.delete_one({"id": str(announcement_id)})
+    await tenant_db.announcement_reads.delete_many({"announcement_id": str(announcement_id)})
 
     return {"message": "Announcement deleted"}
 
@@ -234,12 +234,12 @@ async def archive_announcement(
     if current_user.role not in ['ra', 'admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    existing = await tenant_db.announcements.find_one({"id": announcement_id})
+    existing = await tenant_db.announcements.find_one({"id": str(announcement_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Announcement not found")
     
     await tenant_db.announcements.update_one(
-        {"id": announcement_id},
+        {"id": str(announcement_id)},
         {"$set": {
             "status": "archived",
             "archived_at": datetime.now(timezone.utc).isoformat(),
@@ -261,12 +261,12 @@ async def restore_announcement(
     if current_user.role not in ['ra', 'admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    existing = await tenant_db.announcements.find_one({"id": announcement_id})
+    existing = await tenant_db.announcements.find_one({"id": str(announcement_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Announcement not found")
     
     await tenant_db.announcements.update_one(
-        {"id": announcement_id},
+        {"id": str(announcement_id)},
         {
             "$set": {"status": "published"},
             "$unset": {"archived_at": "", "archived_by": "", "expires_at": ""}
@@ -301,7 +301,7 @@ async def mark_announcement_read(
         
         # Update read count on the announcement
         await tenant_db.announcements.update_one(
-            {"id": announcement_id},
+            {"id": str(announcement_id)},
             {
                 "$addToSet": {"read_by": current_user.id},
                 "$inc": {"read_count": 1}
@@ -323,13 +323,13 @@ async def get_announcement_read_stats(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Get the announcement
-    announcement = await tenant_db.announcements.find_one({"id": announcement_id}, {"_id": 0})
+    announcement = await tenant_db.announcements.find_one({"id": str(announcement_id)}, {"_id": 0})
     if not announcement:
         raise HTTPException(status_code=404, detail="Announcement not found")
     
     # Get all read records with user details
     read_records = await tenant_db.announcement_reads.find(
-        {"announcement_id": announcement_id},
+        {"announcement_id": str(announcement_id)},
         {"_id": 0}
     ).to_list(1000)
     

@@ -103,7 +103,7 @@ async def get_active_sessions(db, user_id: str, current_token_jti: Optional[str]
         if current_token_jti:
             # Find and mark current session
             current = await db.user_sessions.find_one(
-                {"user_id": user_id, "token_jti": current_token_jti},
+                {"user_id": str(user_id), "token_jti": current_token_jti},
                 {"id": 1}
             )
             if current:
@@ -144,7 +144,7 @@ async def revoke_session(db, user_id: str, session_id: str) -> bool:
     """
     try:
         result = await db.user_sessions.update_one(
-            {"id": session_id, "user_id": user_id},
+            {"id": str(session_id), "user_id": str(user_id)},
             {"$set": {"is_active": False, "revoked_at": datetime.now(timezone.utc).isoformat()}}
         )
         
@@ -171,7 +171,7 @@ async def revoke_all_sessions(db, user_id: str, except_current: Optional[str] = 
         Number of sessions revoked
     """
     try:
-        query = {"user_id": user_id, "is_active": True}
+        query = {"user_id": str(user_id), "is_active": True}
         
         if except_current:
             query["token_jti"] = {"$ne": except_current}
@@ -216,7 +216,7 @@ async def detect_concurrent_login(
     try:
         # Get recent sessions
         recent = await db.user_sessions.find(
-            {"user_id": user_id, "is_active": True},
+            {"user_id": str(user_id), "is_active": True},
             {"ip_hash": 1, "device_type": 1, "created_at": 1}
         ).sort("created_at", -1).limit(10).to_list(10)
         

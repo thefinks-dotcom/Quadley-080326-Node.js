@@ -179,7 +179,7 @@ async def get_disclosure(
 ):
     """Get a single disclosure — admin or the disclosing user — tenant isolated"""
     tenant_db, current_user = tenant_data
-    doc = await tenant_db.relationship_disclosures.find_one({"id": disclosure_id}, {"_id": 0})
+    doc = await tenant_db.relationship_disclosures.find_one({"id": str(disclosure_id)}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Disclosure not found")
     if current_user.role not in ADMIN_ROLES and doc["disclosed_by_id"] != current_user.id:
@@ -198,7 +198,7 @@ async def update_disclosure(
     if current_user.role not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    doc = await tenant_db.relationship_disclosures.find_one({"id": disclosure_id}, {"_id": 0})
+    doc = await tenant_db.relationship_disclosures.find_one({"id": str(disclosure_id)}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
@@ -231,9 +231,9 @@ async def update_disclosure(
             "note": data.resolution_notes or "",
         }
         await tenant_db.relationship_disclosures.update_one(
-            {"id": disclosure_id},
+            {"id": str(disclosure_id)},
             {"$set": updates, "$push": {"activity_log": log_entry}}
         )
 
-    updated = await tenant_db.relationship_disclosures.find_one({"id": disclosure_id}, {"_id": 0})
+    updated = await tenant_db.relationship_disclosures.find_one({"id": str(disclosure_id)}, {"_id": 0})
     return updated

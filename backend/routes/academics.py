@@ -70,7 +70,7 @@ async def join_study_group(
     """Join a study group - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.study_groups.find_one({"id": group_id})
+    group = await tenant_db.study_groups.find_one({"id": str(group_id)})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -82,12 +82,12 @@ async def join_study_group(
         raise HTTPException(status_code=400, detail="Group is full")
     
     members.append(current_user.id)
-    await tenant_db.study_groups.update_one({"id": group_id}, {"$set": {"members": members}})
+    await tenant_db.study_groups.update_one({"id": str(group_id)}, {"$set": {"members": members}})
     
     # Add user to message group
     if group.get('message_group_id'):
         await tenant_db.message_groups.update_one(
-            {"id": group['message_group_id']},
+            {"id": str(group)['message_group_id']},
             {"$addToSet": {"members": current_user.id}}
         )
     
@@ -124,7 +124,7 @@ async def get_tutoring_requests(tenant_data: tuple = Depends(get_tenant_db_for_u
     if current_user.role in ['ra', 'admin']:
         requests = await tenant_db.tutoring.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     else:
-        requests = await tenant_db.tutoring.find({"student_id": current_user.id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        requests = await tenant_db.tutoring.find({"student_id": str(current_user).id}, {"_id": 0}).sort("created_at", -1).to_list(100)
     
     for req in requests:
         if isinstance(req.get('created_at'), str):
@@ -151,7 +151,7 @@ async def start_tutor_chat(
         return {"message_group_id": existing_chat['id']}
     
     # Get tutor info
-    tutor = await tenant_db.users.find_one({"id": tutor_id}, {"_id": 0})
+    tutor = await tenant_db.users.find_one({"id": str(tutor_id)}, {"_id": 0})
     if not tutor:
         raise HTTPException(status_code=404, detail="Tutor not found")
     

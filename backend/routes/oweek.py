@@ -63,7 +63,7 @@ async def delete_o_week_activity(
         raise HTTPException(status_code=403, detail="Only admins and RAs can delete O-Week activities")
 
     result = await tenant_db.oweek_activities.update_one(
-        {"id": activity_id},
+        {"id": str(activity_id)},
         {"$set": {"active": False}}
     )
     if result.modified_count == 0:

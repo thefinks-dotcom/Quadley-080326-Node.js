@@ -60,7 +60,7 @@ async def create_rollcall(
         announcement_id, current_user.tenant_code, current_user.id, tenant_db
     )
     rollcall = await tenant_db.emergency_rollcalls.find_one(
-        {"announcement_id": announcement_id, "status": "active"}, {"_id": 0}
+        {"announcement_id": str(announcement_id), "status": "active"}, {"_id": 0}
     )
     return rollcall
 
@@ -81,7 +81,7 @@ async def get_active_rollcalls(
 
     rollcall_ids = [r["id"] for r in rollcalls]
     my_responses = await tenant_db.rollcall_responses.find(
-        {"rollcall_id": {"$in": rollcall_ids}, "user_id": current_user.id},
+        {"rollcall_id": {"$in": rollcall_ids}, "user_id": str(current_user).id},
         {"_id": 0, "rollcall_id": 1, "status": 1}
     ).to_list(20)
 
@@ -91,7 +91,7 @@ async def get_active_rollcalls(
     for r in rollcalls:
         rc = dict(r)
         ann = await tenant_db.announcements.find_one(
-            {"id": rc["announcement_id"]}, {"_id": 0, "title": 1, "content": 1, "created_at": 1}
+            {"id": str(rc)["announcement_id"]}, {"_id": 0, "title": 1, "content": 1, "created_at": 1}
         )
         rc["announcement_title"] = ann.get("title", "") if ann else ""
         rc["announcement_content"] = ann.get("content", "") if ann else ""
@@ -113,7 +113,7 @@ async def respond_to_rollcall(
     if payload.status not in RESPONSE_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Status must be one of: {RESPONSE_OPTIONS}")
 
-    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": rollcall_id})
+    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": str(rollcall_id)})
     if not rollcall:
         raise HTTPException(status_code=404, detail="Roll call not found")
     if rollcall["status"] != "active":
@@ -126,7 +126,7 @@ async def respond_to_rollcall(
 
     if existing:
         await tenant_db.rollcall_responses.update_one(
-            {"rollcall_id": rollcall_id, "user_id": current_user.id},
+            {"rollcall_id": rollcall_id, "user_id": str(current_user).id},
             {"$set": {"status": payload.status, "notes": payload.notes or "", "responded_at": now}}
         )
     else:
@@ -158,12 +158,12 @@ async def get_rollcall_summary(
     if current_user.role not in STAFF_ROLES:
         raise HTTPException(status_code=403, detail="Staff only")
 
-    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": rollcall_id}, {"_id": 0})
+    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": str(rollcall_id)}, {"_id": 0})
     if not rollcall:
         raise HTTPException(status_code=404, detail="Roll call not found")
 
     ann = await tenant_db.announcements.find_one(
-        {"id": rollcall["announcement_id"]}, {"_id": 0, "title": 1, "content": 1}
+        {"id": str(rollcall)["announcement_id"]}, {"_id": 0, "title": 1, "content": 1}
     )
     rollcall["announcement_title"] = ann.get("title", "") if ann else ""
     rollcall["announcement_content"] = ann.get("content", "") if ann else ""
@@ -242,7 +242,7 @@ async def submit_ra_report(
     if current_user.role not in ["ra", *ADMIN_ROLES]:
         raise HTTPException(status_code=403, detail="RA or admin only")
 
-    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": rollcall_id})
+    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": str(rollcall_id)})
     if not rollcall:
         raise HTTPException(status_code=404, detail="Roll call not found")
 
@@ -282,13 +282,13 @@ async def close_rollcall(
     if current_user.role not in ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": rollcall_id})
+    rollcall = await tenant_db.emergency_rollcalls.find_one({"id": str(rollcall_id)})
     if not rollcall:
         raise HTTPException(status_code=404, detail="Roll call not found")
 
     now = datetime.now(timezone.utc).isoformat()
     await tenant_db.emergency_rollcalls.update_one(
-        {"id": rollcall_id},
+        {"id": str(rollcall_id)},
         {"$set": {"status": "closed", "closed_at": now, "closed_by": current_user.id}}
     )
     return {"message": "Roll call closed"}
@@ -305,7 +305,7 @@ async def get_rollcall_by_announcement(
         raise HTTPException(status_code=403, detail="Staff only")
 
     rollcall = await tenant_db.emergency_rollcalls.find_one(
-        {"announcement_id": announcement_id}, {"_id": 0},
+        {"announcement_id": str(announcement_id)}, {"_id": 0},
         sort=[("created_at", -1)]
     )
     if not rollcall:

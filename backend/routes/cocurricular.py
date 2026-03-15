@@ -114,7 +114,7 @@ async def join_cocurricular_group(
     """Join a co-curricular group"""
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -123,7 +123,7 @@ async def join_cocurricular_group(
     # Add to co-curricular group
     if current_user.id not in group.get('members', []):
         await tenant_db.cocurricular_groups.update_one(
-            {"id": group_id},
+            {"id": str(group_id)},
             {
                 "$push": {
                     "members": current_user.id,
@@ -135,10 +135,10 @@ async def join_cocurricular_group(
     # Add to message group
     message_group_id = group.get('message_group_id')
     if message_group_id:
-        msg_group = await tenant_db.message_groups.find_one({"id": message_group_id}, {"_id": 0})
+        msg_group = await tenant_db.message_groups.find_one({"id": str(message_group_id)}, {"_id": 0})
         if msg_group and current_user.id not in msg_group.get('members', []):
             await tenant_db.message_groups.update_one(
-                {"id": message_group_id},
+                {"id": str(message_group_id)},
                 {
                     "$push": {
                         "members": current_user.id,
@@ -170,7 +170,7 @@ async def send_group_message(
     """Send a message to a co-curricular group"""
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -204,7 +204,7 @@ async def change_group_admin(
     if current_user.role not in ['college_admin', 'super_admin', 'admin']:
         raise HTTPException(status_code=403, detail="Only admins can change group ownership")
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -215,13 +215,13 @@ async def change_group_admin(
         raise HTTPException(status_code=400, detail="new_owner_id is required")
     
     # Verify new owner exists
-    new_owner = await tenant_db.users.find_one({"id": new_owner_id}, {"_id": 0})
+    new_owner = await tenant_db.users.find_one({"id": str(new_owner_id)}, {"_id": 0})
     if not new_owner:
         raise HTTPException(status_code=404, detail="New owner not found")
     
     # Update the group
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {"$set": {
             "owner_id": new_owner_id,
             "owner_name": new_owner_name or f"{new_owner.get('first_name', '')} {new_owner.get('last_name', '')}"
@@ -230,7 +230,7 @@ async def change_group_admin(
     
     # Ensure new owner is a member
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id, "members": {"$ne": new_owner_id}},
+        {"id": str(group_id), "members": {"$ne": new_owner_id}},
         {"$push": {
             "members": new_owner_id,
             "member_names": new_owner_name or f"{new_owner.get('first_name', '')} {new_owner.get('last_name', '')}"
@@ -253,7 +253,7 @@ async def upload_photo_file(
     tenant_db, current_user = tenant_data
     
     # Verify group exists
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -267,7 +267,7 @@ async def upload_photo_file(
             SecurityEvent.PERMISSION_DENIED,
             user_id=current_user.id,
             user_email=current_user.email,
-            details={"action": "file_upload", "group_id": group_id},
+            details={"action": "file_upload", "group_id": str(group_id)},
             severity="WARNING"
         )
         raise HTTPException(status_code=403, detail="Not authorized to upload photos to this group")
@@ -293,7 +293,7 @@ async def upload_photo_file(
         SecurityEvent.FILE_UPLOAD,
         user_id=current_user.id,
         user_email=current_user.email,
-        details={"group_id": group_id, "filename": safe_filename, "size": len(content)}
+        details={"group_id": str(group_id), "filename": safe_filename, "size": len(content)}
     )
     
     # Return URL
@@ -312,7 +312,7 @@ async def add_photo_to_group(
     
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -334,7 +334,7 @@ async def add_photo_to_group(
     
     # Add photo to group
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {"$push": {"photos": photo_url}}
     )
     
@@ -350,7 +350,7 @@ async def remove_photo_from_group(
     """Remove a photo from a co-curricular group"""
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -365,7 +365,7 @@ async def remove_photo_from_group(
     # Remove photo
     photos.pop(photo_index)
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {"$set": {"photos": photos}}
     )
     
@@ -381,7 +381,7 @@ async def transfer_group_ownership(
     """Transfer group ownership to another member"""
     tenant_db, current_user = tenant_data
     
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -398,7 +398,7 @@ async def transfer_group_ownership(
         raise HTTPException(status_code=400, detail="New owner must be a member of the group")
     
     # Get new owner info
-    new_owner = await tenant_db.users.find_one({"id": new_owner_id}, {"_id": 0})
+    new_owner = await tenant_db.users.find_one({"id": str(new_owner_id)}, {"_id": 0})
     if not new_owner:
         raise HTTPException(status_code=404, detail="New owner not found")
     
@@ -406,7 +406,7 @@ async def transfer_group_ownership(
     
     # Transfer ownership
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {
             "$set": {
                 "owner_id": new_owner_id,
@@ -432,7 +432,7 @@ async def update_cocurricular_group(
     if current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Only admins can update groups")
 
-    group = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
@@ -448,11 +448,11 @@ async def update_cocurricular_group(
     }
 
     await tenant_db.cocurricular_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {"$set": update_fields}
     )
 
-    updated = await tenant_db.cocurricular_groups.find_one({"id": group_id}, {"_id": 0})
+    updated = await tenant_db.cocurricular_groups.find_one({"id": str(group_id)}, {"_id": 0})
     return CoCurricularGroup(**updated)
 
 
@@ -467,7 +467,7 @@ async def delete_cocurricular_group(
     if current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Only admins can delete groups")
     
-    result = await tenant_db.cocurricular_groups.delete_one({"id": group_id})
+    result = await tenant_db.cocurricular_groups.delete_one({"id": str(group_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Group not found")
     

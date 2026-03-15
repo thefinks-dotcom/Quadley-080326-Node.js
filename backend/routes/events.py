@@ -93,7 +93,7 @@ async def update_event(
     """Update an existing event (creator, RAs, admins only)"""
     tenant_db, current_user = tenant_data
     
-    existing_event = await tenant_db.events.find_one({"id": event_id}, {"_id": 0})
+    existing_event = await tenant_db.events.find_one({"id": str(event_id)}, {"_id": 0})
     if not existing_event:
         raise HTTPException(status_code=404, detail="Event not found")
     
@@ -122,9 +122,9 @@ async def update_event(
     if hasattr(event_data, 'event_type') and event_data.event_type:
         update_data["event_type"] = event_data.event_type
     
-    await tenant_db.events.update_one({"id": event_id}, {"$set": update_data})
+    await tenant_db.events.update_one({"id": str(event_id)}, {"$set": update_data})
     
-    updated_event = await tenant_db.events.find_one({"id": event_id}, {"_id": 0})
+    updated_event = await tenant_db.events.find_one({"id": str(event_id)}, {"_id": 0})
     if isinstance(updated_event.get('date'), str):
         updated_event['date'] = datetime.fromisoformat(updated_event['date'])
     if isinstance(updated_event.get('created_at'), str):
@@ -141,15 +141,15 @@ async def delete_event(
     """Delete an event (creator, RAs, admins only)"""
     tenant_db, current_user = tenant_data
     
-    existing_event = await tenant_db.events.find_one({"id": event_id}, {"_id": 0})
+    existing_event = await tenant_db.events.find_one({"id": str(event_id)}, {"_id": 0})
     if not existing_event:
         raise HTTPException(status_code=404, detail="Event not found")
     
     if existing_event.get('created_by') != current_user.id and current_user.role not in ['ra', 'admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Not authorized to delete this event")
     
-    await tenant_db.events.delete_one({"id": event_id})
-    await tenant_db.event_rsvps.delete_many({"event_id": event_id})
+    await tenant_db.events.delete_one({"id": str(event_id)})
+    await tenant_db.event_rsvps.delete_many({"event_id": str(event_id)})
     
     return {"message": "Event deleted successfully"}
 
@@ -210,15 +210,15 @@ async def rsvp_event(
     """RSVP to an event"""
     tenant_db, current_user = tenant_data
     
-    event = await tenant_db.events.find_one({"id": event_id})
+    event = await tenant_db.events.find_one({"id": str(event_id)})
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     
-    rsvp_record = await tenant_db.event_rsvps.find_one({"event_id": event_id, "user_id": current_user.id})
+    rsvp_record = await tenant_db.event_rsvps.find_one({"event_id": str(event_id), "user_id": str(current_user).id})
     
     if rsvp_record:
         await tenant_db.event_rsvps.update_one(
-            {"event_id": event_id, "user_id": current_user.id},
+            {"event_id": str(event_id), "user_id": str(current_user).id},
             {"$set": {"response": rsvp.response, "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
     else:
@@ -238,10 +238,10 @@ async def rsvp_event(
         if event.get('max_attendees') and len(attendees) >= event['max_attendees']:
             raise HTTPException(status_code=400, detail="Event is full")
         attendees.append(current_user.id)
-        await tenant_db.events.update_one({"id": event_id}, {"$set": {"attendees": attendees}})
+        await tenant_db.events.update_one({"id": str(event_id)}, {"$set": {"attendees": attendees}})
     elif rsvp.response != 'attending' and current_user.id in attendees:
         attendees.remove(current_user.id)
-        await tenant_db.events.update_one({"id": event_id}, {"$set": {"attendees": attendees}})
+        await tenant_db.events.update_one({"id": str(event_id)}, {"$set": {"attendees": attendees}})
     
     if rsvp.response == 'attending' and event.get('house_event') and current_user.floor:
         await award_house_points(tenant_db, current_user.floor, event.get('points', 10))
@@ -257,7 +257,7 @@ async def get_event_rsvp_summary(
     """Get RSVP summary for an event"""
     tenant_db, current_user = tenant_data
     
-    rsvps = await tenant_db.event_rsvps.find({"event_id": event_id}, {"_id": 0}).to_list(1000)
+    rsvps = await tenant_db.event_rsvps.find({"event_id": str(event_id)}, {"_id": 0}).to_list(1000)
     
     summary = {
         "attending": 0,
@@ -284,7 +284,7 @@ async def get_event_rsvps(
     if current_user.role not in ['ra', 'admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    rsvps = await tenant_db.event_rsvps.find({"event_id": event_id}, {"_id": 0}).to_list(100)
+    rsvps = await tenant_db.event_rsvps.find({"event_id": str(event_id)}, {"_id": 0}).to_list(100)
     
     for rsvp in rsvps:
         if isinstance(rsvp.get('created_at'), str):
@@ -303,7 +303,7 @@ async def get_my_rsvp(
     """Get current user's RSVP for an event"""
     tenant_db, current_user = tenant_data
     
-    rsvp = await tenant_db.event_rsvps.find_one({"event_id": event_id, "user_id": current_user.id}, {"_id": 0})
+    rsvp = await tenant_db.event_rsvps.find_one({"event_id": str(event_id), "user_id": str(current_user).id}, {"_id": 0})
     
     if not rsvp:
         return {"response": None}

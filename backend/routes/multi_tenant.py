@@ -1032,7 +1032,7 @@ async def update_tenant_activities(
         if activity_id and activity_id in existing_ids:
             # Update existing activity
             await tenant_db.cocurricular_groups.update_one(
-                {"id": activity_id},
+                {"id": str(activity_id)},
                 {"$set": {
                     "type": activity.get("type", "clubs"),
                     "name": activity.get("name", ""),
@@ -1072,9 +1072,9 @@ async def update_tenant_activities(
     # Delete activities that are no longer in the list (only if they have no members)
     for existing_id in existing_ids:
         if existing_id not in new_ids:
-            activity = await tenant_db.cocurricular_groups.find_one({"id": existing_id})
+            activity = await tenant_db.cocurricular_groups.find_one({"id": str(existing_id)})
             if activity and len(activity.get('members', [])) == 0:
-                await tenant_db.cocurricular_groups.delete_one({"id": existing_id})
+                await tenant_db.cocurricular_groups.delete_one({"id": str(existing_id)})
     
     # Also update the master db tenant record
     await master_db.tenants.update_one(
@@ -1174,7 +1174,7 @@ async def update_single_activity(
     tenant_db = get_tenant_db(tenant_code)
     
     # Check if activity exists
-    existing = await tenant_db.cocurricular_groups.find_one({"id": activity_id})
+    existing = await tenant_db.cocurricular_groups.find_one({"id": str(activity_id)})
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1194,12 +1194,12 @@ async def update_single_activity(
     }
     
     await tenant_db.cocurricular_groups.update_one(
-        {"id": activity_id},
+        {"id": str(activity_id)},
         {"$set": update_data}
     )
     
     # Fetch and return updated activity
-    updated = await tenant_db.cocurricular_groups.find_one({"id": activity_id}, {"_id": 0})
+    updated = await tenant_db.cocurricular_groups.find_one({"id": str(activity_id)}, {"_id": 0})
     
     return {"message": "Activity updated", "activity": updated}
 
@@ -1224,7 +1224,7 @@ async def delete_single_activity(
     tenant_db = get_tenant_db(tenant_code)
     
     # Check if activity exists
-    activity = await tenant_db.cocurricular_groups.find_one({"id": activity_id})
+    activity = await tenant_db.cocurricular_groups.find_one({"id": str(activity_id)})
     if not activity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1239,9 +1239,9 @@ async def delete_single_activity(
         )
     
     # Delete the activity
-    await tenant_db.cocurricular_groups.delete_one({"id": activity_id})
+    await tenant_db.cocurricular_groups.delete_one({"id": str(activity_id)})
     
-    return {"message": "Activity deleted", "activity_id": activity_id}
+    return {"message": "Activity deleted", "activity_id": str(activity_id)}
 
 
 @router.get("/{tenant_code}/activities/{activity_id}")
@@ -1263,7 +1263,7 @@ async def get_single_activity(
     
     tenant_db = get_tenant_db(tenant_code)
     
-    activity = await tenant_db.cocurricular_groups.find_one({"id": activity_id}, {"_id": 0})
+    activity = await tenant_db.cocurricular_groups.find_one({"id": str(activity_id)}, {"_id": 0})
     if not activity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1623,7 +1623,7 @@ async def resend_invitation(
             first_name = current_contact_name.split()[0] if current_contact_name else invitation.get('first_name', '')
             last_name = " ".join(current_contact_name.split()[1:]) if len(current_contact_name.split()) > 1 else invitation.get('last_name', '')
             await master_db.invitations.update_one(
-                {"id": invitation_id},
+                {"id": str(invitation_id)},
                 {"$set": {"email": to_email, "first_name": first_name, "last_name": last_name}}
             )
             invitation['email'] = to_email
@@ -1639,7 +1639,7 @@ async def resend_invitation(
     if not invite_code:
         invite_code = _generate_invite_code(tenant_code)
         await master_db.invitations.update_one(
-            {"id": invitation_id},
+            {"id": str(invitation_id)},
             {"$set": {"invite_code": invite_code}},
         )
 
@@ -1763,7 +1763,7 @@ async def reset_user_mfa(
     tenant_db = get_tenant_db(tenant_code)
     
     result = await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {"mfa_enabled": False, "mfa_secret": None, "mfa_backup_codes": []}}
     )
     

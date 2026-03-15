@@ -51,10 +51,10 @@ async def get_dashboard(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     ).to_list(100)
     
     pending_maintenance_task = tenant_db.maintenance.count_documents(
-        {"student_id": current_user.id, "status": "pending"}
+        {"student_id": str(current_user).id, "status": "pending"}
     )
     
-    streak_task = tenant_db.study_streaks.find_one({"student_id": current_user.id}, {"_id": 0})
+    streak_task = tenant_db.study_streaks.find_one({"student_id": str(current_user).id}, {"_id": 0})
     
     shoutouts_task = tenant_db.shoutouts.find(
         {
@@ -68,7 +68,7 @@ async def get_dashboard(tenant_data: tuple = Depends(get_tenant_db_for_user)):
     ).sort("created_at", -1).limit(5).to_list(5)
     
     unread_notifications_task = tenant_db.notification_history.count_documents(
-        {"user_id": current_user.id, "read": False}
+        {"user_id": str(current_user).id, "read": False}
     )
     
     # Execute all independent queries in parallel

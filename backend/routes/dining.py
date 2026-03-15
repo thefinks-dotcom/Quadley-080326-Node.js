@@ -88,12 +88,12 @@ async def update_menu_item(
     if current_user.role not in ['ra', 'admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    existing = await tenant_db.menu.find_one({"id": item_id}, {"_id": 0})
+    existing = await tenant_db.menu.find_one({"id": str(item_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Menu item not found")
     
     await tenant_db.menu.update_one(
-        {"id": item_id},
+        {"id": str(item_id)},
         {"$set": {
             "name": item_data.name,
             "description": item_data.description,
@@ -104,7 +104,7 @@ async def update_menu_item(
         }}
     )
     
-    updated = await tenant_db.menu.find_one({"id": item_id}, {"_id": 0})
+    updated = await tenant_db.menu.find_one({"id": str(item_id)}, {"_id": 0})
     if isinstance(updated.get('created_at'), str):
         updated['created_at'] = datetime.fromisoformat(updated['created_at'])
     
@@ -122,11 +122,11 @@ async def delete_menu_item(
     if current_user.role not in ['ra', 'admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    existing = await tenant_db.menu.find_one({"id": item_id}, {"_id": 0})
+    existing = await tenant_db.menu.find_one({"id": str(item_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Menu item not found")
     
-    await tenant_db.menu.delete_one({"id": item_id})
+    await tenant_db.menu.delete_one({"id": str(item_id)})
     
     return {"message": "Menu item deleted"}
 
@@ -346,7 +346,7 @@ async def get_late_meal_requests(tenant_data: tuple = Depends(get_tenant_db_for_
         ).sort("created_at", -1).to_list(100)
     else:
         requests = await tenant_db.late_meals.find(
-            {"student_id": current_user.id},
+            {"student_id": str(current_user).id},
             {"_id": 0}
         ).sort("created_at", -1).to_list(100)
     
@@ -390,7 +390,7 @@ async def update_late_meal_request(
     """Update a pending late meal request (only if status is pending)"""
     tenant_db, current_user = tenant_data
     
-    existing = await tenant_db.late_meals.find_one({"id": request_id}, {"_id": 0})
+    existing = await tenant_db.late_meals.find_one({"id": str(request_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Late meal request not found")
     
@@ -402,7 +402,7 @@ async def update_late_meal_request(
         raise HTTPException(status_code=400, detail="Can only update pending requests")
     
     await tenant_db.late_meals.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": {
             "meal_type": request_data.meal_type,
             "date": request_data.date,
@@ -411,7 +411,7 @@ async def update_late_meal_request(
         }}
     )
     
-    updated = await tenant_db.late_meals.find_one({"id": request_id}, {"_id": 0})
+    updated = await tenant_db.late_meals.find_one({"id": str(request_id)}, {"_id": 0})
     if isinstance(updated.get('created_at'), str):
         updated['created_at'] = datetime.fromisoformat(updated['created_at'])
     
@@ -426,7 +426,7 @@ async def cancel_late_meal_request(
     """Cancel/delete a late meal request (only if status is pending)"""
     tenant_db, current_user = tenant_data
     
-    existing = await tenant_db.late_meals.find_one({"id": request_id}, {"_id": 0})
+    existing = await tenant_db.late_meals.find_one({"id": str(request_id)}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Late meal request not found")
     
@@ -437,6 +437,6 @@ async def cancel_late_meal_request(
     if existing.get("status", "pending") != "pending":
         raise HTTPException(status_code=400, detail="Can only cancel pending requests")
     
-    await tenant_db.late_meals.delete_one({"id": request_id})
+    await tenant_db.late_meals.delete_one({"id": str(request_id)})
     
     return {"message": "Late meal request cancelled"}

@@ -27,8 +27,11 @@ async def get_cross_tenant_overview(
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
-        # Get all tenants
-        tenants = await master_db.tenants.find({}, {"_id": 0}).to_list(1000)
+        # Get all tenants — project only the fields used in this route (no PII)
+        tenants = await master_db.tenants.find(
+            {},
+            {"_id": 0, "code": 1, "status": 1, "subscription_tier": 1}
+        ).to_list(1000)
         
         total_tenants = len(tenants)
         active_tenants = sum(1 for t in tenants if t.get('status') == 'active')
@@ -112,7 +115,10 @@ async def get_cross_tenant_activity(
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
-        tenants = await master_db.tenants.find({"status": "active"}, {"_id": 0}).to_list(1000)
+        tenants = await master_db.tenants.find(
+            {"status": "active"},
+            {"_id": 0, "code": 1, "name": 1}
+        ).to_list(1000)
         
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         cutoff_str = cutoff_date.isoformat()
@@ -262,7 +268,10 @@ async def get_growth_metrics(
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
-        tenants = await master_db.tenants.find({}, {"_id": 0}).to_list(1000)
+        tenants = await master_db.tenants.find(
+            {},
+            {"_id": 0, "code": 1, "created_at": 1}
+        ).to_list(1000)
         
         # Group tenants by month
         tenants_by_month = {}
@@ -341,7 +350,10 @@ async def get_module_usage(
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
-        tenants = await master_db.tenants.find({"status": "active"}, {"_id": 0}).to_list(1000)
+        tenants = await master_db.tenants.find(
+            {"status": "active"},
+            {"_id": 0, "enabled_modules": 1}
+        ).to_list(1000)
         
         # Count how many tenants have each module enabled
         module_counts = {}

@@ -63,7 +63,7 @@ async def get_notifications(
     tenant_db, current_user = tenant_data
     
     try:
-        query = {"user_id": current_user.id}
+        query = {"user_id": str(current_user).id}
         
         if unread_only:
             query["read"] = False
@@ -127,7 +127,7 @@ async def mark_notification_read(
     
     try:
         # Build query - must match user_id (and optionally tenant_code if set)
-        query = {"id": notification_id, "user_id": current_user.id}
+        query = {"id": str(notification_id), "user_id": str(current_user).id}
         
         result = await tenant_db.notification_history.update_one(
             query,
@@ -155,7 +155,7 @@ async def mark_all_notifications_read(tenant_data: tuple = Depends(get_tenant_db
     
     try:
         result = await tenant_db.notification_history.update_many(
-            {"user_id": current_user.id, "read": False},
+            {"user_id": str(current_user).id, "read": False},
             {"$set": {"read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
         )
         
@@ -214,7 +214,7 @@ async def clear_all_notifications(
     tenant_db, current_user = tenant_data
     
     try:
-        query = {"user_id": current_user.id}
+        query = {"user_id": str(current_user).id}
         
         if older_than_days:
             cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
@@ -346,7 +346,7 @@ async def unregister_device(tenant_data: tuple = Depends(get_tenant_db_for_user)
     
     try:
         result = await tenant_db.device_tokens.update_many(
-            {"user_id": current_user.id},
+            {"user_id": str(current_user).id},
             {"$set": {"active": False}}
         )
         
@@ -370,7 +370,7 @@ async def unregister_specific_device(
     
     try:
         await tenant_db.device_tokens.update_one(
-            {"device_token": device_token, "user_id": current_user.id},
+            {"device_token": device_token, "user_id": str(current_user).id},
             {"$set": {"active": False}}
         )
         return {"success": True, "message": "Device unregistered"}
@@ -407,7 +407,7 @@ async def update_notification_preferences(
     
     try:
         await tenant_db.users.update_one(
-            {"id": current_user.id},
+            {"id": str(current_user).id},
             {
                 "$set": {
                     "notif_announcements": preferences.announcements,
@@ -525,7 +525,7 @@ async def notify_new_message(tenant_db, sender_id: str, sender_name: str, receiv
     """Notify user of new message"""
     try:
         # Check if user has messages notifications enabled
-        user = await tenant_db.users.find_one({"id": receiver_id}, {"notif_messages": 1})
+        user = await tenant_db.users.find_one({"id": str(receiver_id)}, {"notif_messages": 1})
         if user and not user.get("notif_messages", True):
             return
         

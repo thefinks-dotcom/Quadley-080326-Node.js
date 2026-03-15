@@ -97,19 +97,19 @@ async def search_students(
         student_id = student.get("id")
         
         # Get activity counts (parallel queries would be better in production)
-        events_count = await tenant_db.event_registrations.count_documents({"user_id": student_id})
+        events_count = await tenant_db.event_registrations.count_documents({"user_id": str(student_id)})
         jobs_count = await tenant_db.job_applications.count_documents({"applicant_id": student_id})
-        clubs_count = await tenant_db.club_memberships.count_documents({"user_id": student_id})
-        study_groups_count = await tenant_db.study_group_members.count_documents({"user_id": student_id})
+        clubs_count = await tenant_db.club_memberships.count_documents({"user_id": str(student_id)})
+        study_groups_count = await tenant_db.study_group_members.count_documents({"user_id": str(student_id)})
         mentoring_count = await tenant_db.mentoring_sessions.count_documents({
             "$or": [{"mentor_id": student_id}, {"mentee_id": student_id}]
         })
         tutoring_count = await tenant_db.tutoring_sessions.count_documents({
-            "$or": [{"tutor_id": student_id}, {"student_id": student_id}]
+            "$or": [{"tutor_id": student_id}, {"student_id": str(student_id)}]
         })
         shoutouts_given = await tenant_db.shoutouts.count_documents({"from_user_id": student_id})
         shoutouts_received = await tenant_db.shoutouts.count_documents({"to_user_id": student_id})
-        service_requests = await tenant_db.maintenance.count_documents({"student_id": student_id})
+        service_requests = await tenant_db.maintenance.count_documents({"student_id": str(student_id)})
         
         # Apply activity filter if specified
         if activity_type:
@@ -179,18 +179,18 @@ async def get_student_activity_detail(
         raise HTTPException(status_code=403, detail="Only admins can access student reports")
     
     # Get student info
-    student = await tenant_db.users.find_one({"id": student_id}, {"_id": 0, "password": 0})
+    student = await tenant_db.users.find_one({"id": str(student_id)}, {"_id": 0, "password": 0})
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     
     # Get all events attended
     event_registrations = await tenant_db.event_registrations.find(
-        {"user_id": student_id}, {"_id": 0}
+        {"user_id": str(student_id)}, {"_id": 0}
     ).to_list(1000)
     
     events_attended = []
     for reg in event_registrations:
-        event = await tenant_db.events.find_one({"id": reg.get("event_id")}, {"_id": 0})
+        event = await tenant_db.events.find_one({"id": str(reg).get("event_id")}, {"_id": 0})
         if event:
             events_attended.append({
                 "event_id": event.get("id"),
@@ -207,7 +207,7 @@ async def get_student_activity_detail(
     
     jobs = []
     for app in job_applications:
-        job = await tenant_db.jobs.find_one({"id": app.get("job_id")}, {"_id": 0})
+        job = await tenant_db.jobs.find_one({"id": str(app).get("job_id")}, {"_id": 0})
         if job:
             jobs.append({
                 "job_id": job.get("id"),
@@ -219,12 +219,12 @@ async def get_student_activity_detail(
     
     # Get club memberships
     club_memberships = await tenant_db.club_memberships.find(
-        {"user_id": student_id}, {"_id": 0}
+        {"user_id": str(student_id)}, {"_id": 0}
     ).to_list(1000)
     
     clubs = []
     for membership in club_memberships:
-        club = await tenant_db.clubs.find_one({"id": membership.get("club_id")}, {"_id": 0})
+        club = await tenant_db.clubs.find_one({"id": str(membership).get("club_id")}, {"_id": 0})
         if club:
             clubs.append({
                 "club_id": club.get("id"),
@@ -236,12 +236,12 @@ async def get_student_activity_detail(
     
     # Get study groups
     study_group_memberships = await tenant_db.study_group_members.find(
-        {"user_id": student_id}, {"_id": 0}
+        {"user_id": str(student_id)}, {"_id": 0}
     ).to_list(1000)
     
     study_groups = []
     for membership in study_group_memberships:
-        group = await tenant_db.study_groups.find_one({"id": membership.get("group_id")}, {"_id": 0})
+        group = await tenant_db.study_groups.find_one({"id": str(membership).get("group_id")}, {"_id": 0})
         if group:
             study_groups.append({
                 "group_id": group.get("id"),
@@ -283,7 +283,7 @@ async def get_student_activity_detail(
     ).to_list(1000)
     
     tutoring_as_student = await tenant_db.tutoring_sessions.find(
-        {"student_id": student_id}, {"_id": 0}
+        {"student_id": str(student_id)}, {"_id": 0}
     ).to_list(1000)
     
     tutoring = {
@@ -314,7 +314,7 @@ async def get_student_activity_detail(
     
     # Get service/maintenance requests
     service_requests = await tenant_db.maintenance.find(
-        {"student_id": student_id}, {"_id": 0}
+        {"student_id": str(student_id)}, {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
     # Compile activity summary
