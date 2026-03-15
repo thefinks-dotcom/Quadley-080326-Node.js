@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../../services/authService';
+import { apiErrorMessage } from '../../utils/apiError';
 import { useAuth } from '../../contexts/AuthContext';
 import { colors, spacing, borderRadius, shadows, typography, buttonPrimary } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
@@ -47,7 +48,7 @@ export default function MFAVerifyScreen({ navigation, route }) {
       await authService.verifyMFA(trimmedCode, useBackupCode);
       completeMfaVerification();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Verification failed');
+      setError(apiErrorMessage(err.response?.data?.detail, 'Verification failed'));
     } finally {
       setLoading(false);
     }

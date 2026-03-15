@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../../services/authService';
+import { apiErrorMessage } from '../../utils/apiError';
 import { useAuth } from '../../contexts/AuthContext';
 import { spacing, borderRadius, shadows, typography, buttonPrimary } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
@@ -37,7 +38,7 @@ export default function MFASetupScreen({ navigation, route }) {
       setSetupData(data);
       setStep('setup');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to start MFA setup');
+      setError(apiErrorMessage(err.response?.data?.detail, 'Failed to start MFA setup'));
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ export default function MFASetupScreen({ navigation, route }) {
       await authService.enableMFA(verificationCode);
       setStep('backup');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid verification code');
+      setError(apiErrorMessage(err.response?.data?.detail, 'Invalid verification code'));
     } finally {
       setLoading(false);
     }

@@ -17,7 +17,7 @@ const { withDangerousMod } = require('@expo/config-plugins');
 
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '54';
+const iosBuildNumber = '55';
 
 // Google OAuth client IDs per tenant/platform
 // iOS client ID → reversed = iosUrlScheme (com.googleusercontent.apps.<reversed-client-id>)
