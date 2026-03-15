@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const lastBackgroundTime = useRef(null);
   const loginAttempts = useRef(0);
   
-  const { saveTenant, clearTenant, updateEnabledModules } = useTenant();
+  const { saveTenant, clearTenant, updateEnabledModules, refreshBranding } = useTenant();
 
   useEffect(() => {
     initializeApp();
@@ -85,6 +85,11 @@ export const AuthProvider = ({ children }) => {
           if (Array.isArray(currentUser?.enabled_modules)) {
             updateEnabledModules(currentUser.enabled_modules);
           }
+          // Refresh branding colours from /auth/me so any admin colour changes
+          // are picked up without requiring a full logout/login cycle.
+          if (currentUser?.tenant_branding) {
+            refreshBranding(currentUser.tenant_branding);
+          }
           console.log('[AUTH] Session still valid');
         } catch (err) {
           console.log('[AUTH] Session invalid after returning to foreground:', err.message);
@@ -136,6 +141,11 @@ export const AuthProvider = ({ children }) => {
             setUser(currentUser);
             if (Array.isArray(currentUser?.enabled_modules)) {
               updateEnabledModules(currentUser.enabled_modules);
+            }
+            // Refresh branding colours returned by /auth/me so stale SecureStore
+            // data never overrides the live tenant configuration.
+            if (currentUser?.tenant_branding) {
+              refreshBranding(currentUser.tenant_branding);
             }
           })
           .catch(() => {
@@ -317,6 +327,9 @@ export const AuthProvider = ({ children }) => {
       setUser(currentUser);
       if (Array.isArray(currentUser?.enabled_modules)) {
         updateEnabledModules(currentUser.enabled_modules);
+      }
+      if (currentUser?.tenant_branding) {
+        refreshBranding(currentUser.tenant_branding);
       }
       return currentUser;
     } catch (err) {
