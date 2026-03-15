@@ -154,7 +154,7 @@ export default function EventsScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: secondaryColor }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
       <ModuleHeader title="Events" onBack={() => navigation.goBack()} />
       {/* Category Filter */}
       <FlatList
