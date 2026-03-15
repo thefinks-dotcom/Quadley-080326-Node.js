@@ -1,0 +1,48 @@
+🤖 Android app:
+https://expo.dev/artifacts/eas/s8se1MKtbsWiSNY77WwS8r.aab
+remote: Enumerating objects: 11, done.
+remote: Counting objects: 100% (11/11), done.
+remote: Compressing objects: 100% (7/7), done.
+remote: Total 7 (delta 5), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (7/7), 10.01 KiB | 1.25 MiB/s, done.
+From https://github.com/thefinks-dotcom/Quadley-080326-Node.js
+   1c3adf9..9c8204f  main       -> origin/main
+   3f39178..b5dbc80  messages   -> origin/messages
+Updating 1c3adf9..9c8204f
+Fast-forward
+ ...P-User-RNDeps-Replace-React-Nativ_1773549010812.txt | 532 +++++++++++++++++++++++
+ ...P-User-RNDeps-Replace-React-Nativ_1773549131110.txt | 532 +++++++++++++++++++++++
+ ...P-User-RNDeps-Replace-React-Nativ_1773549143698.txt | 532 +++++++++++++++++++++++
+ mobile/app.config.js                                   |  21 +-
+ 4 files changed, 1614 insertions(+), 3 deletions(-)
+ create mode 100644 attached_assets/Pasted-PhaseScriptExecution-CP-User-RNDeps-Replace-React-Nativ_1773549010812.txt
+ create mode 100644 attached_assets/Pasted-PhaseScriptExecution-CP-User-RNDeps-Replace-React-Nativ_1773549131110.txt
+ create mode 100644 attached_assets/Pasted-PhaseScriptExecution-CP-User-RNDeps-Replace-React-Nativ_1773549143698.txt
+★ eas-cli@18.3.0 is now available.
+To upgrade, run:
+npm install -g eas-cli
+Proceeding with outdated version.
+
+Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
+No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
+Environment variables loaded from the "production-grace-college" build profile "env" configuration: TENANT.
+
+
+
+[Metro] TENANT="quadley" → tenantBuild.generated → tenantBuild.quadley.js
+✔ Using remote Android credentials (Expo server)
+✔ Using Keystore from configuration: Build Credentials j_nWbCgPVZ (default)
+
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+✔ Compressed project files 2s (40.4 MB)
+✔ Uploaded to EAS 5s
+✔ Computed project fingerprint
+
+See logs: https://expo.dev/accounts/genfink/projects/grace-college/builds/613f9122-5c83-4574-a0f1-1c213c78b450
+
+Waiting for build to complete. You can press Ctrl+C to exit.
+✔ Build finished
+
+🤖 Android app:
+https://expo.dev/artifacts/eas/d1v3VUpNd8Ss1iyJsaNvYd.aab
+genfink@Gens-MacBook-Air mobile % 
