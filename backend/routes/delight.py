@@ -2,18 +2,14 @@
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from datetime import datetime, timezone
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 import logging
 
 from models import Shoutout, ShoutoutCreate, StudyStreak
 from utils.auth import get_tenant_db_for_user
+from utils.limiter import limiter
 
 router = APIRouter(tags=["delight"])
 logger = logging.getLogger(__name__)
-
-# Initialize limiter for this router
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/recognition/participants")

@@ -468,3 +468,132 @@ If you need help, contact your RA or college admin.
         html_content=html_content,
         text_content=text_content
     )
+
+
+async def send_invitation_email(
+    to_email: str,
+    tenant_name: str,
+    invitation_token: str,
+    role: str,
+    inviter_name: str = None,
+    first_name: str = None,
+    invite_code: str = None,
+    ios_app_link: str = None,
+    android_app_link: str = None,
+    primary_color: str = "#0f172a",
+    secondary_color: str = "#c9cdd5"
+) -> bool:
+    """Send invitation email to a new user with tenant branding."""
+    greeting = f"Hi {first_name}," if first_name else "Hello,"
+    role_display = {
+        'admin': 'Tenant Administrator',
+        'ra': 'Resident Advisor (RA)',
+        'student': 'Student'
+    }.get(role, role.title())
+    code_display = invite_code or "Check with your administrator"
+
+    download_links = ""
+    if ios_app_link:
+        download_links += f'<a href="{ios_app_link}" style="color: {primary_color}; text-decoration: underline;">Download for iPhone</a>'
+    if android_app_link:
+        if download_links:
+            download_links += '&nbsp;&nbsp;|&nbsp;&nbsp;'
+        download_links += f'<a href="{android_app_link}" style="color: {primary_color}; text-decoration: underline;">Download for Android</a>'
+    if not download_links:
+        download_links = '<span style="color: #6b7280; font-size: 14px;">Contact your administrator for the download link</span>'
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{tenant_name} Invitation</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 480px; margin: 0 auto; padding: 16px;">
+  <div style="background: {primary_color}; padding: 24px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 20px;">{tenant_name}</h1>
+    <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 13px;">Community App</p>
+  </div>
+  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-top: none; padding: 24px 20px; text-align: center;">
+    <p style="color: #6b7280; font-size: 13px; margin: 0 0 10px;">Your personal invite code:</p>
+    <div style="background: {primary_color}; color: white; display: inline-block; padding: 16px 28px; border-radius: 10px; font-family: 'Courier New', Courier, monospace; font-size: 28px; font-weight: bold; letter-spacing: 4px;">{code_display}</div>
+    <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0;">Expires in 7 days</p>
+  </div>
+  <div style="background: #f9fafb; padding: 24px 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+    <p style="margin: 0 0 8px; font-size: 15px;">{greeting}</p>
+    <p style="margin: 0 0 16px; font-size: 15px;">You've been invited to join <strong>{tenant_name}</strong> as a <strong>{role_display}</strong>.</p>
+    {f'<p style="margin: 0 0 16px; color: #6b7280; font-size: 14px;"><em>Invited by: {inviter_name}</em></p>' if inviter_name else ''}
+    <p style="font-weight: 600; font-size: 14px; margin: 0 0 12px; color: #1f2937;">How to get started:</p>
+    <ol style="padding-left: 20px; color: #4b5563; font-size: 14px;">
+      <li style="margin-bottom: 8px;"><strong>Download the app</strong> — {download_links}</li>
+      <li style="margin-bottom: 8px;"><strong>Tap "Join with Invite Code"</strong> and enter the code above</li>
+      <li><strong>Set your password and you're in!</strong></li>
+    </ol>
+  </div>
+  <p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 20px;">If you didn't expect this, you can safely ignore this email.<br>&copy; 2026 {tenant_name}</p>
+</body>
+</html>"""
+
+    return await send_email(
+        to_email=to_email,
+        subject=f"You're invited to join the {tenant_name} App",
+        html_content=html_content
+    )
+
+
+async def send_tenant_admin_invitation_email(
+    to_email: str,
+    tenant_name: str,
+    tenant_code: str,
+    invitation_token: str,
+    contact_person_name: str,
+    invite_code: str = None,
+    ios_app_link: str = None,
+    android_app_link: str = None,
+    primary_color: str = "#0f172a"
+) -> bool:
+    """Send invitation email to a new tenant admin (college administrator)."""
+    first_name = contact_person_name.split()[0] if contact_person_name else "Administrator"
+    code_display = invite_code or "Check with your support contact"
+
+    download_links = ""
+    if ios_app_link:
+        download_links += f'<a href="{ios_app_link}" style="color: {primary_color}; text-decoration: underline;">Download for iPhone</a>'
+    if android_app_link:
+        if download_links:
+            download_links += '&nbsp;&nbsp;|&nbsp;&nbsp;'
+        download_links += f'<a href="{android_app_link}" style="color: {primary_color}; text-decoration: underline;">Download for Android</a>'
+    if not download_links:
+        download_links = '<span style="color: #6b7280; font-size: 14px;">Contact your support contact for the download link</span>'
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{tenant_name} Admin Invitation</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: {primary_color}; margin-bottom: 5px;">{tenant_name}</h1>
+    <p style="color: #6b7280; font-size: 14px;">Administration Platform</p>
+  </div>
+  <div style="background: {primary_color}; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+    <h2 style="margin: 0 0 10px 0;">Welcome, Administrator!</h2>
+    <p style="margin: 0; opacity: 0.9;">{tenant_name} is ready for you</p>
+  </div>
+  <div style="background: #f9fafb; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
+    <p>Hi {first_name},</p>
+    <p><strong>{tenant_name}</strong> has been set up and you've been designated as the <strong>Administrator</strong>.</p>
+    <p>Your admin invite code:</p>
+    <div style="background: {primary_color}; color: white; display: inline-block; padding: 12px 24px; border-radius: 10px; font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: bold; letter-spacing: 4px;">{code_display}</div>
+    <p style="margin-top: 20px;"><strong>Getting started:</strong></p>
+    <ol style="padding-left: 20px; color: #4b5563; font-size: 14px;">
+      <li style="margin-bottom: 8px;"><strong>Download the {tenant_name} app</strong> — {download_links}</li>
+      <li style="margin-bottom: 8px;"><strong>Tap "Join with Invite Code"</strong> and enter your code</li>
+      <li><strong>Set your password and start managing!</strong></li>
+    </ol>
+  </div>
+  <div style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;">
+    <p>&copy; 2026 {tenant_name}. All rights reserved.</p>
+  </div>
+</body>
+</html>"""
+
+    return await send_email(
+        to_email=to_email,
+        subject=f"Welcome, Administrator — {tenant_name} is ready for you",
+        html_content=html_content
+    )

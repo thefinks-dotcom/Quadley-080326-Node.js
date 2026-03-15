@@ -12,7 +12,7 @@ import re
 from models import User, _generate_invite_code
 from utils.auth import db, get_current_user, get_tenant_db_for_user
 from utils.multi_tenant import master_db  # For audit logging consistency
-from utils.email import send_invitation_email
+from utils.email_service import send_invitation_email
 from utils.email_service import send_setup_reminder_email, is_email_enabled, send_student_invite_email
 from utils.admin_audit import log_admin_action, AdminActionType
 

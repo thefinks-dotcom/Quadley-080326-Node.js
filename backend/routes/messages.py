@@ -702,7 +702,7 @@ async def report_message(
 async def _notify_admins_of_report(tenant_db, report_doc: dict, auto_suspended: bool):
     """Background task: email all tenant admins about a new message report."""
     try:
-        from utils.email import send_email
+        from utils.email_service import send_email
         admins = await tenant_db.users.find(
             {"role": {"$in": ["admin", "college_admin", "ra"]}, "active": True, "email": {"$exists": True}},
             {"_id": 0, "email": 1, "first_name": 1}
@@ -743,7 +743,7 @@ async def _notify_admins_of_report(tenant_db, report_doc: dict, auto_suspended: 
         </div>"""
 
         for admin in admins:
-            send_email(to=admin["email"], subject=subject, html_content=html)
+            await send_email(to=admin["email"], subject=subject, html_content=html)
     except Exception as e:
         logger.error(f"Failed to send report notification emails: {e}")
 

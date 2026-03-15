@@ -204,7 +204,7 @@ async def _create_alert(
 
 async def _email_admins(alert: dict):
     """Send alert email to all super admins."""
-    from utils.email import send_email
+    from utils.email_service import send_email
 
     admins = await master_db.super_admins.find(
         {}, {"_id": 0, "email": 1, "first_name": 1}
@@ -243,7 +243,7 @@ async def _email_admins(alert: dict):
 
     for admin in admins:
         try:
-            send_email(
+            await send_email(
                 to=admin["email"],
                 subject=f"[Quadley Security] {label} — {alert['email']}",
                 html_content=html,
