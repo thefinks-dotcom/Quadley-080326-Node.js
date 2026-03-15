@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { colors } from '../theme';
 import BUILD_CONFIG from '../config/tenantBuild.generated';
+import { API_BASE_URL } from '../config/api';
 
 // Build-time tenant identity — hardcoded by app.config.js at `expo prebuild` time.
 // These values are ALWAYS correct for this binary regardless of Metro env vars.
@@ -77,9 +78,15 @@ export const TenantProvider = ({ children }) => {
     logoUrl: null
   });
 
-  // Load tenant from storage on mount
+  // Load tenant from storage on mount. For white-label builds also kick off a
+  // lightweight public branding fetch so the login screen shows the correct
+  // colours even when the local tenantBuild.generated.js still contains
+  // Quadley defaults (e.g. dev builds connected to Metro without TENANT set).
   useEffect(() => {
     loadTenantFromStorage();
+    if (BUILD_TENANT !== 'quadley') {
+      fetchPreLoginBranding();
+    }
   }, []);
 
   // Normalize branding from snake_case (backend) to camelCase (frontend).
@@ -101,6 +108,30 @@ export const TenantProvider = ({ children }) => {
       || topLevel?.logo_url || topLevel?.logoUrl || null;
     if (!pc && !sc && !lu) return null;
     return { primaryColor: pc, secondaryColor: sc, logoUrl: lu };
+  };
+
+  // Fetch the tenant's public branding from the backend without authentication.
+  // Used by white-label builds on startup (and after logout) so the login screen
+  // always shows the correct tenant colours — even when tenantBuild.generated.js
+  // still holds Quadley defaults (e.g. a local Metro dev session without TENANT set).
+  // Failures are silent; BUILD_CONFIG values remain as the fallback.
+  const fetchPreLoginBranding = async () => {
+    try {
+      const url = `${API_BASE_URL}/auth/public/tenant/${BUILD_TENANT}/branding`;
+      const response = await fetch(url, { method: 'GET' });
+      if (!response.ok) return;
+      const data = await response.json();
+      const normalized = normalizeBranding(data, data);
+      if (!normalized) return;
+      setBranding(prev => ({
+        ...prev,
+        ...(normalized.primaryColor && { primaryColor: normalized.primaryColor }),
+        ...(normalized.secondaryColor && { secondaryColor: normalized.secondaryColor }),
+        ...(normalized.logoUrl && { logoUrl: normalized.logoUrl }),
+      }));
+    } catch (_) {
+      // Non-fatal — BUILD_CONFIG colours are already set as the default.
+    }
   };
 
   const loadTenantFromStorage = async () => {
@@ -228,6 +259,12 @@ export const TenantProvider = ({ children }) => {
         logoUrl: null
       });
       await SecureStore.deleteItemAsync('tenant');
+      // For white-label builds, immediately refresh pre-login branding from the
+      // live backend so the login screen shows the correct tenant colours after
+      // logout (handles the case where BUILD_CONFIG still holds Quadley defaults).
+      if (BUILD_TENANT !== 'quadley') {
+        fetchPreLoginBranding();
+      }
     } catch (error) {
       console.log('Error clearing tenant from storage:', error);
     }
