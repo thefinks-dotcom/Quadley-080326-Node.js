@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { authService } from '../services/authService';
 import { warmupConnection, resetWarmupState, recreateApiInstance, setSessionExpiredCallback } from '../services/api';
 import { useTenant } from './TenantContext';
+import { apiErrorMessage } from '../utils/apiError';
 
 const AuthContext = createContext(null);
 
@@ -247,7 +248,7 @@ export const AuthProvider = ({ children }) => {
         
         message = 'Cannot connect to server. Please check your internet and try again.';
       } else if (err.response?.data?.detail) {
-        message = err.response.data.detail;
+        message = apiErrorMessage(err.response.data.detail);
       } else if (err.message) {
         message = err.message;
       }
@@ -275,7 +276,7 @@ export const AuthProvider = ({ children }) => {
       setUser(newUser);
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.detail || 'Registration failed';
+      const message = apiErrorMessage(err.response?.data?.detail, 'Registration failed');
       setError(message);
       return { success: false, error: message };
     }
@@ -293,7 +294,7 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.detail || 'Registration failed';
+      const message = apiErrorMessage(err.response?.data?.detail, 'Registration failed');
       setError(message);
       return { success: false, error: message };
     }
