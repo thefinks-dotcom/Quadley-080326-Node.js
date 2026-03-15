@@ -226,7 +226,7 @@ export default function AcademicsScreen({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']} data-testid="academics-screen">
       <ModuleHeader
-        title="Academics"
+        title="Study"
         onBack={() => navigation.goBack()}
         onAdd={activeTab === 'study-groups' ? () => setModalVisible(true) : undefined}
       />
