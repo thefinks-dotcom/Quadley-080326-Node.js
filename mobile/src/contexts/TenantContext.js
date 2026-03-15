@@ -1,26 +1,40 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import { colors } from '../theme';
 import BUILD_CONFIG from '../config/tenantBuild.generated';
 import { API_BASE_URL } from '../config/api';
 
-// Build-time tenant identity — hardcoded by app.config.js at `expo prebuild` time.
-// These values are ALWAYS correct for this binary regardless of Metro env vars.
-const BUILD_TENANT = BUILD_CONFIG.tenant;
-const BUILD_TENANT_NAME = BUILD_CONFIG.tenantName;
-const BUILD_PRIMARY = BUILD_CONFIG.primaryColor || colors.primary;
-const BUILD_SECONDARY = BUILD_CONFIG.secondaryColor || colors.textPrimary;
+// ── Build-time tenant identity ────────────────────────────────────────────────
+//
+// TWO sources of truth, in priority order:
+//
+//   1. Constants.expoConfig.extra  — set in app.config.js `extra` block and
+//      embedded directly into the native binary by Xcode / Gradle at build time.
+//      This value is ALWAYS correct for the running binary because it is part of
+//      the compiled native app, not a JS file that can be mis-cached or reset.
+//
+//   2. tenantBuild.generated.js (BUILD_CONFIG) — written by app.config.js at
+//      `expo prebuild` time.  Reliable for EAS cloud builds; can be stale for
+//      local dev sessions where Metro is started without the TENANT env var.
+//      push_to_github.py always resets it to Quadley before every push.
+//
+// Using Constants first means a Grace College binary always identifies itself
+// correctly even when the JS-layer generated file still says "quadley".
+//
+const _expoExtra = Constants.expoConfig?.extra || {};
+const BUILD_TENANT      = _expoExtra.tenant       || BUILD_CONFIG.tenant;
+const BUILD_TENANT_NAME = _expoExtra.tenantName   || BUILD_CONFIG.tenantName;
+const BUILD_PRIMARY     = _expoExtra.primaryColor  || BUILD_CONFIG.primaryColor  || colors.primary;
+const BUILD_SECONDARY   = _expoExtra.secondaryColor|| BUILD_CONFIG.secondaryColor|| colors.textPrimary;
 
 // ── Sanity check ──────────────────────────────────────────────────────────────
-// Catch contamination early: if the generated file somehow contains another
-// tenant's values, log a clear warning so it's immediately obvious in the
-// Metro console. This should never happen if push_to_github.py ran correctly.
 const KNOWN_TENANTS = ['quadley', 'grace_college', 'ormond', 'murphy_shark'];
 if (!KNOWN_TENANTS.includes(BUILD_TENANT)) {
-  console.error(`[TenantContext] ⚠️  Unknown BUILD_TENANT: "${BUILD_TENANT}". Check tenantBuild.generated.js.`);
+  console.error(`[TenantContext] ⚠️  Unknown BUILD_TENANT: "${BUILD_TENANT}". Check Constants.expoConfig.extra / tenantBuild.generated.js.`);
 }
-if (!BUILD_CONFIG.primaryColor || !BUILD_CONFIG.secondaryColor) {
-  console.error(`[TenantContext] ⚠️  Missing colors in BUILD_CONFIG for tenant "${BUILD_TENANT}". Check tenantBuild.generated.js.`);
+if (!BUILD_PRIMARY || !BUILD_SECONDARY) {
+  console.error(`[TenantContext] ⚠️  Missing colours for tenant "${BUILD_TENANT}". Check Constants.expoConfig.extra / tenantBuild.generated.js.`);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 

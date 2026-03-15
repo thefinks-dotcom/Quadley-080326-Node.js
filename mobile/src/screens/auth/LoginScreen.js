@@ -17,12 +17,17 @@ import { useTenant } from '../../contexts/TenantContext';
 import { warmupConnection } from '../../services/api';
 import { colors as defaultColors, borderRadius, spacing, shadows, typography } from '../../theme';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import Constants from 'expo-constants';
 import TENANT_LOGOS from '../../utils/tenantLogos';
 import BUILD_CONFIG from '../../config/tenantBuild.generated';
 
-const buildTenantCode = BUILD_CONFIG.tenant;
-const buildTenantName = BUILD_CONFIG.tenantName;
-const buildPrimaryColor = BUILD_CONFIG.primaryColor || defaultColors.primary;
+// Prefer Constants.expoConfig.extra (baked into the native binary by Xcode at
+// build time) over tenantBuild.generated.js (a JS file that can be stale when
+// Metro runs without TENANT env var set, e.g. local dev after git pull).
+const _expoExtra = Constants.expoConfig?.extra || {};
+const buildTenantCode   = _expoExtra.tenant       || BUILD_CONFIG.tenant;
+const buildTenantName   = _expoExtra.tenantName   || BUILD_CONFIG.tenantName;
+const buildPrimaryColor = _expoExtra.primaryColor  || BUILD_CONFIG.primaryColor || defaultColors.primary;
 const buildLogo = TENANT_LOGOS[buildTenantCode] || TENANT_LOGOS.quadley;
 
 export default function LoginScreen({ navigation }) {
