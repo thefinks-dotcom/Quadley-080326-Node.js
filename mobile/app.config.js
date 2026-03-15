@@ -17,7 +17,7 @@ const { withDangerousMod } = require('@expo/config-plugins');
 
 // iOS build number — auto-incremented by push_to_github.py on every push.
 // To manually set: change the string below and push.
-const iosBuildNumber = '58';
+const iosBuildNumber = '59';
 
 // Google OAuth client IDs per tenant/platform
 // iOS client ID → reversed = iosUrlScheme (com.googleusercontent.apps.<reversed-client-id>)
@@ -220,7 +220,12 @@ module.exports = {
               '[ -s "${NVM_DIR}/nvm.sh" ] && \\. "${NVM_DIR}/nvm.sh"',
               'export NODE_BINARY=$(command -v node 2>/dev/null)',
               '#',
-              '# 2. Tenant identity for the Metro custom resolver (metro.config.js).',
+              '# 2. Explicit project root — fixes "@expo/config: package.json not found"',
+              '#    when build phase scripts run with CWD set to the ios/ folder.',
+              '#    PROJECT_DIR is the ios/ directory (set by Xcode); the real root is one level up.',
+              'export EXPO_PROJECT_ROOT="${PROJECT_DIR}/.."',
+              '#',
+              '# 3. Tenant identity for the Metro custom resolver (metro.config.js).',
               `export TENANT=${TENANT}`,
             ].join('\n') + '\n';
             fs.writeFileSync(xenvPath, xenvContent, 'utf8');
