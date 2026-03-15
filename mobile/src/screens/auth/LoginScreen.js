@@ -36,10 +36,14 @@ export default function LoginScreen({ navigation }) {
   const { tenant, branding } = useTenant();
   const passwordRef = useRef(null);
 
-  // Login screen ALWAYS shows the build's white-label branding.
-  // Stored tenant data (from a previous session on a different build) must not
-  // bleed into the login screen identity — the build IS the tenant here.
-  const primaryColor = buildPrimaryColor;
+  // Login screen shows the build's white-label branding.
+  // TenantContext is initialised with BUILD_CONFIG values and may be updated
+  // by a background pre-login branding fetch (for white-label non-Quadley builds)
+  // or by saveTenant after login. clearTenant on logout resets to BUILD_CONFIG.
+  // Using branding.primaryColor here means the correct tenant colour is always
+  // shown even when tenantBuild.generated.js still holds Quadley defaults in a
+  // local dev / Metro session without the TENANT env var set.
+  const primaryColor = branding?.primaryColor || buildPrimaryColor;
   const displayName = buildTenantName;
   const tenantLogo = buildLogo;
 

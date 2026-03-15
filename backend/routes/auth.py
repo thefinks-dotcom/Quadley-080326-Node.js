@@ -1834,8 +1834,10 @@ async def get_public_tenant_branding(tenant_code: str):
     Public endpoint — no auth required.
     Returns branding info for the login page of a specific tenant.
     """
+    import re as _re
     tenant = await master_db.tenants.find_one(
-        {"code": tenant_code.upper(), "status": "active"},
+        # Case-insensitive match so both "grace_college" and "GRACE_COLLEGE" work.
+        {"code": {"$regex": f"^{_re.escape(tenant_code)}$", "$options": "i"}, "status": "active"},
         {"_id": 0, "code": 1, "name": 1, "branding": 1,
          "primary_color": 1, "secondary_color": 1, "logo_url": 1, "enabled_modules": 1}
     )
