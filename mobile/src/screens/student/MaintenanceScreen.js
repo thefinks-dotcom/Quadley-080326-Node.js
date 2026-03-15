@@ -186,7 +186,7 @@ export default function MaintenanceScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-      <ModuleHeader title="Maintenance" onBack={() => navigation.goBack()} onAdd={() => setModalVisible(true)} />
+      <ModuleHeader title="Fixes" onBack={() => navigation.goBack()} onAdd={() => setModalVisible(true)} />
       <FlatList
         data={requests}
         keyExtractor={(item, index) => item.id || `item-${index}`}
