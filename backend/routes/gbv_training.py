@@ -177,7 +177,7 @@ async def update_gbv_declaration(
 
     now = datetime.now(timezone.utc)
     await tenant_db.users.update_one(
-        {"id": data.user_id},
+        {"id": str(data).user_id},
         {"$set": {
             "gbv_declaration": data.has_declaration,
             "gbv_declaration_notes": data.declaration_notes or "",

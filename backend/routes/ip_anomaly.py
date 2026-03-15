@@ -71,7 +71,7 @@ async def resolve_alert(
     _require_admin(current_user)
 
     result = await master_db.ip_anomaly_alerts.update_one(
-        {"id": alert_id, "resolved": False},
+        {"id": str(alert_id), "resolved": False},
         {
             "$set": {
                 "resolved": True,

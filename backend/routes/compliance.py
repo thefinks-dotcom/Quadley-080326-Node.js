@@ -327,7 +327,7 @@ async def get_pii_inventory():
 async def get_my_consents(current_user: User = Depends(get_current_user)):
     """Get all consent records for the current user with full audit trail."""
     consents = await master_db.user_consents.find(
-        {"user_id": current_user.id},
+        {"user_id": str(current_user).id},
         {"_id": 0}
     ).sort("timestamp", -1).to_list(100)
 
@@ -476,7 +476,7 @@ async def export_my_data(
 
     # Collect user profile
     user_doc = await db.users.find_one(
-        {"id": current_user.id},
+        {"id": str(current_user).id},
         {"_id": 0, "password": 0, "setup_token": 0, "setup_token_expires": 0, "mfa_secret": 0, "mfa_backup_codes": 0}
     )
 
@@ -488,7 +488,7 @@ async def export_my_data(
     collections_list = await db.list_collection_names()
 
     events_rsvps = await db.event_rsvps.find(
-        {"user_id": current_user.id}, {"_id": 0}
+        {"user_id": str(current_user).id}, {"_id": 0}
     ).to_list(500) if "event_rsvps" in collections_list else []
 
     messages = await db.messages.find(
@@ -500,11 +500,11 @@ async def export_my_data(
     ).to_list(500) if "maintenance_requests" in collections_list else []
 
     bookings = await db.bookings.find(
-        {"student_id": current_user.id}, {"_id": 0}
+        {"student_id": str(current_user).id}, {"_id": 0}
     ).to_list(500) if "bookings" in collections_list else []
 
     consents = await master_db.user_consents.find(
-        {"user_id": current_user.id}, {"_id": 0}
+        {"user_id": str(current_user).id}, {"_id": 0}
     ).to_list(100)
 
     # Log the export
@@ -584,13 +584,13 @@ async def request_account_deletion(
 
     # Step 1: Deactivate user account immediately
     await db.users.update_one(
-        {"id": current_user.id},
+        {"id": str(current_user).id},
         {"$set": {"active": False, "deactivated_at": now.isoformat(), "deletion_requested": True}}
     )
 
     # Step 2: Anonymize personal data (immediate)
     await db.users.update_one(
-        {"id": current_user.id},
+        {"id": str(current_user).id},
         {"$set": {
             "first_name": "[DELETED]",
             "last_name": "[DELETED]",
@@ -603,7 +603,7 @@ async def request_account_deletion(
     )
 
     # Step 3: Delete consent records (user's data)
-    await master_db.user_consents.delete_many({"user_id": current_user.id})
+    await master_db.user_consents.delete_many({"user_id": str(current_user).id})
 
     # Step 4: Create deletion request for admin audit
     request_doc = {

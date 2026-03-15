@@ -104,13 +104,13 @@ async def toggle_messaging_suspend(
     if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    user_doc = await tenant_db.users.find_one({"id": user_id}, {"_id": 0, "messaging_suspended": 1, "first_name": 1, "last_name": 1})
+    user_doc = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0, "messaging_suspended": 1, "first_name": 1, "last_name": 1})
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
 
     new_state = not user_doc.get("messaging_suspended", False)
     await tenant_db.users.update_one(
-        {"id": user_id}, {"$set": {"messaging_suspended": new_state}}
+        {"id": str(user_id)}, {"$set": {"messaging_suspended": new_state}}
     )
 
     action = "suspended" if new_state else "reinstated"
@@ -312,7 +312,7 @@ async def resend_invite(
     
     # Also try finding by looking up user in tenant DB first
     if not invitation:
-        user = await tenant_db.users.find_one({"id": user_id})
+        user = await tenant_db.users.find_one({"id": str(user_id)})
         if user and user.get("email"):
             invitation = await master_db.invitations.find_one({
                 "email": user["email"],
@@ -393,7 +393,7 @@ async def activate_user(
 
     tenant_code = current_user.tenant_code or "UNKN"
 
-    user = await tenant_db.users.find_one({"id": user_id}, {"_id": 0})
+    user = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -405,7 +405,7 @@ async def activate_user(
 
     # Update user record — keep them pending but refresh the token
     await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {
             "pending_setup": True,
             "active": False,
@@ -478,14 +478,14 @@ async def force_activate_user(
     if current_user.role not in ['admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    user = await tenant_db.users.find_one({"id": user_id}, {"_id": 0})
+    user = await tenant_db.users.find_one({"id": str(user_id)}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     temp_password = secrets.token_urlsafe(10)
 
     await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {
             "active": True,
             "pending_setup": False,
@@ -1089,7 +1089,7 @@ async def update_user_role(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     # Find the target user in tenant database
-    target_user = await tenant_db.users.find_one({"id": user_id})
+    target_user = await tenant_db.users.find_one({"id": str(user_id)})
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -1114,7 +1114,7 @@ async def update_user_role(
     
     # Update the role in tenant database
     await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {"role": update_data.role}}
     )
     
@@ -1156,7 +1156,7 @@ async def update_user_email(
     if current_user.role not in ['admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    target_user = await tenant_db.users.find_one({"id": user_id})
+    target_user = await tenant_db.users.find_one({"id": str(user_id)})
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -1172,7 +1172,7 @@ async def update_user_email(
         raise HTTPException(status_code=409, detail="This email address is already in use")
 
     await tenant_db.users.update_one(
-        {"id": user_id},
+        {"id": str(user_id)},
         {"$set": {"email": new_email}}
     )
 
@@ -1206,7 +1206,7 @@ async def update_user_details(
     if current_user.role not in ['admin', 'super_admin', 'college_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    target_user = await tenant_db.users.find_one({"id": user_id})
+    target_user = await tenant_db.users.find_one({"id": str(user_id)})
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -1242,9 +1242,9 @@ async def update_user_details(
     if not updates:
         raise HTTPException(status_code=400, detail="No changes to save")
 
-    await tenant_db.users.update_one({"id": user_id}, {"$set": updates})
+    await tenant_db.users.update_one({"id": str(user_id)}, {"$set": updates})
 
-    return {"message": "User details updated", "user_id": user_id, "updated_fields": list(updates.keys())}
+    return {"message": "User details updated", "user_id": str(user_id), "updated_fields": list(updates.keys())}
 
 
 @router.get("/stats")
@@ -1488,7 +1488,7 @@ async def send_setup_reminders(
                     setup_token = secrets.token_urlsafe(32)
                     new_expiry = now + timedelta(days=7)
                     await tenant_db.users.update_one(
-                        {"id": user["id"]},
+                        {"id": str(user)["id"]},
                         {"$set": {
                             "setup_token": setup_token,
                             "setup_token_expires": new_expiry.isoformat()
@@ -1518,7 +1518,7 @@ async def send_setup_reminders(
                 
                 # Update last reminder sent timestamp
                 await tenant_db.users.update_one(
-                    {"id": user["id"]},
+                    {"id": str(user)["id"]},
                     {"$set": {"last_reminder_sent": now.isoformat()}}
                 )
             else:
@@ -1661,7 +1661,7 @@ async def resolve_incident(incident_id: str, tenant_data: tuple = Depends(get_te
         raise HTTPException(status_code=403, detail="Only admins can resolve incidents")
     
     await tenant_db.incidents.update_one(
-        {"id": incident_id},
+        {"id": str(incident_id)},
         {"$set": {"status": "resolved", "resolved_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"message": "Incident resolved"}

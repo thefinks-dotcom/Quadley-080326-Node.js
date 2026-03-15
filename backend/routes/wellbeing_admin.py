@@ -52,7 +52,7 @@ async def create_wellbeing_request(
     
     await tenant_db.wellbeing_requests.insert_one(request_dict)
     
-    return {"message": "Wellbeing request submitted", "id": request_dict["id"]}
+    return {"message": "Wellbeing request submitted", "id": str(request_dict)["id"]}
 
 
 @router.get("/requests")
@@ -67,7 +67,7 @@ async def get_wellbeing_requests(tenant_data: tuple = Depends(get_tenant_db_for_
         ).sort("created_at", -1).to_list(1000)
     else:
         requests = await tenant_db.wellbeing_requests.find(
-            {"student_id": current_user.id},
+            {"student_id": str(current_user).id},
             {"_id": 0}
         ).sort("created_at", -1).to_list(1000)
     
@@ -113,7 +113,7 @@ async def get_wellbeing_request(
     """Get a specific wellbeing request - tenant isolated"""
     tenant_db, current_user = tenant_data
     
-    request = await tenant_db.wellbeing_requests.find_one({"id": request_id}, {"_id": 0})
+    request = await tenant_db.wellbeing_requests.find_one({"id": str(request_id)}, {"_id": 0})
     
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
@@ -149,12 +149,12 @@ async def update_wellbeing_request(
     if data.assigned_to:
         update_data["assigned_to"] = data.assigned_to
         # Look up name
-        assigned_user = await tenant_db.users.find_one({"id": data.assigned_to}, {"_id": 0})
+        assigned_user = await tenant_db.users.find_one({"id": str(data).assigned_to}, {"_id": 0})
         if assigned_user:
             update_data["assigned_to_name"] = f"{assigned_user.get('first_name', '')} {assigned_user.get('last_name', '')}"
     
     await tenant_db.wellbeing_requests.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": update_data}
     )
     
@@ -182,7 +182,7 @@ async def schedule_wellbeing_appointment(
     }
     
     await tenant_db.wellbeing_requests.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": update_data}
     )
     
@@ -213,7 +213,7 @@ async def resolve_wellbeing_request(
     }
     
     await tenant_db.wellbeing_requests.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": update_data}
     )
     

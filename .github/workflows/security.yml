@@ -1,0 +1,96 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  pip-audit:
+    name: Python dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit on backend
+        run: |
+          cd backend
+          pip install -r requirements.txt --quiet
+          pip-audit --requirement requirements.txt --output json --format json \
+            | tee pip-audit-report.json || true
+
+      - name: Show audit summary
+        run: |
+          cd backend
+          pip-audit --requirement requirements.txt --format columns || true
+
+      - name: Upload pip-audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: backend/pip-audit-report.json
+          if-no-files-found: ignore
+
+  npm-audit-mobile:
+    name: Mobile JS dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit on mobile
+        working-directory: mobile
+        run: |
+          npm install --legacy-peer-deps --quiet 2>/dev/null || true
+          npm audit --json | tee npm-audit-mobile.json || true
+          npm audit --audit-level=high || true
+
+      - name: Upload npm audit report (mobile)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-mobile
+          path: mobile/npm-audit-mobile.json
+          if-no-files-found: ignore
+
+  npm-audit-frontend:
+    name: Frontend JS dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit on frontend
+        working-directory: frontend-next
+        run: |
+          yarn install --frozen-lockfile --quiet 2>/dev/null || yarn install --quiet || true
+          yarn npm audit --all --json 2>/dev/null | tee yarn-audit-frontend.json || true
+          yarn audit --level high 2>/dev/null || npm audit --audit-level=high 2>/dev/null || true
+
+      - name: Upload yarn audit report (frontend)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yarn-audit-frontend
+          path: frontend-next/yarn-audit-frontend.json
+          if-no-files-found: ignore

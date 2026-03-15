@@ -54,7 +54,7 @@ async def verify_resource_access(
     Verify user has access to a specific resource.
     Automatically filters by tenant_id.
     """
-    query = {"id": resource_id}
+    query = {"id": str(resource_id)}
     
     # Super admins can access any tenant's resources
     if not ctx.is_super_admin:

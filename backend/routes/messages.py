@@ -107,7 +107,7 @@ async def get_typing_status(
             typers.append(value)
     
     if typers:
-        return {"is_typing": True, "user_id": typers[0]["user_id"], "user_name": typers[0]["user_name"]}
+        return {"is_typing": True, "user_id": str(typers)[0]["user_id"], "user_name": typers[0]["user_name"]}
     return {"is_typing": False}
 
 
@@ -118,7 +118,7 @@ async def delete_message(
 ):
     """Delete a message (only by sender)"""
     tenant_db, current_user = tenant_data
-    message = await tenant_db.messages.find_one({"id": message_id}, {"_id": 0})
+    message = await tenant_db.messages.find_one({"id": str(message_id)}, {"_id": 0})
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
     
@@ -132,7 +132,7 @@ async def delete_message(
             detail="This message cannot be deleted — it is under active review."
         )
 
-    await tenant_db.messages.delete_one({"id": message_id})
+    await tenant_db.messages.delete_one({"id": str(message_id)})
     return {"message": "Message deleted"}
 
 
@@ -146,7 +146,7 @@ async def send_message(
 
     # SAFETY: Check messaging suspension (admin kill switch)
     user_doc = await tenant_db.users.find_one(
-        {"id": current_user.id}, {"_id": 0, "messaging_suspended": 1}
+        {"id": str(current_user).id}, {"_id": 0, "messaging_suspended": 1}
     )
     if user_doc and user_doc.get("messaging_suspended"):
         raise HTTPException(
@@ -256,7 +256,7 @@ async def get_conversations(tenant_data: tuple = Depends(get_tenant_db_for_user)
             other_user_id = msg['receiver_id'] if msg['sender_id'] == current_user.id else msg['sender_id']
             
             # Get other user info from tenant database
-            other_user = await tenant_db.users.find_one({"id": other_user_id}, {"_id": 0, "password": 0})
+            other_user = await tenant_db.users.find_one({"id": str(other_user_id)}, {"_id": 0, "password": 0})
             
             if other_user:
                 # Count unread messages (exclude self-messages)
@@ -295,7 +295,7 @@ async def get_conversations(tenant_data: tuple = Depends(get_tenant_db_for_user)
         
         # Get last message in group
         last_msg = await tenant_db.messages.find_one(
-            {"group_id": group['id']},
+            {"group_id": str(group)['id']},
             {"_id": 0},
             sort=[("timestamp", -1)]
         )
@@ -350,7 +350,7 @@ async def get_conversation_messages(
     if not is_authorized:
         # Group conversation: user must be an active member
         group = await tenant_db.message_groups.find_one(
-            {"id": conversation_id, "members": current_user.id, "is_active": True},
+            {"id": str(conversation_id), "members": current_user.id, "is_active": True},
             {"_id": 0, "id": 1}
         )
         if group:
@@ -421,7 +421,7 @@ async def mark_message_read(
     """Mark a single message as read"""
     tenant_db, current_user = tenant_data
     result = await tenant_db.messages.update_one(
-        {"id": message_id, "receiver_id": current_user.id},
+        {"id": str(message_id), "receiver_id": current_user.id},
         {"$set": {"read": True}}
     )
     
@@ -476,7 +476,7 @@ async def leave_message_group(
     tenant_db, current_user = tenant_data
     
     # Verify user is a member
-    group = await tenant_db.message_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.message_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
@@ -485,7 +485,7 @@ async def leave_message_group(
     
     # Remove user from group
     await tenant_db.message_groups.update_one(
-        {"id": group_id},
+        {"id": str(group_id)},
         {
             "$pull": {
                 "members": current_user.id,
@@ -519,7 +519,7 @@ async def create_message_group(
     # Get member details from tenant database
     member_names = []
     for member_id in group_data.member_ids:
-        user = await tenant_db.users.find_one({"id": member_id}, {"_id": 0, "first_name": 1, "last_name": 1})
+        user = await tenant_db.users.find_one({"id": str(member_id)}, {"_id": 0, "first_name": 1, "last_name": 1})
         if user:
             member_names.append(f"{user.get('first_name', '')} {user.get('last_name', '')}")
     
@@ -569,12 +569,12 @@ async def get_group_messages(
     tenant_db, current_user = tenant_data
     
     # Verify user is a member
-    group = await tenant_db.message_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.message_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group or current_user.id not in group.get('members', []):
         raise HTTPException(status_code=403, detail="Not a member of this group")
     
     messages = await tenant_db.messages.find(
-        {"group_id": group_id},
+        {"group_id": str(group_id)},
         {"_id": 0}
     ).sort("timestamp", 1).to_list(1000)
     
@@ -594,7 +594,7 @@ async def mark_group_messages_read(
     tenant_db, current_user = tenant_data
     
     # Verify user is a member
-    group = await tenant_db.message_groups.find_one({"id": group_id}, {"_id": 0})
+    group = await tenant_db.message_groups.find_one({"id": str(group_id)}, {"_id": 0})
     if not group or current_user.id not in group.get('members', []):
         raise HTTPException(status_code=403, detail="Not a member of this group")
     
@@ -621,7 +621,7 @@ async def report_message(
     """Report a message — preserves evidence, notifies admins, auto-suspends at threshold."""
     tenant_db, current_user = tenant_data
 
-    message = await tenant_db.messages.find_one({"id": message_id}, {"_id": 0})
+    message = await tenant_db.messages.find_one({"id": str(message_id)}, {"_id": 0})
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
@@ -637,7 +637,7 @@ async def report_message(
             is_participant = True
     if not is_participant:
         group = await tenant_db.message_groups.find_one(
-            {"id": conv_id, "members": current_user.id}, {"_id": 0, "id": 1}
+            {"id": str(conv_id), "members": current_user.id}, {"_id": 0, "id": 1}
         )
         is_participant = bool(group)
     if not is_participant:
@@ -645,7 +645,7 @@ async def report_message(
 
     # Prevent duplicate reports from the same user
     existing = await tenant_db.message_reports.find_one(
-        {"message_id": message_id, "reporter_id": current_user.id}, {"_id": 0, "id": 1}
+        {"message_id": str(message_id), "reporter_id": current_user.id}, {"_id": 0, "id": 1}
     )
     if existing:
         raise HTTPException(status_code=409, detail="You have already reported this message")
@@ -671,7 +671,7 @@ async def report_message(
 
     # Flag the message to prevent deletion (evidence preservation)
     await tenant_db.messages.update_one(
-        {"id": message_id}, {"$set": {"has_report": True}}
+        {"id": str(message_id)}, {"$set": {"has_report": True}}
     )
 
     # Count open reports against this user for auto-suspend threshold
@@ -682,7 +682,7 @@ async def report_message(
     auto_suspended = False
     if open_report_count >= 3:
         await tenant_db.users.update_one(
-            {"id": reported_user_id},
+            {"id": str(reported_user_id)},
             {"$set": {"messaging_suspended": True}}
         )
         auto_suspended = True
@@ -781,7 +781,7 @@ async def action_on_report(
     if current_user.role not in ["admin", "super_admin", "college_admin", "ra"]:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    report = await tenant_db.message_reports.find_one({"id": report_id}, {"_id": 0})
+    report = await tenant_db.message_reports.find_one({"id": str(report_id)}, {"_id": 0})
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
 
@@ -795,7 +795,7 @@ async def action_on_report(
 
     if action == "suspend":
         await tenant_db.users.update_one(
-            {"id": report["reported_user_id"]},
+            {"id": str(report)["reported_user_id"]},
             {"$set": {"messaging_suspended": True}}
         )
     elif action == "warn":
@@ -803,20 +803,20 @@ async def action_on_report(
     elif action == "remove_message":
         # OSA compliance: remove content but preserve the report record
         await tenant_db.messages.update_one(
-            {"id": report["message_id"]},
+            {"id": str(report)["message_id"]},
             {"$set": {"content": "[Message removed by moderator]", "removed": True}}
         )
         update_fields["status"] = "content_removed"
     elif action == "dismiss":
         # Remove the report flag from the message if dismissed
         await tenant_db.messages.update_one(
-            {"id": report["message_id"]},
+            {"id": str(report)["message_id"]},
             {"$set": {"has_report": False}}
         )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
-    await tenant_db.message_reports.update_one({"id": report_id}, {"$set": update_fields})
+    await tenant_db.message_reports.update_one({"id": str(report_id)}, {"$set": update_fields})
     return {"message": f"Action '{action}' applied to report {report_id}"}
 
 

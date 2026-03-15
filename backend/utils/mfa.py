@@ -138,7 +138,7 @@ class MFAService:
         
         # Store pending MFA setup (not yet verified)
         await self.db.mfa_setup.update_one(
-            {"user_id": user_id},
+            {"user_id": str(user_id)},
             {
                 "$set": {
                     "user_id": user_id,
@@ -162,7 +162,7 @@ class MFAService:
         """
         Verify initial MFA code and enable MFA for the user.
         """
-        setup = await self.db.mfa_setup.find_one({"user_id": user_id, "verified": False})
+        setup = await self.db.mfa_setup.find_one({"user_id": str(user_id), "verified": False})
         
         if not setup:
             return False
@@ -172,7 +172,7 @@ class MFAService:
         
         # MFA verified, enable it for the user
         await self.db.users.update_one(
-            {"id": user_id},
+            {"id": str(user_id)},
             {
                 "$set": {
                     "mfa_enabled": True,
@@ -184,7 +184,7 @@ class MFAService:
         
         # Mark setup as verified
         await self.db.mfa_setup.update_one(
-            {"user_id": user_id},
+            {"user_id": str(user_id)},
             {"$set": {"verified": True}}
         )
         
@@ -195,7 +195,7 @@ class MFAService:
         """
         Verify MFA code during login.
         """
-        user = await self.db.users.find_one({"id": user_id}, {"_id": 0})
+        user = await self.db.users.find_one({"id": str(user_id)}, {"_id": 0})
         
         if not user or not user.get("mfa_enabled"):
             return True  # MFA not enabled, skip verification
@@ -210,7 +210,7 @@ class MFAService:
         """
         Verify a backup code and consume it.
         """
-        user = await self.db.users.find_one({"id": user_id}, {"_id": 0})
+        user = await self.db.users.find_one({"id": str(user_id)}, {"_id": 0})
         
         if not user or not user.get("mfa_enabled"):
             return False
@@ -221,7 +221,7 @@ class MFAService:
         if is_valid and hash_to_remove:
             # Remove used backup code
             await self.db.users.update_one(
-                {"id": user_id},
+                {"id": str(user_id)},
                 {"$pull": {"mfa_backup_codes": hash_to_remove}}
             )
             logger.info(f"Backup code used for user {user_id}")
@@ -234,7 +234,7 @@ class MFAService:
         Disable MFA for a user.
         """
         await self.db.users.update_one(
-            {"id": user_id},
+            {"id": str(user_id)},
             {
                 "$set": {"mfa_enabled": False},
                 "$unset": {"mfa_secret": "", "mfa_backup_codes": ""}
@@ -242,7 +242,7 @@ class MFAService:
         )
         
         # Clean up setup records
-        await self.db.mfa_setup.delete_many({"user_id": user_id})
+        await self.db.mfa_setup.delete_many({"user_id": str(user_id)})
         
         logger.info(f"MFA disabled for user {user_id}")
         return True
@@ -255,7 +255,7 @@ class MFAService:
         hashed_codes = hash_backup_codes(backup_codes)
         
         await self.db.users.update_one(
-            {"id": user_id},
+            {"id": str(user_id)},
             {"$set": {"mfa_backup_codes": hashed_codes}}
         )
         
@@ -264,13 +264,13 @@ class MFAService:
     
     async def is_mfa_enabled(self, user_id: str) -> bool:
         """Check if MFA is enabled for a user"""
-        user = await self.db.users.find_one({"id": user_id}, {"_id": 0, "mfa_enabled": 1})
+        user = await self.db.users.find_one({"id": str(user_id)}, {"_id": 0, "mfa_enabled": 1})
         return user.get("mfa_enabled", False) if user else False
     
     async def get_mfa_status(self, user_id: str) -> dict:
         """Get MFA status for a user"""
         user = await self.db.users.find_one(
-            {"id": user_id}, 
+            {"id": str(user_id)}, 
             {"_id": 0, "mfa_enabled": 1, "mfa_backup_codes": 1}
         )
         

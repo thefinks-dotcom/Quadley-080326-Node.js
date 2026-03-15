@@ -17,7 +17,7 @@ async def create_tenant_request(tenant_data: TenantCreate):
     # Check if tenant_id or domain already exists
     existing = await db.tenants.find_one({
         "$or": [
-            {"tenant_id": tenant_data.tenant_id},
+            {"tenant_id": str(tenant_data).tenant_id},
             {"domain": tenant_data.domain}
         ]
     })
@@ -70,7 +70,7 @@ async def list_tenants(current_user: User = Depends(get_current_user)):
     else:
         # Regular admin sees only their tenant
         tenants = await db.tenants.find(
-            {"tenant_id": current_user.tenant_id},
+            {"tenant_id": str(current_user).tenant_id},
             {"_id": 0}
         ).to_list(1)
     
@@ -90,7 +90,7 @@ async def get_tenant(
         )
     
     tenant = await db.tenants.find_one(
-        {"$or": [{"tenant_id": tenant_id}, {"code": tenant_id}]},
+        {"$or": [{"tenant_id": str(tenant_id)}, {"code": tenant_id}]},
         {"_id": 0}
     )
     if not tenant:
@@ -117,7 +117,7 @@ async def approve_tenant(
         )
     
     # Check if tenant exists and get current status
-    tenant = await db.tenants.find_one({"tenant_id": tenant_id}, {"_id": 0})
+    tenant = await db.tenants.find_one({"tenant_id": str(tenant_id)}, {"_id": 0})
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -133,7 +133,7 @@ async def approve_tenant(
     
     # Update tenant status to active
     result = await db.tenants.update_one(
-        {"tenant_id": tenant_id, "status": {"$in": ["pending", "suspended"]}},
+        {"tenant_id": str(tenant_id), "status": {"$in": ["pending", "suspended"]}},
         {"$set": {"status": "active"}}
     )
     
@@ -145,7 +145,7 @@ async def approve_tenant(
     
     # Activate admin user
     await db.users.update_many(
-        {"tenant_id": tenant_id, "role": "admin"},
+        {"tenant_id": str(tenant_id), "role": "admin"},
         {"$set": {"active": True}}
     )
     
@@ -167,11 +167,11 @@ async def update_tenant(
         
         if update_data:
             await db.tenants.update_one(
-                {"tenant_id": tenant_id},
+                {"tenant_id": str(tenant_id)},
                 {"$set": update_data}
             )
         
-        tenant = await db.tenants.find_one({"tenant_id": tenant_id}, {"_id": 0})
+        tenant = await db.tenants.find_one({"tenant_id": str(tenant_id)}, {"_id": 0})
         return tenant
     else:
         raise HTTPException(
@@ -195,7 +195,7 @@ async def suspend_tenant(
         )
     
     result = await db.tenants.update_one(
-        {"tenant_id": tenant_id},
+        {"tenant_id": str(tenant_id)},
         {"$set": {"status": "suspended"}}
     )
     

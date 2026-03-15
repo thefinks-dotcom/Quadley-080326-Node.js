@@ -971,7 +971,7 @@ async def get_disclosure_by_id(
 ):
     """Get a specific disclosure - tenant isolated"""
     tenant_db, current_user = tenant_data
-    disclosure = await tenant_db.safe_disclosures.find_one({"id": disclosure_id}, {"_id": 0})
+    disclosure = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)}, {"_id": 0})
     
     if not disclosure:
         raise HTTPException(status_code=404, detail="Disclosure not found")
@@ -1011,7 +1011,7 @@ async def update_disclosure_status(
     update_data["assigned_to_name"] = f"{current_user.first_name} {current_user.last_name}"
     
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": update_data}
     )
     
@@ -1062,7 +1062,7 @@ async def complete_risk_assessment(
         }
     
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": update_data}
     )
     
@@ -1112,7 +1112,7 @@ async def create_support_plan(
     }
     
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": update_data}
     )
     
@@ -1144,7 +1144,7 @@ async def create_formal_report(
     }
     
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": update_data}
     )
     
@@ -1174,7 +1174,7 @@ async def resolve_disclosure(
     }
     
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": update_data}
     )
     
@@ -1250,7 +1250,7 @@ async def forward_disclosure(
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
     
-    disclosure = await tenant_db.safe_disclosures.find_one({"id": disclosure_id}, {"_id": 0})
+    disclosure = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)}, {"_id": 0})
     if not disclosure:
         raise HTTPException(status_code=404, detail="Disclosure not found")
     
@@ -1402,7 +1402,7 @@ async def forward_disclosure(
         }
         
         await tenant_db.safe_disclosures.update_one(
-            {"id": disclosure_id},
+            {"id": str(disclosure_id)},
             {
                 "$push": {"forward_history": forward_record},
                 "$set": {"updated_at": now.isoformat()}
@@ -1447,7 +1447,7 @@ async def escalate_to_formal_complaint(
     if current_user.role not in ["admin", "ra", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
     if existing.get("formal_report"):
@@ -1457,7 +1457,7 @@ async def escalate_to_formal_complaint(
     investigation_deadline = now + timedelta(days=63)
 
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": {
             "report_type": "formal_complaint",
             "formal_report": True,
@@ -1497,7 +1497,7 @@ async def assign_case_worker(
 
     now = datetime.now(timezone.utc)
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": {
             "assigned_to": data.assignee_id,
             "assigned_to_name": data.assignee_name,
@@ -1540,7 +1540,7 @@ async def add_case_note(
     }
 
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {
             "$push": {"case_notes": note_record},
             "$set": {"updated_at": now.isoformat()}
@@ -1559,7 +1559,7 @@ async def initiate_appeal(
     """Student initiates an appeal within 20 business days of resolution - Standard 5 - tenant isolated"""
     tenant_db, current_user = tenant_data
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
@@ -1583,7 +1583,7 @@ async def initiate_appeal(
     }
 
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": {
             "status": "appeal_under_review",
             "appeal": appeal_record,
@@ -1605,7 +1605,7 @@ async def escalate_to_nso(
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
@@ -1621,7 +1621,7 @@ async def escalate_to_nso(
     }
 
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": nso_record}
     )
 
@@ -1649,13 +1649,13 @@ async def update_respondent(
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
     now = datetime.now(timezone.utc)
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {"$set": {
             "respondent_name": data.respondent_name,
             "respondent_id": data.respondent_id,
@@ -1679,7 +1679,7 @@ async def add_interim_measure(
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
@@ -1695,7 +1695,7 @@ async def add_interim_measure(
     }
 
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {
             "$push": {"interim_measures": measure},
             "$set": {"updated_at": now.isoformat()}
@@ -1716,15 +1716,15 @@ async def remove_interim_measure(
     if current_user.role not in ["admin", "super_admin", "superadmin", "college_admin"]:
         raise HTTPException(status_code=403, detail="Admins only")
 
-    existing = await tenant_db.safe_disclosures.find_one({"id": disclosure_id})
+    existing = await tenant_db.safe_disclosures.find_one({"id": str(disclosure_id)})
     if not existing:
         raise HTTPException(status_code=404, detail="Disclosure not found")
 
     now = datetime.now(timezone.utc)
     await tenant_db.safe_disclosures.update_one(
-        {"id": disclosure_id},
+        {"id": str(disclosure_id)},
         {
-            "$pull": {"interim_measures": {"id": measure_id}},
+            "$pull": {"interim_measures": {"id": str(measure_id)}},
             "$set": {"updated_at": now.isoformat()}
         }
     )

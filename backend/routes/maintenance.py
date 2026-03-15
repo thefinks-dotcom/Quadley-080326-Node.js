@@ -49,7 +49,7 @@ async def get_maintenance_requests(tenant_data: tuple = Depends(get_tenant_db_fo
     tenant_db, current_user = tenant_data
     
     # Admins see all requests; everyone else (students, RAs) sees only their own
-    query = {} if current_user.role in ['admin', 'college_admin', 'super_admin', 'superadmin'] else {"student_id": current_user.id}
+    query = {} if current_user.role in ['admin', 'college_admin', 'super_admin', 'superadmin'] else {"student_id": str(current_user).id}
     requests = await tenant_db.maintenance.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
     
     for req in requests:
@@ -79,7 +79,7 @@ async def update_maintenance_status(
         raise HTTPException(status_code=400, detail="Invalid status")
     
     # Get the request first to find the student and issue type
-    request = await tenant_db.maintenance.find_one({"id": request_id}, {"_id": 0})
+    request = await tenant_db.maintenance.find_one({"id": str(request_id)}, {"_id": 0})
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
     
@@ -97,7 +97,7 @@ async def update_maintenance_status(
         update_data["assigned_to"] = current_user.id
     
     result = await tenant_db.maintenance.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": update_data}
     )
     
@@ -145,7 +145,7 @@ async def assign_maintenance_request(
     }
     
     result = await tenant_db.maintenance.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {"$set": update_data}
     )
     
@@ -206,7 +206,7 @@ async def add_facilitator(
     
     await tenant_db.facilitators.insert_one(facilitator_doc)
     
-    return {"message": "Facilitator added", "id": facilitator_doc["id"]}
+    return {"message": "Facilitator added", "id": str(facilitator_doc)["id"]}
 
 
 @router.put("/{request_id}/resolve")
@@ -221,7 +221,7 @@ async def resolve_maintenance_request(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     result = await tenant_db.maintenance.update_one(
-        {"id": request_id},
+        {"id": str(request_id)},
         {
             "$set": {
                 "status": "resolved",

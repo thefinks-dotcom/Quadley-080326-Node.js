@@ -460,7 +460,7 @@ async def process_reminder(tenant_code: str, reminder_type: str):
             
             for parcel in parcels:
                 user_id = parcel.get('user_id')
-                user = await tenant_db.users.find_one({"id": user_id})
+                user = await tenant_db.users.find_one({"id": str(user_id)})
                 
                 if user and user.get('email'):
                     recipients_count += 1
